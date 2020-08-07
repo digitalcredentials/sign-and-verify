@@ -4,14 +4,14 @@ import { createJwk, sign } from './issuer';
 const server = fastify();
 
 const port = process.env['PORT'] ? Number(process.env['PORT']) : 5000;
+const hostAddress = process.env['ADDRESS'] ? process.env['ADDRESS'] : '127.0.0.1';
 
 server.register(require('fastify-cors'), { 
 
 })
 
 server.get('/ping', async (request, reply) => {
-  const key = createJwk('did:example:123#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs');
-  return `pong ${key.id}\n`
+  return `pong\n`
 });
 
 
@@ -31,7 +31,7 @@ server.post(
   }
 )
 
-server.listen(port, (err, address) => {
+server.listen(port, hostAddress, (err, address) => {
   if (err) {
     console.error(err)
     process.exit(1)
