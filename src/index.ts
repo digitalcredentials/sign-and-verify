@@ -3,7 +3,7 @@ import { createJwk, sign } from './issuer';
 
 const server = fastify();
 
-const port = process.env['port'] ? Number(process.env['port']) : 5000;
+const port = process.env['PORT'] ? Number(process.env['PORT']) : 5000;
 
 server.register(require('fastify-cors'), { 
 
