@@ -1,5 +1,5 @@
 import fastify from 'fastify';
-import { createJwk, sign } from './issuer';
+import { createJwk, sign, verify } from './issuer';
 
 const server = fastify();
 
@@ -24,6 +24,22 @@ server.post(
     };
 
     const result = await sign(credential, options);
+    reply
+      .code(201)
+      .header('Content-Type', 'application/json; charset=utf-8')
+      .send(result);
+  }
+)
+
+server.post(
+  '/verify/credentials', async (request, reply) => {
+    const credential = request.body;
+    //const options = requestBody['options'];
+    const options = {
+      assertionMethod: 'did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs'
+    };
+
+    const result = await verify(credential, options);
     reply
       .code(201)
       .header('Content-Type', 'application/json; charset=utf-8')

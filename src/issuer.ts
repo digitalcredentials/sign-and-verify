@@ -61,6 +61,15 @@ export function createJwk(assertionMethod: string) {
   return new JsonWebKey(keyInfo);
 }
 
+function createSuite(assertionMethod: string, date = new Date().toISOString()) {
+  const signingKey = createJwk(assertionMethod);
+  const signatureSuite = new JsonWebSignature2020({
+    key: signingKey,
+    date:  date
+  });
+  return signatureSuite;
+}
+
 // sample options
 /*
 const options = {
@@ -70,14 +79,9 @@ const options = {
 };*/
 
 export async function sign(credential: any, options: any) {
-  let assertionMethod = options.assertionMethod;
-  const signingKey = createJwk(assertionMethod);
-  const signatureSuite = new JsonWebSignature2020({
-    key: signingKey,
-    date: new Date().toISOString() // TODO
-  });
-
-  let controller = getController(assertionMethod);
+  const assertionMethod = options.assertionMethod;
+  const suite = createSuite(assertionMethod);
+  const controller = getController(assertionMethod);
   // update issuer id
   // issuer | id
   if (credential['issuer']) {
@@ -89,11 +93,7 @@ export async function sign(credential: any, options: any) {
   }
 
   // sign
-  let result = await signCore(credential, signatureSuite, customLoader);
-  console.log(JSON.stringify(result, null, 2));
-  return result;
-
-
+  return signCore(credential, suite, customLoader);
 
   // TODO: created vs issuanceDate, domain, challenge
   // TODO: verification vs assertion method
@@ -105,6 +105,19 @@ export async function sign(credential: any, options: any) {
   "domain": "example.com",
   "challenge": "d436f0c8-fbd9-4e48-bbb2-55fc5d0920a8"
 */
+}
 
 
+export async function verify(verifiableCredential: any, options: any) {
+  const assertionMethod = options.assertionMethod;
+  const suite = createSuite(assertionMethod);
+  const controller = getController(assertionMethod);
+
+  // preload docs for docLoader
+  // TODO: needs to be private
+  preloadedDocs[controller] = unlockedDid;
+  preloadedDocs[assertionMethod] = unlockedDid;
+
+  // verify
+  return verifyCore(verifiableCredential, suite, customLoader, true);
 }
