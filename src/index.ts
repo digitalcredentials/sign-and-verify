@@ -1,5 +1,6 @@
 import fastify from 'fastify';
-import { createJwk, sign, verify } from './issuer';
+import { sign, verify } from './issuer';
+import { requestCredential } from './request';
 
 const server = fastify();
 
@@ -46,6 +47,19 @@ server.post(
       .send(result);
   }
 )
+
+server.post(
+  '/request/credentials', async (request, reply) => {
+    const requestInfo = request.body;
+
+    const result = await requestCredential(requestInfo);
+    reply
+      .code(201)
+      .header('Content-Type', 'application/json; charset=utf-8')
+      .send(result);
+  }
+)
+
 
 server.listen(port, hostAddress, (err, address) => {
   if (err) {

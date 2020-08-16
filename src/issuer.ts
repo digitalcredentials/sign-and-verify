@@ -83,13 +83,15 @@ export async function sign(credential: any, options: any) {
   const suite = createSuite(assertionMethod);
   const controller = getController(assertionMethod);
   // update issuer id
-  // issuer | id
-  if (credential['issuer']) {
-    if (credential.issuer['id']) {
-      credential.issuer.id = controller;
-    } else {
-      credential.issuer = controller;
-    }
+  if (credential['issuer'] && credential.issuer['id']) {
+    credential.issuer.id = controller;
+  } else {
+    credential.issuer = controller;
+  }
+
+  // add issuanceDate if not provided
+  if (!credential.issuanceDate) {
+    credential.issuanceDate = new Date().toISOString();
   }
 
   // sign
