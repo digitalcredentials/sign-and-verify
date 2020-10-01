@@ -8,20 +8,28 @@ The REST service implements a subset of the W3C CCG vc-http-api draft standard.
 ## Build
 
 ```
+# node-only, build the service
 npm run build
+
+# build local docker images
+docker-compose build --no-cache
 ```
 
 ## Run
 
 ```
+# node-only, run the service
 npm run start
+
+# run docker locally
+docker-compose up --build
 ```
 
 ## Examples
 
 ### Issue
 
-  
+
 ```
 curl --header "Content-Type: application/json" --request POST --data '{"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1"],"id":"http://example.gov/credentials/3732","type":["VerifiableCredential","UniversityDegreeCredential"],"issuer":"did:elem:ropsten:EiBJJPdo-ONF0jxqt8mZYEj9Z7FbdC87m2xvN0_HAbcoEg","issuanceDate":"2020-03-10T04:24:12.164Z","credentialSubject":{"id":"did:elem:ropsten:EiBJJPdo-ONF0jxqt8mZYEj9Z7FbdC87m2xvN0_HAbcoEg","degree":{"type":"BachelorDegree","name":"Bachelor of Science and Arts"}}}' http://127.0.0.1:5000/issue/credentials
 ```
@@ -37,6 +45,3 @@ curl --header "Content-Type: application/json" --request POST --data '{"@context
 ```
 curl --header "Content-Type: application/json" --request POST --data '{"subjectDid": "did:example:123"}' http://127.0.0.1:5000/request/credentials
 ```
-
-
-
