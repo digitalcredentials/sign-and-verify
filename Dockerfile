@@ -2,7 +2,7 @@ FROM node:14.11
 
 WORKDIR /usr/src/app
 
-ADD package.json ./
+ADD package.json package-lock.json ./
 
 RUN npm install
 

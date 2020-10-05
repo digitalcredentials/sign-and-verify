@@ -5,24 +5,25 @@ This repo currently contains signing and verification functionality and a minima
 The REST service implements a subset of the W3C CCG vc-http-api draft standard.
 
 
+## Configuration
+
+The service can be configured with the following environment variables:
+
+- `UNLOCKED_DID` - a base64 encoded DID json blob (required)
+- `PORT` - the port the web service will bind to (optional, default: `5000`)
+
+Locally, you need to copy `.env.example` to `.env`, which `npm run start` will pick up, to test these values.
+
 ## Build
 
 ```
-# node-only, build the service
 npm run build
-
-# build local docker images
-docker-compose build --no-cache
 ```
 
 ## Run
 
 ```
-# node-only, run the service
 npm run start
-
-# run docker locally
-docker-compose up --build
 ```
 
 ## Examples

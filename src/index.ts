@@ -1,10 +1,11 @@
 import fastify from 'fastify';
-import { sign, verify } from './issuer';
+import { getDefaultIssuer } from './issuer';
 import { requestCredential } from './request';
+import { getConfig } from "./config"
 
 const server = fastify();
 
-const port = process.env['PORT'] ? Number(process.env['PORT']) : 5000;
+const { sign, verify } = getDefaultIssuer();
 
 server.register(require('fastify-cors'), {
 
@@ -60,7 +61,7 @@ server.post(
 )
 
 
-server.listen(port, '::', (err, address) => {
+server.listen(getConfig().port, '::', (err, address) => {
   if (err) {
     console.error(err)
     process.exit(1)

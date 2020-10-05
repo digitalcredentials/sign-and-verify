@@ -1,6 +1,9 @@
-import { createJwk, getController, sign } from './issuer';
+import { readFileSync } from 'fs';
 import { expect } from 'chai';
 import 'mocha';
+
+import { createIssuer, getController } from './issuer';
+import { Config } from './config';
 
 const identifer = 'did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs';
 const controller = 'did:web:digitalcredentials.github.io';
@@ -24,6 +27,11 @@ const credential = {
     }
   }
 };
+const config: Config = {
+  port: 5000,
+  unlockedDid: JSON.parse(readFileSync("data/unlocked-did:web:digitalcredentials.github.io.json").toString("ascii"))
+};
+const issuer = createIssuer(config)
 
 describe('Issuer test',
   () => {
@@ -33,7 +41,7 @@ describe('Issuer test',
     });
 
     it('should create JsonKeyKey', () => {
-      const result = createJwk(identifer);
+      const result = issuer.createJwk(identifer);
       expect(result.id).to.equal(identifer);
       expect(result.type).to.equal('JsonWebKey2020');
       expect(result.controller).to.equal(controller);
@@ -43,7 +51,7 @@ describe('Issuer test',
       const options = {
         'assertionMethod': identifer
       };
-      const result = await sign(credential, options);
+      const result = await issuer.sign(credential, options);
       expect(result.issuer).to.equal(controller);
     }).slow(5000).timeout(10000);
   });
