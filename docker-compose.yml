@@ -3,5 +3,8 @@ version: "3.7"
 services:
   web:
     build: .
+    command: node build && node start
+    volumes:
+      - ".:/usr/src/app"
     ports:
       - "5000:5000"

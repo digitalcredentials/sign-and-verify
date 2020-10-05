@@ -45,5 +45,5 @@ describe('Issuer test',
       };
       const result = await sign(credential, options);
       expect(result.issuer).to.equal(controller);
-    }).timeout(10000);
+    }).slow(5000).timeout(10000);
   });
