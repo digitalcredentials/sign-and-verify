@@ -6,7 +6,7 @@
   "scripts": {
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js"
+    "start": "node --require dotenv/config dist/index.js"
   },
   "keywords": [],
   "author": "",
@@ -24,9 +24,12 @@
   "devDependencies": {
     "@types/chai": "^4.2.12",
     "@types/mocha": "^8.0.1",
-    "@types/node": "^14.0.27",
+    "@types/node": "^14.11.2",
+    "@types/sinon": "^9.0.8",
     "chai": "^4.2.0",
+    "dotenv": "^8.2.0",
     "mocha": "^8.1.1",
+    "sinon": "^9.1.0",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.7"
   }

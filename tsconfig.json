@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "paths": { "*": ["types/*"] },
+    "baseUrl": ".",
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
 
     /* Basic Options */
@@ -68,5 +70,6 @@
     "resolveJsonModule": true
   },
   "include": ["src", "src/**/*.json"],
-  "exclude": ["node_modules", "src/**/*.spec.ts"]
+  "exclude": ["node_modules", "src/**/*.spec.ts"],
+  "typeRoots": [ "./types", "./node_modules/@types"]
 }
