@@ -17,7 +17,7 @@ const credential = {
     "VerifiableCredential",
     "UniversityDegreeCredential"
   ],
-  "issuer": "did:elem:ropsten:EiBJJPdo-ONF0jxqt8mZYEj9Z7FbdC87m2xvN0_HAbcoEg",
+  "issuer": "did:web:digitalcredentials.github.io",
   "issuanceDate": "2020-03-10T04:24:12.164Z",
   "credentialSubject": {
     "id": "did:elem:ropsten:EiBJJPdo-ONF0jxqt8mZYEj9Z7FbdC87m2xvN0_HAbcoEg",
@@ -53,5 +53,15 @@ describe('Issuer test',
       };
       const result = await issuer.sign(credential, options);
       expect(result.issuer).to.equal(controller);
+    }).slow(5000).timeout(10000);
+
+    it('should verify', async () => {
+      const options = {
+        'assertionMethod': identifer
+      };
+
+      const temp = await issuer.sign(credential, options);
+      const verificationResult = await issuer.verify(temp, options);
+      expect(verificationResult.verified).to.equal(true);
     }).slow(5000).timeout(10000);
   });
