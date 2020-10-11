@@ -6,7 +6,9 @@
   "scripts": {
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node --require dotenv/config dist/index.js"
+    "start": "node --require dotenv/config dist/index.js",
+    "postbuild": "npm run copy-files",
+    "copy-files": "copyfiles -u 1 src/**/*.yaml dist/"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +18,7 @@
     "@transmute/json-web-signature-2020": "^1.0.0",
     "fastify": "^3.2.0",
     "fastify-cors": "^4.1.0",
+    "fastify-swagger": "^3.4.0",
     "jose": "^1.27.2",
     "jsonld": "^3.1.1",
     "jsonld-signatures": "^5.1.0",
@@ -27,7 +30,9 @@
     "@types/node": "^14.11.2",
     "@types/sinon": "^9.0.8",
     "chai": "^4.2.0",
+    "copyfiles": "^2.4.0",
     "dotenv": "^8.2.0",
+    "fastify-log": "^1.2.1",
     "mocha": "^8.1.1",
     "sinon": "^9.1.0",
     "ts-node": "^8.10.2",

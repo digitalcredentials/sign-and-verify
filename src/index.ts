@@ -3,16 +3,37 @@ import { getDefaultIssuer } from './issuer';
 import { requestCredential } from './request';
 import { getConfig } from "./config"
 
-const server = fastify();
-
 const { sign, verify } = getDefaultIssuer();
+
+const server = fastify({
+  logger: true
+});
 
 server.register(require('fastify-cors'), {
 
+});
+server.register(require('fastify-swagger'), {
+  routePrefix: '/docs',
+  mode: 'static',
+  specification: {
+    path: __dirname + '/vc-http-api-0.0.0.yaml'
+  },
+  exposeRoute: true
 })
+server.setErrorHandler(function (error, request, reply) {
+  request.log.error(error);
+  reply
+    .code(500)
+    .header('Content-Type', 'application/json; charset=utf-8')
+    .send(error);
+});
 
-server.get('/ping', async (request, reply) => {
-  return `pong\n`
+
+server.get('/status', async (request, reply) => {
+  reply
+    .code(200)
+    .header('Content-Type', 'application/json; charset=utf-8')
+    .send({ status: 'OK' });
 });
 
 
