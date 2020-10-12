@@ -3,7 +3,7 @@ import { getDefaultIssuer } from './issuer';
 import { requestCredential } from './request';
 import { getConfig } from "./config"
 
-const { sign, verify } = getDefaultIssuer();
+const { sign, verify, createAndSignPresentation, verifyPresentation } = getDefaultIssuer();
 
 const server = fastify({
   logger: true
@@ -39,11 +39,9 @@ server.get('/status', async (request, reply) => {
 
 server.post(
   '/issue/credentials', async (request, reply) => {
-    const credential = request.body;
-    //const options = requestBody['options'];
-    const options = {
-      verificationMethod: 'did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs'
-    };
+    const req: any = request.body;
+    const credential = req.credential;
+    const options = req.options;
 
     const result = await sign(credential, options);
     reply
@@ -55,13 +53,11 @@ server.post(
 
 server.post(
   '/verify/credentials', async (request, reply) => {
-    const credential = request.body;
-    //const options = requestBody['options'];
-    const options = {
-      verificationMethod: 'did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs'
-    };
+    const req: any = request.body;
+    const verifiableCredential = req.verifiableCredential;
+    const options = req.options;
 
-    const result = await verify(credential, options);
+    const result = await verify(verifiableCredential, options);
     reply
       .code(201)
       .header('Content-Type', 'application/json; charset=utf-8')
@@ -78,6 +74,27 @@ server.post(
       .code(201)
       .header('Content-Type', 'application/json; charset=utf-8')
       .send(result);
+  }
+)
+
+server.post(
+  '/verify/presentations', async (request, reply) => {
+    const requestInfo: any = request.body;
+    const verifiablePresentation = requestInfo.verifiablePresentation;
+    const options = requestInfo.options;
+
+    const verificationResult = await verifyPresentation(verifiablePresentation, options);
+    if (verificationResult.verified) {
+      reply
+      .code(201)
+      .header('Content-Type', 'application/json; charset=utf-8')
+      .send({ holder : verifiablePresentation.holder});
+    } else {
+      reply
+      .code(500)
+      .send({ message: 'Could not validate DID', error: verificationResult});
+    }
+
   }
 )
 

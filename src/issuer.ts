@@ -16,6 +16,13 @@ export function createIssuer(config: Config) {
     [unlockedDid.publicKey[0].id, unlockedDid.publicKey[0]]
   ]);
 
+  // preload DIDs for docLoader
+  // TODO: split between issuer and verifier, which doesn't need private
+  preloadedDocs[config.unlockedDid.id] = unlockedDid;
+  config.unlockedDid.publicKey.forEach((pk) => {
+    preloadedDocs[pk.id] = unlockedDid;
+  })
+
   const customLoader = (url: string) => {
     const context = preloadedDocs[url];
     if (context) {
@@ -34,7 +41,6 @@ export function createIssuer(config: Config) {
   }
 
   function createSuite(options: SignatureOptions) {
-    //assertionMethod: string, date = new Date().toISOString()
     const signingKey = createJwk(getSigningKeyIdentifier(options));
     const signatureSuite = new JsonWebSignature2020({
       key: signingKey,
@@ -44,15 +50,7 @@ export function createIssuer(config: Config) {
   }
 
   async function verify(verifiableCredential: any, options: SignatureOptions) {
-    // TODO: doesn't need private
     const suite = createSuite(options);
-    const controller = getController(options.verificationMethod!);
-
-    // preload docs for docLoader
-    // TODO: needs to be private
-    preloadedDocs[controller] = unlockedDid;
-    preloadedDocs[options.verificationMethod!] = unlockedDid;
-
     try {
       let valid = await vc.verifyCredential({
         credential: { ...verifiableCredential },
@@ -70,7 +68,6 @@ export function createIssuer(config: Config) {
 
   async function sign(credential: any, options: SignatureOptions) {
     const suite = createSuite(options);
-
     try {
       let result = await vc.issue({
         credential: credential,
@@ -85,18 +82,13 @@ export function createIssuer(config: Config) {
     }
   }
 
-    // https://github.com/digitalbazaar/vc-js/blob/b5985f8e28a4cf60ac8933b47ba1cbd576de7b68/lib/vc.js
-  // TODO: assertion method
-  async function createAndSignPresentation(credential: any, options: SignatureOptions) {
- //   assertionMethod: any, challenge: string) {
+  async function createAndSignPresentation(credential: any, presentationId: string, holder: string, options: SignatureOptions) {
     const suite = createSuite(options);
-    const controller = getController(options.verificationMethod!);
-
-    const presentation = {
-      "@context": ["https://www.w3.org/2018/credentials/v1"],
-      "type": "VerifiablePresentation",
-      "holder": controller,
-    }
+    const presentation = vc.createPresentation({
+      verifiableCredential: credential,
+      id: presentationId,
+      holder: holder
+    });
 
     let result = await vc.signPresentation({
       presentation: presentation,
@@ -110,14 +102,7 @@ export function createIssuer(config: Config) {
 
   async function verifyPresentation(verifiablePresentation: any, options: SignatureOptions) {
     const suite = createSuite(options);
-    const controller = getController(options.verificationMethod!);
-  
-    // preload docs for docLoader
-    // TODO
-    preloadedDocs[controller] = unlockedDid;
-    preloadedDocs[options.verificationMethod!] = unlockedDid;
-  
-    // verify
+
     let valid = await vc.verify({
       presentation: { ...verifiablePresentation },
       documentLoader: customLoader,

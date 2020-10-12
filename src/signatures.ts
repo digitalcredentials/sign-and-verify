@@ -1,6 +1,8 @@
+export const DefaultProofPurpose = 'assertionMethod';
+
 export class SignatureOptions {
   public verificationMethod?: string;
-  public proofPurpose?: string = "assertionMethod";
+  public proofPurpose?: string = DefaultProofPurpose;
   public created?: string;
   public domain?: string;
   public challenge?: string;
