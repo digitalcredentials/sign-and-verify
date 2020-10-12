@@ -42,7 +42,7 @@ server.post(
     const credential = request.body;
     //const options = requestBody['options'];
     const options = {
-      assertionMethod: 'did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs'
+      verificationMethod: 'did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs'
     };
 
     const result = await sign(credential, options);
@@ -58,7 +58,7 @@ server.post(
     const credential = request.body;
     //const options = requestBody['options'];
     const options = {
-      assertionMethod: 'did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs'
+      verificationMethod: 'did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs'
     };
 
     const result = await verify(credential, options);

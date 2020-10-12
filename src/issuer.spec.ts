@@ -49,7 +49,7 @@ describe('Issuer test',
 
     it('should sign', async () => {
       const options = {
-        'assertionMethod': identifer
+        'verificationMethod': identifer
       };
       const result = await issuer.sign(credential, options);
       expect(result.issuer).to.equal(controller);
@@ -57,7 +57,7 @@ describe('Issuer test',
 
     it('should verify', async () => {
       const options = {
-        'assertionMethod': identifer
+        'verificationMethod': identifer
       };
 
       const temp = await issuer.sign(credential, options);
