@@ -46,13 +46,12 @@ export function createIssuer(config: Config) {
   async function verify(verifiableCredential: any, options: SignatureOptions) {
     // TODO: doesn't need private
     const suite = createSuite(options);
-    const verificationMethod = options.verificationMethod!;
-    const controller = getController(verificationMethod);
+    const controller = getController(options.verificationMethod!);
 
     // preload docs for docLoader
     // TODO: needs to be private
     preloadedDocs[controller] = unlockedDid;
-    preloadedDocs[verificationMethod] = unlockedDid;
+    preloadedDocs[options.verificationMethod!] = unlockedDid;
 
     try {
       let valid = await vc.verifyCredential({
@@ -86,11 +85,56 @@ export function createIssuer(config: Config) {
     }
   }
 
+    // https://github.com/digitalbazaar/vc-js/blob/b5985f8e28a4cf60ac8933b47ba1cbd576de7b68/lib/vc.js
+  // TODO: assertion method
+  async function createAndSignPresentation(credential: any, options: SignatureOptions) {
+ //   assertionMethod: any, challenge: string) {
+    const suite = createSuite(options);
+    const controller = getController(options.verificationMethod!);
+
+    const presentation = {
+      "@context": ["https://www.w3.org/2018/credentials/v1"],
+      "type": "VerifiablePresentation",
+      "holder": controller,
+    }
+
+    let result = await vc.signPresentation({
+      presentation: presentation,
+      documentLoader: customLoader,
+      expansionMap: false,
+      suite,
+      challenge: options.challenge!
+    });
+    return result;
+  }
+
+  async function verifyPresentation(verifiablePresentation: any, options: SignatureOptions) {
+    const suite = createSuite(options);
+    const controller = getController(options.verificationMethod!);
+  
+    // preload docs for docLoader
+    // TODO
+    preloadedDocs[controller] = unlockedDid;
+    preloadedDocs[options.verificationMethod!] = unlockedDid;
+  
+    // verify
+    let valid = await vc.verify({
+      presentation: { ...verifiablePresentation },
+      documentLoader: customLoader,
+      challenge: options.challenge!,
+      expansionMap: false,
+      suite
+    });
+    return valid;
+  }
+
   return {
     createJwk,
     createSuite,
     verify,
-    sign
+    sign,
+    createAndSignPresentation,
+    verifyPresentation
   }
 }
 

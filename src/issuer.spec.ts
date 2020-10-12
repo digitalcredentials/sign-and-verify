@@ -64,4 +64,25 @@ describe('Issuer test',
       const verificationResult = await issuer.verify(temp, options);
       expect(verificationResult.verified).to.equal(true);
     }).slow(5000).timeout(10000);
+
+
+    it('should sign presentation', async () => {
+      const options = {
+        'verificationMethod': identifer,
+        'challenge': '123'
+      };
+      const result = await issuer.createAndSignPresentation({}, options);
+      expect(result.proof['https://w3id.org/security#verificationMethod']['id']).to.equal(identifer);
+    }).slow(5000).timeout(10000);
+
+
+    it('should verify presentation', async () => {
+      const options = {
+        'verificationMethod': identifer,
+        'challenge': '123'
+      };
+      const result = await issuer.createAndSignPresentation({}, options);
+      const verificationResult = await issuer.verifyPresentation(result, options);
+      expect(verificationResult.verified).to.equal(true);
+    }).slow(5000).timeout(10000);
   });
