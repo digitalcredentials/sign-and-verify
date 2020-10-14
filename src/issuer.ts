@@ -3,6 +3,7 @@ import { JsonWebKey, JsonWebSignature2020 } from "@transmute/json-web-signature-
 import vc from "vc-js";
 import { PublicKey } from "./types";
 import { Config, getConfig } from "./config";
+import { SignatureOptions, getSigningKeyIdentifier, getSigningDate } from "./signatures";
 
 export function getController(fullDid: string) {
   return fullDid.split('#')[0];
@@ -14,6 +15,13 @@ export function createIssuer(config: Config) {
   const unlockedAssertionMethods = new Map<string, PublicKey>([
     [unlockedDid.publicKey[0].id, unlockedDid.publicKey[0]]
   ]);
+
+  // preload DIDs for docLoader
+  // TODO: split between issuer and verifier, which doesn't need private
+  preloadedDocs[config.unlockedDid.id] = unlockedDid;
+  config.unlockedDid.publicKey.forEach((pk) => {
+    preloadedDocs[pk.id] = unlockedDid;
+  })
 
   const customLoader = (url: string) => {
     const context = preloadedDocs[url];
@@ -32,25 +40,17 @@ export function createIssuer(config: Config) {
     return new JsonWebKey(keyInfo);
   }
 
-  function createSuite(assertionMethod: string, date = new Date().toISOString()) {
-    const signingKey = createJwk(assertionMethod);
+  function createSuite(options: SignatureOptions) {
+    const signingKey = createJwk(getSigningKeyIdentifier(options));
     const signatureSuite = new JsonWebSignature2020({
       key: signingKey,
-      date: date
+      date: getSigningDate(options)
     });
     return signatureSuite;
   }
 
-  async function verify(verifiableCredential: any, options: any) {
-    const assertionMethod = options.assertionMethod;
-    const suite = createSuite(assertionMethod);
-    const controller = getController(assertionMethod);
-
-    // preload docs for docLoader
-    // TODO: needs to be private
-    preloadedDocs[controller] = unlockedDid;
-    preloadedDocs[assertionMethod] = unlockedDid;
-
+  async function verify(verifiableCredential: any, options: SignatureOptions) {
+    const suite = createSuite(options);
     try {
       let valid = await vc.verifyCredential({
         credential: { ...verifiableCredential },
@@ -66,10 +66,8 @@ export function createIssuer(config: Config) {
     }
   }
 
-  async function sign(credential: any, options: any) {
-    const assertionMethod = options.assertionMethod;
-    const suite = createSuite(assertionMethod);
-
+  async function sign(credential: any, options: SignatureOptions) {
+    const suite = createSuite(options);
     try {
       let result = await vc.issue({
         credential: credential,
@@ -84,11 +82,44 @@ export function createIssuer(config: Config) {
     }
   }
 
+  async function createAndSignPresentation(credential: any, presentationId: string, holder: string, options: SignatureOptions) {
+    const suite = createSuite(options);
+    const presentation = vc.createPresentation({
+      verifiableCredential: credential,
+      id: presentationId,
+      holder: holder
+    });
+
+    let result = await vc.signPresentation({
+      presentation: presentation,
+      documentLoader: customLoader,
+      expansionMap: false,
+      suite,
+      challenge: options.challenge!
+    });
+    return result;
+  }
+
+  async function verifyPresentation(verifiablePresentation: any, options: SignatureOptions) {
+    const suite = createSuite(options);
+
+    let valid = await vc.verify({
+      presentation: { ...verifiablePresentation },
+      documentLoader: customLoader,
+      challenge: options.challenge!,
+      expansionMap: false,
+      suite
+    });
+    return valid;
+  }
+
   return {
     createJwk,
     createSuite,
     verify,
-    sign
+    sign,
+    createAndSignPresentation,
+    verifyPresentation
   }
 }
 

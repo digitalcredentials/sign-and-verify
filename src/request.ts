@@ -24,7 +24,7 @@ export async function requestCredential(requestInfo: any) {
   copy.credentialSubject.id = requestInfo.subjectDid;
 
   const options = {
-    assertionMethod: 'did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs'
+    verificationMethod: 'did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs'
   };
 
   return issuer.sign(copy, options);

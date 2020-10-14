@@ -7,6 +7,8 @@ import { Config } from './config';
 
 const identifer = 'did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs';
 const controller = 'did:web:digitalcredentials.github.io';
+const challenge = '123';
+const presentationId = '456'
 const credential = {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
@@ -27,6 +29,33 @@ const credential = {
     }
   }
 };
+const verifiablePresentation =
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiablePresentation"
+  ],
+  "id": "456",
+  "holder": "did:web:digitalcredentials.github.io",
+  "proof": {
+    "type": "/JsonWebSignature2020",
+    "http://purl.org/dc/terms/created": {
+      "type": "http://www.w3.org/2001/XMLSchema#dateTime",
+      "@value": "2020-10-12T17:23:38.912Z"
+    },
+    "https://w3id.org/security#challenge": "123",
+    "https://w3id.org/security#jws": "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..YKyqSBDjkmYEdgTuUJaylwfI9z8XjHP7eJ7W9fRoywgSIgUncWWRi6QtGYuHXth11sEpHneuIh0aPFCeqV4DBw",
+    "https://w3id.org/security#proofPurpose": {
+      "id": "https://w3id.org/security#authenticationMethod"
+    },
+    "https://w3id.org/security#verificationMethod": {
+      "id": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"
+    }
+  }
+};
+
 const config: Config = {
   port: 5000,
   unlockedDid: JSON.parse(readFileSync("data/unlocked-did:web:digitalcredentials.github.io.json").toString("ascii"))
@@ -49,7 +78,7 @@ describe('Issuer test',
 
     it('should sign', async () => {
       const options = {
-        'assertionMethod': identifer
+        'verificationMethod': identifer
       };
       const result = await issuer.sign(credential, options);
       expect(result.issuer).to.equal(controller);
@@ -57,11 +86,31 @@ describe('Issuer test',
 
     it('should verify', async () => {
       const options = {
-        'assertionMethod': identifer
+        'verificationMethod': identifer
       };
 
       const temp = await issuer.sign(credential, options);
       const verificationResult = await issuer.verify(temp, options);
+      expect(verificationResult.verified).to.equal(true);
+    }).slow(5000).timeout(10000);
+
+
+    it('should sign presentation', async () => {
+      const options = {
+        'verificationMethod': identifer,
+        'challenge': challenge
+      };
+      const result = await issuer.createAndSignPresentation(null, presentationId, controller, options);
+      expect(result.proof['https://w3id.org/security#verificationMethod']['id']).to.equal(identifer);
+    }).slow(5000).timeout(10000);
+
+
+    it('should verify presentation', async () => {
+      const options = {
+        'verificationMethod': identifer,
+        'challenge': challenge
+      };
+      const verificationResult = await issuer.verifyPresentation(verifiablePresentation, options);
       expect(verificationResult.verified).to.equal(true);
     }).slow(5000).timeout(10000);
   });
