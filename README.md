@@ -74,7 +74,7 @@ curl --header "Content-Type: application/json" \
 
 ## Credential Requests and DID Verification
 
-As described in [Credential Request Flow[(https://github.com/digitalcredentials/docs/blob/main/request/credential_request.md), the `verify/presentations` endpoint is used to verify the DID contained in the subject's credential request. The credential request will contain a structure like the following:
+As described in [Credential Request Flow](https://github.com/digitalcredentials/docs/blob/main/request/credential_request.md), the `verify/presentations` endpoint is used to verify the DID contained in the subject's credential request. The credential request will contain a structure like the following:
 
 ```
 {
