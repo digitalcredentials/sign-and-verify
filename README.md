@@ -2,7 +2,7 @@
 
 This repo currently contains signing and verification functionality and a minimal REST service that demonstrates the functionality. It may be broken up into separate repos or converted to a monorepo in the future.
 
-The REST service implements a subset of the W3C CCG vc-http-api draft standard.
+The REST service implements a subset of the W3C CCG [vc-http-api draft standard](https://w3c-ccg.github.io/vc-http-api/).
 
 
 ## Configuration
@@ -26,7 +26,12 @@ npm run build
 npm run start
 ```
 
-## Examples
+## API Documentation
+
+This REST API implements a subset of the vc-http-api draft standard. See the [swagger definition of vc-http-api](https://w3c-ccg.github.io/vc-http-api/).
+
+
+## Curl Examples
 
 ### Issue
 
