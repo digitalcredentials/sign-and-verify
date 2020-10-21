@@ -65,7 +65,9 @@ curl --header "Content-Type: application/json" \
 
 ## Requesting Credentials
 
-The endpoint to request credentials is not part of the vc-http-api standard. It's also not over-specified by DCC to allow issuers flexibility to adapt it to their processes. But there are certain elements expected by the DCC wallet.
+The endpoint to request credentials is not part of the vc-http-api standard. It's also not overly-specified by DCC to allow issuers flexibility to adapt it to their processes. But there are certain request/response elements expected by the DCC wallet.
+
+### Request
 
 A DCC wallet request will be of the form:
 
@@ -97,8 +99,17 @@ curl --header "Content-Type: application/json" \
 About `REQUEST_PAYLOAD`:
 - `HOLDER_DID` is the subject DID the issuer would issue the credential to
 - `challenge` is expected to match the challenge the issuer previously provided in the links
-- This entire structure is called a "Verifiable Presentation", which we are using to allow the learner to prove control over the DID they provided
+- This entire structure is called a "Verifiable Presentation", which we are using to allow the learner to prove control over the DID they provided.
+- It's recommended that the issuer verify the `REQUEST_PAYLOAD` provided by the learner's DCC wallet before issuing the credential. See "DID Verification"  notes below
 
+### Response
+
+- Success:
+  - 201 status code
+  - payload: pass through response from `/issue/credentials`
+- Errors:
+  - 400: invalid input	
+  - 500: other error
 
 ### DID Verification
 
@@ -132,7 +143,7 @@ Per the [vc-http-api definition](https://w3c-ccg.github.io/vc-http-api/#/Verifie
 > Note: the `/verify/presentations` API.contract comes from [vc-http-api](https://w3c-ccg.github.io/vc-http-api/). It's awkward, because `options`, constructed by issuer, always seems to use the `verificationMethod` provided from the subject's request. I have a tracking issue to clarify, and we can change default behavior on sign-and-verify to recognize this.
 
 
-### Example
+### DID Verification Example
 
 Assumptions:
 - sign-and-verify is running locally on port 5000
