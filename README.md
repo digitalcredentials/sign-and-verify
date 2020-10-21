@@ -65,7 +65,7 @@ curl --header "Content-Type: application/json" \
 
 ## Requesting Credentials
 
-The endpoint to request credentiala is not part of the vc-http-api standard. It's also not over-specified by DCC to allow issuers flexibility to adapt it to their processes. But there are certain elements expected by the DCC wallet.
+The endpoint to request credentials is not part of the vc-http-api standard. It's also not over-specified by DCC to allow issuers flexibility to adapt it to their processes. But there are certain elements expected by the DCC wallet.
 
 A DCC wallet request will be of the form:
 
