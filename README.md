@@ -65,7 +65,9 @@ curl --header "Content-Type: application/json" \
 
 ## Requesting Credentials
 
-The endpoint "request credential" is not part of the vc-http-api standard. But there are certain elements expected by the DCC wallet. A DCC wallet request will be of the form:
+The endpoint to request credentiala is not part of the vc-http-api standard. It's also not over-specified by DCC to allow issuers flexibility to adapt it to their processes. But there are certain elements expected by the DCC wallet.
+
+A DCC wallet request will be of the form:
 
 ```
 curl --header "Content-Type: application/json" \
@@ -75,7 +77,7 @@ curl --header "Content-Type: application/json" \
    <request_endpoint>
 ```
 
-`request_endpoint` is part of the [DEEP_LINK](https://github.com/digitalcredentials/docs/blob/main/request/credential_request.md#request-credential-initial-state) provided by the issuer to the DCC wallet. The DCC wallet will parse it from the DEEP_LINK and call it during the credential request.
+`request_endpoint` is provided by the issuer as part of the [DEEP_LINK](https://github.com/digitalcredentials/docs/blob/main/request/credential_request.md#request-credential-initial-state) to the DCC wallet. The DCC wallet will parse it from the DEEP_LINK and call it during the credential request.
 
 `REQUEST_PAYLOAD` has the following structure:
 
