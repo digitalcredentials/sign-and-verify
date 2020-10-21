@@ -63,60 +63,69 @@ curl --header "Content-Type: application/json" \
   http://127.0.0.1:5000/verify/presentations
 ```
 
-### Request
+## Requesting Credentials
+
+The endpoint "request credential" is not part of the vc-http-api standard. But there are certain elements expected by the DCC wallet. A DCC wallet request will be of the form:
 
 ```
 curl --header "Content-Type: application/json" \
+  --header "Authorization: Bearer <TOKEN>" \
   --request POST \
-  --data '{"subjectDid": "did:example:123"}' \
-  http://127.0.0.1:5000/request/credentials
+  --data <REQUEST_PAYLOAD> \
+   <request_endpoint>
 ```
 
-## Credential Requests and DID Verification
+`request_endpoint` is part of the [DEEP_LINK](https://github.com/digitalcredentials/docs/blob/main/request/credential_request.md#request-credential-initial-state) provided by the issuer to the DCC wallet. The DCC wallet will parse it from the DEEP_LINK and call it during the credential request.
 
-As described in [Credential Request Flow](https://github.com/digitalcredentials/docs/blob/main/request/credential_request.md), the `verify/presentations` endpoint is used to verify the DID contained in the subject's credential request. The credential request will contain a structure like the following:
+`REQUEST_PAYLOAD` has the following structure:
 
 ```
 {
     "@context": ["https://www.w3.org/2018/credentials/v1"],
+    ...
     "type": ["VerifiablePresentation"],
-    "id": "456",
-    "holder": "did:web:digitalcredentials.github.io",
+    "holder": <HOLDER_DID>,
     "proof": {
+      challenge: "<Expected 1-time challenge>",
       ...
     }
 }
 ```
-We'll refer to this as REQUEST.
 
-To verify the proof that the subject has passed, call the `/verify/presentations` endpoint. 
+About `REQUEST_PAYLOAD`:
+- `HOLDER_DID` is the subject DID the issuer would issue the credential to
+- `challenge` is expected to match the challenge the issuer previously provided in the links
+- This entire structure is called a "Verifiable Presentation", which we are using to allow the learner to prove control over the DID they provided
+
+
+### DID Verification
+
+It's recommended that the issuer verify the `REQUEST_PAYLOAD` provided by the learner's DCC wallet before issuing the credential
+
+Issuers can use the `/verify/presentations` endpoint described above to verify the DID contained in the subject's credential request. 
 
 The general structure of a `/verify/presentations` call looks like this:
 ```
 curl --header "Content-Type: application/json"  \
     --request POST \
-    --data '<VP verification payload>'  \
+    --data '<VERIFY_VP>'  \
     <sign-and-verify-endpoint>/verify/presentations
 ```
 
-The `data` payload looks like this:
+The `VERIFY_VP` payload has this structure:
 
 ```
 {
-  verifiablePresentation: "<REQUEST>", 
+  verifiablePresentation: "<REQUEST_PAYLOAD>",
   options: {
-    verificationMethod: "<REQUEST.holder>",
+    verificationMethod: "<REQUEST_PAYLOAD.holder>",
     challenge: "<Expected 1-time challenge>"
   }
 }
 ```
 
-In other words, the `data` payload contains:
-- Verifiable Presentation provided from subject's wallet (containing `did` + `challenge`, signed)
-  - passed through from the wallet's credential request
-- Options, constructed by issuer
-
 Per the [vc-http-api definition](https://w3c-ccg.github.io/vc-http-api/#/Verifier/verifyPresentation) of `/verify/presentations`, the status code will be 200 if successfully verified. There is an additional response body with details if detailed verification output is desired.
+
 
 > Note: the `/verify/presentations` API.contract comes from [vc-http-api](https://w3c-ccg.github.io/vc-http-api/). It's awkward, because `options`, constructed by issuer, always seems to use the `verificationMethod` provided from the subject's request. I have a tracking issue to clarify, and we can change default behavior on sign-and-verify to recognize this.
 
@@ -125,7 +134,7 @@ Per the [vc-http-api definition](https://w3c-ccg.github.io/vc-http-api/#/Verifie
 
 Assumptions:
 - sign-and-verify is running locally on port 5000
-- subject DID is `did:web:digitalcredentials.github.io` in this example. This is atypical because I reused issuer DID (I'll update later; I just wanted to include a payload that I verified)
+- subject DID is `did:web:digitalcredentials.github.io` in this example
 
 Experimental code (partially) demonstrating this: https://github.com/digitalcredentials/issuer-demo
 
@@ -154,12 +163,12 @@ Formatted for clarity. This payload is passed through from subject:
         "type": "http://www.w3.org/2001/XMLSchema#dateTime",
         "@value": "2020-10-12T17:06:49.767Z"
       },
-      "https://w3id.org/security#challenge": "123",
-      "https://w3id.org/security#jws": "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..4OiWb5EGPmXhtMNhmVXwyYhUI2BLbgcP0o-GNQaXBsMARfEGMTZi28BDiXmkdsCWvx2xmFD-cROvyIr-qMpeCQ",
-      "https://w3id.org/security#proofPurpose": {
+      "challenge": "123",
+      "jws": "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..4OiWb5EGPmXhtMNhmVXwyYhUI2BLbgcP0o-GNQaXBsMARfEGMTZi28BDiXmkdsCWvx2xmFD-cROvyIr-qMpeCQ",
+      "proofPurpose": {
         "id": "https://w3id.org/security#authenticationMethod"
       },
-      "https://w3id.org/security#verificationMethod": {
+      "verificationMethod": {
         "id": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"
       }
     }
