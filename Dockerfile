@@ -1,4 +1,4 @@
-FROM node:14.11
+FROM node:14.14-stretch-slim
 
 WORKDIR /usr/src/app
 
@@ -12,5 +12,4 @@ RUN npm run build
 
 EXPOSE 5000
 
-USER node
-CMD node dist/index.js
+CMD ["node", "dist/index.js"]
