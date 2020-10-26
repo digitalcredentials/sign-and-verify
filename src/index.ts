@@ -1,6 +1,9 @@
 import fastify from 'fastify';
+import fastifyRawBody from 'fastify-raw-body';
+import fastifySensible from "fastify-sensible"
 import { getDefaultIssuer } from './issuer';
-import { getConfig } from "./config"
+import { getConfig } from "./config";
+import { verifyRequestDigest, verifyRequestSignature } from './hooks';
 
 const { sign, verify, createAndSignPresentation, signPresentation, verifyPresentation, requestDemoCredential } = getDefaultIssuer();
 
@@ -8,9 +11,7 @@ const server = fastify({
   logger: true
 });
 
-server.register(require('fastify-cors'), {
-
-});
+server.register(require('fastify-cors'), {});
 server.register(require('fastify-swagger'), {
   routePrefix: '/docs',
   mode: 'static',
@@ -18,7 +19,13 @@ server.register(require('fastify-swagger'), {
     path: __dirname + '/vc-http-api-0.0.0.yaml'
   },
   exposeRoute: true
-})
+});
+server.register(fastifySensible);
+server.register(fastifyRawBody, {
+  global: false, // don't add the rawBody to every request.
+  runFirst: true // get the body before any preParsing hook change/uncompress it.
+});
+
 server.setErrorHandler(function (error, request, reply) {
   //request.log.error(error);
   reply
@@ -37,7 +44,17 @@ server.get('/status', async (request, reply) => {
 
 
 server.post(
-  '/issue/credentials', async (request, reply) => {
+  '/issue/credentials',
+  {
+    config:{
+      rawBody: true,
+    },
+    preValidation: [
+      verifyRequestDigest,
+      verifyRequestSignature
+    ]
+  },
+  async (request, reply) => {
     const req: any = request.body;
     const credential = req.credential;
     const options = req.options;
@@ -141,7 +158,10 @@ server.post(
 )
 
 
-server.listen(getConfig().port, '::', (err, address) => {
+// Raise any configuration errors now, before we try to start the server
+const { port} = getConfig();
+
+server.listen(port, '::', (err, address) => {
   if (err) {
     console.error(err)
     process.exit(1)
