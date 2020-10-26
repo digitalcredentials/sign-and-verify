@@ -55,7 +55,11 @@ const verifiablePresentation = {
 
 const config: Config = {
   port: 5000,
-  unlockedDid: JSON.parse(readFileSync("data/unlocked-did:web:digitalcredentials.github.io.json").toString("ascii"))
+  unlockedDid: JSON.parse(readFileSync("data/unlocked-did:web:digitalcredentials.github.io.json").toString("ascii")),
+  hmacSecret: null,
+  hmacRequiredHeaders: [],
+  digestCheck: false,
+  digestAlorithms: []
 };
 const issuer = createIssuer(config)
 

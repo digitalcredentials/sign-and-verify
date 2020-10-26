@@ -12,6 +12,10 @@ The service can be configured with the following environment variables:
 
 - `UNLOCKED_DID` - a base64 encoded DID json blob (required)
 - `PORT` - the port the web service will bind to (optional, default: `5000`)
+- `DIGEST_CHECK` - set to `true` to enable `Digest` header verification (optional, default: `false`)
+- `DIGEST_ALGORITHMS` - a comma-delimited list of acceptable digest algorithms (optional, default: `sha256,sha512`)
+- `HMAC_SECRET` - set to the shared HMAC secret to require [HMAC signing](https://tools.ietf.org/html/draft-ietf-httpbis-message-signatures-00) of the request via the `Signature` header (optional, default: `null`)
+- `HMAC_REQUIRED_HEADERS` - a comma-delimited list of headers that are required to be in the HMAC signature (optional, default: `date,digest`)
 
 Locally, you need to copy `.env.example` to `.env`, which `npm run start` will pick up, to test these values.
 
@@ -48,7 +52,7 @@ This assumes familiarity with the basics of the [W3C Verifiable Credentials Data
 - [Verifiable Credential](https://www.w3.org/TR/vc-data-model/#credentials)
 - [Verifiable Presentation](https://www.w3.org/TR/vc-data-model/#presentations)
 
-The REST API exposed by this service implements a subset of the [vc-http-api](https://w3c-ccg.github.io/vc-http-api/vc-http-api) draft standard and also includes some non-standard convenience endpoints. 
+The REST API exposed by this service implements a subset of the [vc-http-api](https://w3c-ccg.github.io/vc-http-api/vc-http-api) draft standard and also includes some non-standard convenience endpoints.
 
 The vc-http-api can be confusing when getting started, partly because it contains APIs for issuer, holders, and verifiers. Actual deployments would involve different endpoints for differely roles; or, put differently, a single instance of this service is not intended to be used by issuers, holders, and verifiers. The vc-http-api currently lacks high-level documentation, so this README provides verbose descriptions about what these APIs are used for. But these APIs ultimately (should eventually) comply with [vc-http-api](https://w3c-ccg.github.io/vc-http-api/).
 
@@ -56,7 +60,7 @@ The vc-http-api can be confusing when getting started, partly because it contain
 
 ## Issue Credential
 
-For issuers when signing a Verifiable Credential. 
+For issuers when signing a Verifiable Credential.
 
 ### General Format
 
@@ -74,7 +78,7 @@ Request:
 
 ```
 curl --header "Content-Type: application/json" \
-  --request POST 
+  --request POST \
   --data '{"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json"],"id":"http://example.gov/credentials/3732","type":["VerifiableCredential","UniversityDegreeCredential"],"issuer":"did:web:digitalcredentials.github.io","issuanceDate":"2020-03-10T04:24:12.164Z","credentialSubject":{"id":"did:example:abcdef","degree":{"type":"BachelorDegree","name":"Bachelor of Science and Arts"}}}' \
   http://127.0.0.1:5000/issue/credentials
 ```
@@ -89,7 +93,7 @@ Response Codes:
 
 ## Verify Presentation
 
-For verifiers to verify (check the proof) of a Verifiable Presentation (VP). 
+For verifiers to verify (check the proof) of a Verifiable Presentation (VP).
 
 Current DCC implementations also use this endpoint for a special case of VP verification, to implement a lightweight version of DID auth. The  learner's wallet generates a VP proving control over the DID (it's a VP without a VC), and the issuer checks the proof.
 
@@ -119,7 +123,7 @@ curl --header "Content-Type: application/json" \
 Response Codes:
 
 - 200: success
-    - Specifically, it means the API request was successful AND the VP was verified 
+    - Specifically, it means the API request was successful AND the VP was verified
     - VerificationResult details below
 - 400: invalid input
 - 500: error
@@ -236,7 +240,7 @@ Response Codes:
 Note: VerificationResult from vc-http-api isn't especially helpful at the moment, so we pass along verification metadata. But response code 200 means it's successfully verified.
 
 
-## Request a Demo Credential 
+## Request a Demo Credential
 
 With proof of control of DID. `<REQUEST_PAYLOAD>` is a Verifiable Presentation proving control of the did. See details below.
 
@@ -246,7 +250,7 @@ curl --header "Content-Type: application/json" \
   --request POST \
   --data <REQUEST_PAYLOAD> \
   http://127.0.0.1:5000/request/democredential
-``` 
+```
 
 
 Without proof of control of DID
@@ -305,7 +309,7 @@ About `REQUEST_PAYLOAD`:
 
 It's recommended that the issuer verify the `REQUEST_PAYLOAD` provided by the learner's DCC wallet before issuing the credential
 
-Issuers can use the `/verify/presentations` endpoint described above to verify the DID contained in the subject's credential request. 
+Issuers can use the `/verify/presentations` endpoint described above to verify the DID contained in the subject's credential request.
 
 The general structure of a `/verify/presentations` call looks like this:
 
@@ -314,7 +318,7 @@ curl --header "Content-Type: application/json"  \
     --request POST \
     --data '{ verifiablePresentation: "<REQUEST_PAYLOAD>", \
       options: { \
-      verificationMethod: "<REQUEST_PAYLOAD.proof.verificationMethod.id>", \ 
+      verificationMethod: "<REQUEST_PAYLOAD.proof.verificationMethod.id>", \
       challenge: "<Expected 1-time challenge>" }' \
     <sign-and-verify-endpoint>/verify/presentations
 ```
@@ -370,7 +374,7 @@ Formatted for clarity and security-context normalized. This payload is passed th
 
 ##### Options (formatted):
 
-Formatted for clarity. 
+Formatted for clarity.
 
 ```
 {
@@ -379,3 +383,19 @@ Formatted for clarity.
 }
 ```
 
+
+## Security
+
+In order to ensure that requests to issue digital credentials are from a trusted source, there are two security mechanisms in place that work to establish a chain of trust.
+
+### Digest Verification
+
+In order to verify the integrity of incoming requests, there is an optional validation of the integrity of the request body. This is done by comparing the hash of the body against the hash provided in the `Digest` header, using the hash algorithm specified by the header. The header is required to be in the form of `Digest: {ALGORITHM}={HASH}`.
+
+If the verification fails a response with a 400 status code and an appropriate error message are returned.
+
+### HMAC Signature Verification
+
+Digest Verification alone only isn't useful if the header and request body have been tampered with. To combat this, a request signature check can be made which verifies the signature of the request headers using a shared HMAC secret. Only a client that knows this secret will be able to generate a correct signature.
+
+This, combined with Digest Verification, ensures that a) the request (specifically the headers in the signature) came from a trusted source and b) the request contents (encapsulated by the `Digest` header, which is part of the signature) haven't been tampered with and can be trusted.
