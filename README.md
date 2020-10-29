@@ -45,6 +45,8 @@ curl --header "Content-Type: application/json" \
 
 ### Verify Credential
 
+Request:
+
 ```
 curl --header "Content-Type: application/json" \
   --request POST \
@@ -52,15 +54,39 @@ curl --header "Content-Type: application/json" \
   http://127.0.0.1:5000/verify/credentials
 ```
 
+Response:
+- Response code 200: Verifiable Credential successfully verified.
+- 400: invalid input
+- 500: error
+
+Note: VerificationResult from vc-http-api isn't especially helpful at the moment, so we pass along verification metadata. But response code 200 means it's successfully verified.
+
 ### Verify Presentation
 
 See details below
+
+Request:
 
 ```
 curl --header "Content-Type: application/json" \
   --request POST \
   --data '{"verifiablePresentation": {"@context":["https://www.w3.org/2018/credentials/v1"],"type":["VerifiablePresentation"],"id":"456","holder":"did:web:digitalcredentials.github.io","proof":{"type":"/JsonWebSignature2020","http://purl.org/dc/terms/created":{"type":"http://www.w3.org/2001/XMLSchema#dateTime","@value":"2020-10-12T17:06:49.767Z"},"https://w3id.org/security#challenge":"123","https://w3id.org/security#jws":"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..4OiWb5EGPmXhtMNhmVXwyYhUI2BLbgcP0o-GNQaXBsMARfEGMTZi28BDiXmkdsCWvx2xmFD-cROvyIr-qMpeCQ","https://w3id.org/security#proofPurpose":{"id":"https://w3id.org/security#authenticationMethod"},"https://w3id.org/security#verificationMethod":{"id":"did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}}, "options": {"verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs", "challenge":"123"}}' \
   http://127.0.0.1:5000/verify/presentations
+```
+
+Response:
+- Response code 200: Verifiable Presentation successfully verified. See additional response details below
+- 400: invalid input
+- 500: error
+
+Note: VerificationResult from vc-http-api isn't especially helpful at the moment, so we pass along verification metadata. Response code 200 means it's successfully verified. 
+
+In case of success, we do return the non-standard `holder` field for convenience. In this example, that's below:
+
+```
+{
+   holder : did:web:digitalcredentials.github.io
+}
 ```
 
 ## Requesting Credentials
@@ -159,7 +185,7 @@ curl --header "Content-Type: application/json" --request POST --data '{"verifiab
 
 
 #### Verifiable Presentation (formatted):
-Formatted for clarity. This payload is passed through from subject:
+Formatted for clarity and security-context normalized. This payload is passed through from subject:
 ```
 {
     "@context": [

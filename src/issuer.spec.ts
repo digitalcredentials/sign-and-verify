@@ -91,6 +91,7 @@ describe('Issuer test',
 
       const temp = await issuer.sign(credential, options);
       const verificationResult = await issuer.verify(temp, options);
+      console.log(JSON.stringify(verificationResult, null, 2));
       expect(verificationResult.verified).to.equal(true);
     }).slow(5000).timeout(10000);
 

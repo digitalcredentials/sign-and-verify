@@ -59,7 +59,7 @@ server.post(
 
     const result = await verify(verifiableCredential, options);
     reply
-      .code(201)
+      .code(200)
       .header('Content-Type', 'application/json; charset=utf-8')
       .send(result);
   }
@@ -86,13 +86,16 @@ server.post(
     const verificationResult = await verifyPresentation(verifiablePresentation, options);
     if (verificationResult.verified) {
       reply
-      .code(201)
-      .header('Content-Type', 'application/json; charset=utf-8')
-      .send({ holder : verifiablePresentation.holder});
+        .code(200)
+        .header('Content-Type', 'application/json; charset=utf-8')
+        .send({
+          // note: holder is not part of the vc-http-api standard
+          holder : verifiablePresentation.holder
+        });
     } else {
       reply
-      .code(500)
-      .send({ message: 'Could not validate DID', error: verificationResult});
+        .code(500)
+        .send({ message: 'Could not validate DID', error: verificationResult });
     }
 
   }
