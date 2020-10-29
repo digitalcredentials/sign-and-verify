@@ -131,7 +131,7 @@ The `VERIFY_VP` payload has this structure:
 {
   verifiablePresentation: "<REQUEST_PAYLOAD>",
   options: {
-    verificationMethod: "<REQUEST_PAYLOAD.holder>",
+    verificationMethod: "<REQUEST_PAYLOAD.proof.verificationMethod.id>",
     challenge: "<Expected 1-time challenge>"
   }
 }
