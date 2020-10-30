@@ -147,14 +147,12 @@ curl --header "Content-Type: application/json" \
 
 PROOF_OPTIONS look like this:
 ```
-/*
 {
   "presentationId": "<optional; provided by the wallet>",
   "holder": "<did proving control over>",
   "verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs",
   "challenge": "<challenge provided by issuer and passed through from wallet; should match>"
 }
-*/
 ```
 
 ## Example
