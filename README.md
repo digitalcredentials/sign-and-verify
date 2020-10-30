@@ -39,15 +39,18 @@ npm run start
 npm run test
 ```
 
-# API Documentation
+# Basic Concepts
 
-This REST API implements a subset of the vc-http-api draft standard and non-standard convenience methods. See the [swagger definition of vc-http-api](https://w3c-ccg.github.io/vc-http-api/).
+This assumes familiarity with the basics of the [W3C Verifiable Credentials Data Model](https://www.w3.org/TR/vc-data-model/). Two key concepts are:
 
-The vc-http-api can be confusing when getting started, for a couple of reasons. 
-1. It contains APIs for issuer, holders, and verifiers, which in general would be deployed and called separately (e.g. the holder would use a different endpoint than the issuer in general). 
-2. It currently doesn't have high-level documentation
+- [Verifiable Credential](https://www.w3.org/TR/vc-data-model/#credentials)
+- [Verifiable Presentation](https://www.w3.org/TR/vc-data-model/#presentations)
 
-For that reason, this provides verbose descriptions about what these APIs are used for. But these APIs ultimately (should) comply with [vc-http-api](https://w3c-ccg.github.io/vc-http-api/).
+The REST API exposed by this service implements a subset of the [vc-http-api](https://w3c-ccg.github.io/vc-http-api/vc-http-api) draft standard and also includes some non-standard convenience endpoints. 
+
+The vc-http-api can be confusing when getting started, partly because it contains APIs for issuer, holders, and verifiers. Actual deployments would involve different endpoints for differely roles; or, put differently, a single instance of this service is not intended to be used by issuers, holders, and verifiers. The vc-http-api currently lacks high-level documentation, so this README provides verbose descriptions about what these APIs are used for. But these APIs ultimately (should eventually) comply with [vc-http-api](https://w3c-ccg.github.io/vc-http-api/).
+
+# API Docs
 
 ## Issue Credential
 
