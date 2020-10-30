@@ -102,6 +102,7 @@ describe('Issuer test',
         'challenge': challenge
       };
       const result = await issuer.createAndSignPresentation(null, presentationId, controller, options);
+      console.log(JSON.stringify(result, null, 2));
       expect(result.proof['https://w3id.org/security#verificationMethod']['id']).to.equal(identifer);
     }).slow(5000).timeout(10000);
 

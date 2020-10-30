@@ -82,6 +82,19 @@ export function createIssuer(config: Config) {
     }
   }
 
+  async function signPresentation(presentation: any, options: SignatureOptions) {
+    const suite = createSuite(options);
+
+    let result = await vc.signPresentation({
+      presentation: presentation,
+      documentLoader: customLoader,
+      expansionMap: false,
+      suite,
+      challenge: options.challenge!
+    });
+    return result;
+  }
+
   async function createAndSignPresentation(credential: any, presentationId: string, holder: string, options: SignatureOptions) {
     const suite = createSuite(options);
     const presentation = vc.createPresentation({
@@ -118,6 +131,7 @@ export function createIssuer(config: Config) {
     createSuite,
     verify,
     sign,
+    signPresentation,
     createAndSignPresentation,
     verifyPresentation
   }

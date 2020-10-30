@@ -4,6 +4,7 @@ This repo currently contains signing and verification functionality and a minima
 
 The REST service implements a subset of the W3C CCG [vc-http-api draft standard](https://w3c-ccg.github.io/vc-http-api/).
 
+# Getting started
 
 ## Configuration
 
@@ -13,6 +14,12 @@ The service can be configured with the following environment variables:
 - `PORT` - the port the web service will bind to (optional, default: `5000`)
 
 Locally, you need to copy `.env.example` to `.env`, which `npm run start` will pick up, to test these values.
+
+## Install
+
+```
+npm run install
+```
 
 ## Build
 
@@ -26,15 +33,39 @@ npm run build
 npm run start
 ```
 
-## API Documentation
+## Test
 
-This REST API implements a subset of the vc-http-api draft standard. See the [swagger definition of vc-http-api](https://w3c-ccg.github.io/vc-http-api/).
+```
+npm run test
+```
 
+# API Documentation
 
-## Examples
+This REST API implements a subset of the vc-http-api draft standard and non-standard convenience methods. See the [swagger definition of vc-http-api](https://w3c-ccg.github.io/vc-http-api/).
 
-### Issue
+The vc-http-api can be confusing when getting started, for a couple of reasons. 
+1. It contains APIs for issuer, holders, and verifiers, which in general would be deployed and called separately (e.g. the holder would use a different endpoint than the issuer in general). 
+2. It currently doesn't have high-level documentation
 
+For that reason, this provides verbose descriptions about what these APIs are used for. But these APIs ultimately (should) comply with [vc-http-api](https://w3c-ccg.github.io/vc-http-api/).
+
+## Issue Credential
+
+For issuers when signing a Verifiable Credential. 
+
+## General Format
+
+```
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"credential": <Verifiable Credential To Sign> \
+          "options": <Signing Options>' \
+  <sign-and-verify-service>/issue/credentials
+```
+
+## Example
+
+Request:
 
 ```
 curl --header "Content-Type: application/json" \
@@ -43,27 +74,33 @@ curl --header "Content-Type: application/json" \
   http://127.0.0.1:5000/issue/credentials
 ```
 
-### Verify Credential
+Response Codes:
+- 201: success (with signed Verifiable Credential)
+- 400: invalid input
+- 500: error
 
-Request:
+[Reference: vc-http-api /issue/credentials](https://w3c-ccg.github.io/vc-http-api/#/Issuer/issueCredential)
+
+
+## Verify Presentation
+
+For verifiers to verify (check the proof) of a Verifiable Presentation (VP). 
+
+Current DCC implementations also use this endpoint for a special case of VP verification, to implement a lightweight version of DID auth. The  learner's wallet generates a VP proving control over the DID (it's a VP without a VC), and the issuer checks the proof.
+
+Additional implementation details are [Overview of Credential Request Flow](#Overview-of-Credential-Request-Flow)
+
+## General Format
 
 ```
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"verifiableCredential": {"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1"],"id":"http://example.gov/credentials/3732","type":["VerifiableCredential","UniversityDegreeCredential"],"issuer":"did:web:digitalcredentials.github.io","issuanceDate":"2020-03-10T04:24:12.164Z","credentialSubject":{"id":"did:elem:ropsten:EiBJJPdo-ONF0jxqt8mZYEj9Z7FbdC87m2xvN0_HAbcoEg","degree":{"type":"BachelorDegree","name":"Bachelor of Science and Arts"}},"proof":{"type":"/JsonWebSignature2020","dct:created":{"type":"xsd:dateTime","@value":"2020-10-12T16:59:13.588Z"},"https://w3id.org/security#jws":"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..uEcrIAdPZfUdsP3uQmq-LE0PuSLlvXQLPpZiuH7JXss7phCOEHzw8z1MgG6Bf5J3AxYXmrkzPHkr2iUi-TVaBg","https://w3id.org/security#proofPurpose":{"id":"https://w3id.org/security#assertionMethod"},"https://w3id.org/security#verificationMethod":{"id":"did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}}, "options": {"verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}' \
-  http://127.0.0.1:5000/verify/credentials
+  --data '{"verifiablePresentation": <Verifiable Presentation> \
+            "options": <Verification Options>' \
+    <sign-and-verify-service>/verify/presentations
 ```
 
-Response:
-- Response code 200: Verifiable Credential successfully verified.
-- 400: invalid input
-- 500: error
-
-Note: VerificationResult from vc-http-api isn't especially helpful at the moment, so we pass along verification metadata. But response code 200 means it's successfully verified.
-
-### Verify Presentation
-
-See details below
+## Example
 
 Request:
 
@@ -74,14 +111,15 @@ curl --header "Content-Type: application/json" \
   http://127.0.0.1:5000/verify/presentations
 ```
 
-Response:
-- Response code 200: Verifiable Presentation successfully verified. See additional response details below
+Response Codes:
+
+- 200: success
+    - Specifically, it means the API request was successful AND the VP was verified 
+    - VerificationResult details below
 - 400: invalid input
 - 500: error
 
-Note: VerificationResult from vc-http-api isn't especially helpful at the moment, so we pass along verification metadata. Response code 200 means it's successfully verified. 
-
-In case of success, we do return the non-standard `holder` field for convenience. In this example, that's below:
+Note: VerificationResult from vc-http-api isn't especially helpful at the moment, so we pass along non-standard verification metadata. Response code 200 means it's successfully verified. Additionally, in case of success, we return the non-standard `holder` field for convenience. In this example, the VerificationResult is:
 
 ```
 {
@@ -89,13 +127,124 @@ In case of success, we do return the non-standard `holder` field for convenience
 }
 ```
 
-## Requesting Credentials
+[Reference: vc-http-api /verify/presentations](https://w3c-ccg.github.io/vc-http-api/#/Verifier/verifyPresentation)
 
-The endpoint to request credentials is not part of the vc-http-api standard. It's also not overly-specified by DCC to allow issuers flexibility to adapt it to their processes. But there are certain request/response elements expected by the DCC wallet.
 
-### Request
+## Generate proof of control
+> non-standard
 
-A DCC wallet request will be of the form:
+This is used by the learner's wallet (as a library) to generate proof of control over a DID. This is a special case of `/prove/presentations` (which this also implements), but customizes for this use case.
+
+## General Format
+
+```
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '<PROOF OPTIONS>' \
+    <sign-and-verify-service>/generate/controlproof
+```
+
+
+PROOF_OPTIONS look like this:
+```
+/*
+{
+  "presentationId": "<optional; provided by the wallet>",
+  "holder": "<did proving control over>",
+  "verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs",
+  "challenge": "<challenge provided by issuer and passed through from wallet; should match>"
+}
+*/
+```
+
+## Example
+
+Request
+
+```
+curl --header "Content-Type: application/json" \
+  --request POST  \
+  --data '{"presentationId": "456", "holder": "did:web:digitalcredentials.github.io", "verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs", "challenge": "123"}' \
+  http://127.0.0.1:5000/generate/controlproof
+```
+
+Response Codes:
+- 201: success, with VP demonstrating proof of control (see response for this example below)
+- 400: invalid input
+- 500: error
+
+
+Response:
+```
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1"
+  ],
+  "type": [
+    "VerifiablePresentation"
+  ],
+  "id": "456",
+  "holder": "did:web:digitalcredentials.github.io",
+  "proof": {
+    "type": "/JsonWebSignature2020",
+    "http://purl.org/dc/terms/created": {
+      "type": "http://www.w3.org/2001/XMLSchema#dateTime",
+      "@value": "2020-10-30T00:40:59.674Z"
+    },
+    "https://w3id.org/security#challenge": "123",
+    "https://w3id.org/security#jws": "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..vRfVoA-8hyh5tS5wb-3EoiSni9W1fHyvLTmumEE80v1Z3486LYdG6etRF6sjNmhrTCIyQiIOh0QwnkZ6W69sAQ",
+    "https://w3id.org/security#proofPurpose": {
+      "id": "https://w3id.org/security#authenticationMethod"
+    },
+    "https://w3id.org/security#verificationMethod": {
+      "id": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"
+    }
+  }
+}
+```
+
+
+## Verify Credential
+
+Used to verify a Verifable Credential.
+
+## General Format
+
+```
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"verifiableCredential": <Verifiable Credential> \
+            "options": <Verification Options>' \
+    <sign-and-verify-service>/verify/credentials
+```
+
+
+## Example
+
+Request:
+
+```
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"verifiableCredential": {"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1"],"id":"http://example.gov/credentials/3732","type":["VerifiableCredential","UniversityDegreeCredential"],"issuer":"did:web:digitalcredentials.github.io","issuanceDate":"2020-03-10T04:24:12.164Z","credentialSubject":{"id":"did:elem:ropsten:EiBJJPdo-ONF0jxqt8mZYEj9Z7FbdC87m2xvN0_HAbcoEg","degree":{"type":"BachelorDegree","name":"Bachelor of Science and Arts"}},"proof":{"type":"/JsonWebSignature2020","dct:created":{"type":"xsd:dateTime","@value":"2020-10-12T16:59:13.588Z"},"https://w3id.org/security#jws":"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..uEcrIAdPZfUdsP3uQmq-LE0PuSLlvXQLPpZiuH7JXss7phCOEHzw8z1MgG6Bf5J3AxYXmrkzPHkr2iUi-TVaBg","https://w3id.org/security#proofPurpose":{"id":"https://w3id.org/security#assertionMethod"},"https://w3id.org/security#verificationMethod":{"id":"did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}}, "options": {"verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}' \
+  http://127.0.0.1:5000/verify/credentials
+```
+
+Response Codes:
+- 200: success, and Verifiable Credential successfully verified.
+- 400: invalid input
+- 500: error
+
+Note: VerificationResult from vc-http-api isn't especially helpful at the moment, so we pass along verification metadata. But response code 200 means it's successfully verified.
+
+
+# Overview of Credential Request Flow
+
+The vc-http-api standard doesn't include specific methods related to credential request. Similarly, the credential request protocol is not overly-specified by DCC, to allow issuers flexibility to adapt it to their processes. But there are certain request/response elements expected by the DCC wallet, which this service can help with. This section describes how the DCC credential request flow relates to sign-and-verify
+
+## Request Structure
+
+A credential request coming from the DCC wallet will be of the form:
 
 ```
 curl --header "Content-Type: application/json" \
@@ -107,7 +256,7 @@ curl --header "Content-Type: application/json" \
 
 `request_endpoint` is provided by the issuer as part of the [DEEP_LINK](https://github.com/digitalcredentials/docs/blob/main/request/credential_request.md#request-credential-initial-state) to the DCC wallet. The DCC wallet will parse it from the DEEP_LINK and call it during the credential request.
 
-`REQUEST_PAYLOAD` has the following structure:
+`REQUEST_PAYLOAD` has structure described by the [generate proof of control response](#Generate-proof-of-control). It's recommended that issuers verify several aspects of payload; relevant fields are highlighted below.
 
 ```
 {
@@ -116,7 +265,10 @@ curl --header "Content-Type: application/json" \
     "type": ["VerifiablePresentation"],
     "holder": <HOLDER_DID>,
     "proof": {
-      challenge: "<Expected 1-time challenge>",
+      "challenge": "<Expected 1-time challenge>",
+      "verificationMethod": {
+        "id": <Used for VP verification options>
+      }
       ...
     }
 }
@@ -125,51 +277,37 @@ curl --header "Content-Type: application/json" \
 About `REQUEST_PAYLOAD`:
 - `HOLDER_DID` is the subject DID the issuer would issue the credential to
 - `challenge` is expected to match the challenge the issuer previously provided in the links
-- This entire structure is called a "Verifiable Presentation", which we are using to allow the learner to prove control over the DID they provided.
-- It's recommended that the issuer verify the `REQUEST_PAYLOAD` provided by the learner's DCC wallet before issuing the credential. See "DID Verification"  notes below
+- `proof.verificationMethod.id` will be used as an argument when verifying the VP
 
-### Response
 
-- Success:
-  - 201 status code
-  - payload: pass through response from `/issue/credentials`
-- Errors:
-  - 400: invalid input	
-  - 500: other error
-
-### DID Verification
+## DID (Proof of Control) Verification
 
 It's recommended that the issuer verify the `REQUEST_PAYLOAD` provided by the learner's DCC wallet before issuing the credential
 
 Issuers can use the `/verify/presentations` endpoint described above to verify the DID contained in the subject's credential request. 
 
 The general structure of a `/verify/presentations` call looks like this:
+
 ```
 curl --header "Content-Type: application/json"  \
     --request POST \
-    --data '<VERIFY_VP>'  \
+    --data '{ verifiablePresentation: "<REQUEST_PAYLOAD>", \
+      options: { \
+      verificationMethod: "<REQUEST_PAYLOAD.proof.verificationMethod.id>", \ 
+      challenge: "<Expected 1-time challenge>" }' \
     <sign-and-verify-endpoint>/verify/presentations
 ```
 
-The `VERIFY_VP` payload has this structure:
+As described in [Verify Presentation](#Verify-Presentation), response code 200 means it's successfully verified. Additionally, in case of success, we return the non-standard `holder` field for convenience. In this example, the VerificationResult is:
 
 ```
 {
-  verifiablePresentation: "<REQUEST_PAYLOAD>",
-  options: {
-    verificationMethod: "<REQUEST_PAYLOAD.proof.verificationMethod.id>",
-    challenge: "<Expected 1-time challenge>"
-  }
+   holder : did:web:digitalcredentials.github.io
 }
 ```
 
-Per the [vc-http-api definition](https://w3c-ccg.github.io/vc-http-api/#/Verifier/verifyPresentation) of `/verify/presentations`, the status code will be 200 if successfully verified. There is an additional response body with details if detailed verification output is desired.
 
-
-> Note: the `/verify/presentations` API.contract comes from [vc-http-api](https://w3c-ccg.github.io/vc-http-api/). It's awkward, because `options`, constructed by issuer, always seems to use the `verificationMethod` provided from the subject's request. I have a tracking issue to clarify, and we can change default behavior on sign-and-verify to recognize this.
-
-
-### DID Verification Example
+### Example
 
 Assumptions:
 - sign-and-verify is running locally on port 5000
@@ -184,8 +322,8 @@ curl --header "Content-Type: application/json" --request POST --data '{"verifiab
 ```
 
 
-#### Verifiable Presentation (formatted):
-Formatted for clarity and security-context normalized. This payload is passed through from subject:
+##### Verifiable Presentation (formatted):
+Formatted for clarity and security-context normalized. This payload is passed through from subject (`REQUEST_PAYLOAD`):
 ```
 {
     "@context": [
@@ -214,13 +352,9 @@ Formatted for clarity and security-context normalized. This payload is passed th
 }
 ```
 
-#### Options (formatted):
+##### Options (formatted):
 
 Formatted for clarity. 
-
-Notes:
-- `verificationMethod` has the awkwardness described above
-- issuer should provide `challenge` to ensure the value in the VP payload is what we expect
 
 ```
 {
@@ -228,6 +362,5 @@ Notes:
   "challenge": "123"
 }
 ```
-
 
 
