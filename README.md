@@ -56,7 +56,7 @@ The vc-http-api can be confusing when getting started, partly because it contain
 
 For issuers when signing a Verifiable Credential. 
 
-## General Format
+### General Format
 
 ```
 curl --header "Content-Type: application/json" \
@@ -66,7 +66,7 @@ curl --header "Content-Type: application/json" \
   <sign-and-verify-service>/issue/credentials
 ```
 
-## Example
+### Example
 
 Request:
 
@@ -93,7 +93,7 @@ Current DCC implementations also use this endpoint for a special case of VP veri
 
 Additional implementation details are [Overview of Credential Request Flow](#Overview-of-Credential-Request-Flow)
 
-## General Format
+### General Format
 
 ```
 curl --header "Content-Type: application/json" \
@@ -103,7 +103,7 @@ curl --header "Content-Type: application/json" \
     <sign-and-verify-service>/verify/presentations
 ```
 
-## Example
+### Example
 
 Request:
 
@@ -138,7 +138,7 @@ Note: VerificationResult from vc-http-api isn't especially helpful at the moment
 
 This is used by the learner's wallet (as a library) to generate proof of control over a DID. This is a special case of `/prove/presentations` (which this also implements), but customizes for this use case.
 
-## General Format
+### General Format
 
 ```
 curl --header "Content-Type: application/json" \
@@ -158,7 +158,7 @@ PROOF_OPTIONS look like this:
 }
 ```
 
-## Example
+### Example
 
 Request
 
@@ -209,7 +209,7 @@ Response:
 
 Used to verify a Verifable Credential.
 
-## General Format
+### General Format
 
 ```
 curl --header "Content-Type: application/json" \
@@ -220,7 +220,7 @@ curl --header "Content-Type: application/json" \
 ```
 
 
-## Example
+### Example
 
 Request:
 
@@ -238,6 +238,18 @@ Response Codes:
 
 Note: VerificationResult from vc-http-api isn't especially helpful at the moment, so we pass along verification metadata. But response code 200 means it's successfully verified.
 
+
+## Request a Demo Credential 
+
+Without proof of control of DID
+
+### Example
+```
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"holder": "did:example:me"}' \
+  http://127.0.0.1:5000/request/democredential/nodidproof
+```  
 
 # Overview of Credential Request Flow
 
@@ -363,5 +375,4 @@ Formatted for clarity.
   "challenge": "123"
 }
 ```
-
 
