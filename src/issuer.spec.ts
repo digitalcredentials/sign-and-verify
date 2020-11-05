@@ -91,7 +91,6 @@ describe('Issuer test',
 
       const temp = await issuer.sign(credential, options);
       const verificationResult = await issuer.verify(temp, options);
-      console.log(JSON.stringify(verificationResult, null, 2));
       expect(verificationResult.verified).to.equal(true);
     }).slow(5000).timeout(10000);
 
@@ -102,7 +101,6 @@ describe('Issuer test',
         'challenge': challenge
       };
       const result = await issuer.createAndSignPresentation(null, presentationId, controller, options);
-      console.log(JSON.stringify(result, null, 2));
       expect(result.proof['https://w3id.org/security#verificationMethod']['id']).to.equal(identifer);
     }).slow(5000).timeout(10000);
 
@@ -115,4 +113,16 @@ describe('Issuer test',
       const verificationResult = await issuer.verifyPresentation(verifiablePresentation, options);
       expect(verificationResult.verified).to.equal(true);
     }).slow(5000).timeout(10000);
+
+
+
+  it("should get demo credential", async () => {
+    const request = {
+      holder: "did:example:me"
+    };
+
+    const credential = await issuer.requestDemoCredential(request);
+    expect(credential.credentialSubject.id).to.equal("did:example:me");
+  }).slow(5000).timeout(10000);
+
   });

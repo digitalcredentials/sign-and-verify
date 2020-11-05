@@ -1,9 +1,8 @@
 import fastify from 'fastify';
 import { getDefaultIssuer } from './issuer';
-import { requestCredential } from './request';
 import { getConfig } from "./config"
 
-const { sign, verify, createAndSignPresentation, signPresentation, verifyPresentation } = getDefaultIssuer();
+const { sign, verify, createAndSignPresentation, signPresentation, verifyPresentation, requestDemoCredential } = getDefaultIssuer();
 
 const server = fastify({
   logger: true
@@ -80,10 +79,10 @@ server.post(
 )
 
 server.post(
-  '/request/credentials', async (request, reply) => {
+  '/request/democredential/nodidproof', async (request, reply) => {
     const requestInfo = request.body;
 
-    const result = await requestCredential(requestInfo);
+    const result = await requestDemoCredential(requestInfo);
     reply
       .code(201)
       .header('Content-Type', 'application/json; charset=utf-8')
@@ -111,7 +110,6 @@ server.post(
         .code(500)
         .send({ message: 'Could not validate DID', error: verificationResult });
     }
-
   }
 )
 

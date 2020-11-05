@@ -4,6 +4,8 @@ import vc from "vc-js";
 import { PublicKey } from "./types";
 import { Config, getConfig } from "./config";
 import { SignatureOptions, getSigningKeyIdentifier, getSigningDate } from "./signatures";
+import {default as demoCredential} from "./demoCredential.json";
+import { v4 as uuidv4 } from 'uuid';
 
 export function getController(fullDid: string) {
   return fullDid.split('#')[0];
@@ -126,6 +128,34 @@ export function createIssuer(config: Config) {
     return valid;
   }
 
+  async function requestDemoCredential(verifiablePresentation: any) {
+
+    // disabling verification for testing
+      /*
+    const Challenge = "d2a428f6-bb6d-4021-a8a5-b67221477d80";
+    const verificationOptions = {
+      'verificationMethod': verifiablePresentation.proof.verificationMethod.id,
+      'challenge': Challenge
+    };
+    const verificationResult = await issuer.verifyPresentation(verifiablePresentation, verificationOptions);
+    if (!verificationResult.verified) {
+      throw new Error("Invalid request");
+    }*/
+  
+    const subjectDid = verifiablePresentation.holder;
+    
+    const verificationMethod = unlockedDid.assertionMethod[0];
+    const signatureOptions =   {
+      verificationMethod: verificationMethod
+    };
+  
+    let copy = JSON.parse(JSON.stringify(demoCredential));
+    copy['id'] = uuidv4();
+    copy.credentialSubject.id = subjectDid;
+    copy['issuanceDate'] = new Date().toISOString();
+    return sign(copy, signatureOptions);
+  }
+
   return {
     createJwk,
     createSuite,
@@ -133,7 +163,8 @@ export function createIssuer(config: Config) {
     sign,
     signPresentation,
     createAndSignPresentation,
-    verifyPresentation
+    verifyPresentation,
+    requestDemoCredential
   }
 }
 

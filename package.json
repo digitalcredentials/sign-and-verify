@@ -23,6 +23,7 @@
     "jose": "^1.27.2",
     "jsonld": "^3.1.1",
     "jsonld-signatures": "^5.1.0",
+    "uuid": "^8.3.1",
     "vc-js": "^0.6.4"
   },
   "devDependencies": {
@@ -30,6 +31,7 @@
     "@types/mocha": "^8.0.1",
     "@types/node": "^14.11.2",
     "@types/sinon": "^9.0.8",
+    "@types/uuid": "^8.3.0",
     "chai": "^4.2.0",
     "copyfiles": "^2.4.0",
     "fastify-log": "^1.2.1",
