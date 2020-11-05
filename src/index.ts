@@ -82,6 +82,18 @@ server.post(
   '/request/democredential/nodidproof', async (request, reply) => {
     const requestInfo = request.body;
 
+    const result = await requestDemoCredential(requestInfo, true);
+    reply
+      .code(201)
+      .header('Content-Type', 'application/json; charset=utf-8')
+      .send(result);
+  }
+)
+
+server.post(
+  '/request/democredential', async (request, reply) => {
+    const requestInfo = request.body;
+
     const result = await requestDemoCredential(requestInfo);
     reply
       .code(201)

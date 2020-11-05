@@ -1,4 +1,5 @@
 export const DefaultProofPurpose = 'assertionMethod';
+const SecurityPrefix = 'https://w3id.org/security';
 
 export class SignatureOptions {
   public verificationMethod?: string;
@@ -22,3 +23,13 @@ export function getSigningDate(options: SignatureOptions): string {
   // TODO: double-check this is how it's being used
   return options.created ? options.created! : new Date().toISOString()
 };
+
+export function getProofProperty(vpProof: any, property: string): any {
+  if (vpProof.hasOwnProperty(property)) {
+    return vpProof[property];
+  } else if (vpProof.hasOwnProperty(`${SecurityPrefix}#${property}`)){
+    return vpProof[`${SecurityPrefix}#${property}`];
+  } else {
+    throw new Error("Invalid credential request");
+  }
+}

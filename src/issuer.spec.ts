@@ -114,15 +114,18 @@ describe('Issuer test',
       expect(verificationResult.verified).to.equal(true);
     }).slow(5000).timeout(10000);
 
+    it("should get demo credential", async () => {
+      const credential = await issuer.requestDemoCredential(verifiablePresentation);
+      expect(credential.credentialSubject.id).to.equal("did:web:digitalcredentials.github.io");
+    }).slow(5000).timeout(10000);
 
+    it("should get demo credential without verification", async () => {
+      const request = {
+        holder: "did:example:me"
+      };
 
-  it("should get demo credential", async () => {
-    const request = {
-      holder: "did:example:me"
-    };
-
-    const credential = await issuer.requestDemoCredential(request);
-    expect(credential.credentialSubject.id).to.equal("did:example:me");
-  }).slow(5000).timeout(10000);
+      const credential = await issuer.requestDemoCredential(request, true);
+      expect(credential.credentialSubject.id).to.equal("did:example:me");
+    }).slow(5000).timeout(10000);
 
   });
