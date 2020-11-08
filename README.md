@@ -15,6 +15,8 @@ The service can be configured with the following environment variables:
 
 Locally, you need to copy `.env.example` to `.env`, which `npm run start` will pick up, to test these values.
 
+NOTE: the `UNLOCKED_DID` included as an example is just for your reference. Do not check in unlocked dids, private keys, or the equivalent.
+
 ## Install
 
 ```
