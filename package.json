@@ -13,6 +13,7 @@
   "keywords": [],
   "author": "Kim Hamilton Duffy",
   "license": "MIT",
+  "repository": "git@github.com:digitalcredentials/sign-and-verify.git",
   "dependencies": {
     "@transmute/json-web-key-2020": "^1.0.0",
     "@transmute/json-web-signature-2020": "^1.0.0",
