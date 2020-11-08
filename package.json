@@ -11,8 +11,8 @@
     "copy-files": "copyfiles -u 1 src/**/*.yaml dist/"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Kim Hamilton Duffy",
+  "license": "MIT",
   "dependencies": {
     "@transmute/json-web-key-2020": "^1.0.0",
     "@transmute/json-web-signature-2020": "^1.0.0",
