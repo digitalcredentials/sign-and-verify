@@ -25,11 +25,17 @@ export function getSigningDate(options: SignatureOptions): string {
 };
 
 export function getProofProperty(vpProof: any, property: string): any {
+  let propValue = null;
   if (vpProof.hasOwnProperty(property)) {
-    return vpProof[property];
+    propValue = vpProof[property];
   } else if (vpProof.hasOwnProperty(`${SecurityPrefix}#${property}`)){
-    return vpProof[`${SecurityPrefix}#${property}`];
+    propValue = vpProof[`${SecurityPrefix}#${property}`];
   } else {
-    throw new Error("Invalid credential request");
+    throw new Error(`Invalid proof property ${property}`);
   }
+
+  if (propValue.hasOwnProperty('id')) {
+    return propValue.id;
+  }
+  return propValue;
 }

@@ -1,5 +1,5 @@
 import jsonld from "jsonld";
-import { JsonWebKey, JsonWebSignature2020 } from "@transmute/json-web-signature-2020";
+import { JsonWebKey, JsonWebSignature } from "@transmute/json-web-signature-2020";
 import vc from "vc-js";
 import { PublicKey } from "./types";
 import { Config, getConfig } from "./config";
@@ -47,7 +47,7 @@ export function createIssuer(config: Config) {
 
   function createSuite(options: SignatureOptions) {
     const signingKey = createJwk(getSigningKeyIdentifier(options));
-    const signatureSuite = new JsonWebSignature2020({
+    const signatureSuite = new JsonWebSignature({
       key: signingKey,
       date: getSigningDate(options)
     });
@@ -60,7 +60,6 @@ export function createIssuer(config: Config) {
       let valid = await vc.verifyCredential({
         credential: { ...verifiableCredential },
         documentLoader: customLoader,
-        expansionMap: !false,
         suite
       });
       return valid;
@@ -77,7 +76,6 @@ export function createIssuer(config: Config) {
       let result = await vc.issue({
         credential: credential,
         documentLoader: customLoader,
-        expansionMap: false,
         suite
       });
       return result;
@@ -93,7 +91,6 @@ export function createIssuer(config: Config) {
     let result = await vc.signPresentation({
       presentation: presentation,
       documentLoader: customLoader,
-      expansionMap: false,
       suite,
       challenge: options.challenge!
     });
@@ -107,11 +104,12 @@ export function createIssuer(config: Config) {
       id: presentationId,
       holder: holder
     });
+    presentation['@context'].push("https://www.w3.org/2018/credentials/examples/v1");
+    presentation['@context'].push("https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json");
 
     let result = await vc.signPresentation({
       presentation: presentation,
       documentLoader: customLoader,
-      expansionMap: false,
       suite,
       challenge: options.challenge!
     });
@@ -125,7 +123,6 @@ export function createIssuer(config: Config) {
       presentation: { ...verifiablePresentation },
       documentLoader: customLoader,
       challenge: options.challenge!,
-      expansionMap: false,
       suite
     });
     return valid;
@@ -138,7 +135,7 @@ export function createIssuer(config: Config) {
     if (!skipVerification) {
       // issuer also needs to check if challenge is expected
       const verificationOptions = {
-        verificationMethod: getProofProperty(verifiablePresentation.proof, VerificationMethod).id,
+        verificationMethod: getProofProperty(verifiablePresentation.proof, VerificationMethod),
         challenge: getProofProperty(verifiablePresentation.proof, Challenge)
       };
       const verificationResult = await verifyPresentation(verifiablePresentation, verificationOptions);

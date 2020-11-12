@@ -20,7 +20,7 @@ server.register(require('fastify-swagger'), {
   exposeRoute: true
 })
 server.setErrorHandler(function (error, request, reply) {
-  request.log.error(error);
+  //request.log.error(error);
   reply
     .code(500)
     .header('Content-Type', 'application/json; charset=utf-8')

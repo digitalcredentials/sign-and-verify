@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import 'mocha';
 
 import { createIssuer, getController } from './issuer';
+import { getProofProperty } from './signatures';
 import { Config } from './config';
 
 const identifer = 'did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs';
@@ -12,7 +13,8 @@ const presentationId = '456'
 const credential = {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
-    "https://www.w3.org/2018/credentials/examples/v1"
+    "https://www.w3.org/2018/credentials/examples/v1",
+    "https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json",
   ],
   "id": "http://example.gov/credentials/3732",
   "type": [
@@ -22,17 +24,19 @@ const credential = {
   "issuer": "did:web:digitalcredentials.github.io",
   "issuanceDate": "2020-03-10T04:24:12.164Z",
   "credentialSubject": {
-    "id": "did:elem:ropsten:EiBJJPdo-ONF0jxqt8mZYEj9Z7FbdC87m2xvN0_HAbcoEg",
+    "id": "did:example:abcdef",
     "degree": {
       "type": "BachelorDegree",
       "name": "Bachelor of Science and Arts"
     }
   }
 };
-const verifiablePresentation =
-{
+
+const verifiablePresentation = {
   "@context": [
-    "https://www.w3.org/2018/credentials/v1"
+    "https://www.w3.org/2018/credentials/v1",
+    "https://www.w3.org/2018/credentials/examples/v1",
+    "https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json"
   ],
   "type": [
     "VerifiablePresentation"
@@ -40,19 +44,12 @@ const verifiablePresentation =
   "id": "456",
   "holder": "did:web:digitalcredentials.github.io",
   "proof": {
-    "type": "/JsonWebSignature2020",
-    "http://purl.org/dc/terms/created": {
-      "type": "http://www.w3.org/2001/XMLSchema#dateTime",
-      "@value": "2020-10-12T17:23:38.912Z"
-    },
-    "https://w3id.org/security#challenge": "123",
-    "https://w3id.org/security#jws": "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..YKyqSBDjkmYEdgTuUJaylwfI9z8XjHP7eJ7W9fRoywgSIgUncWWRi6QtGYuHXth11sEpHneuIh0aPFCeqV4DBw",
-    "https://w3id.org/security#proofPurpose": {
-      "id": "https://w3id.org/security#authenticationMethod"
-    },
-    "https://w3id.org/security#verificationMethod": {
-      "id": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"
-    }
+    "type": "JsonWebSignature2020",
+    "created": "2020-11-12T22:00:33.393Z",
+    "challenge": "123",
+    "jws": "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..nuQE1vdLcf0YJSI_ojCdOpkQ53Amf4admAfA1eds9ONz9iskp5NBHqoz_YpzyRPxRvj4zblDDAhR524Dn4BtBA",
+    "proofPurpose": "authentication",
+    "verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"
   }
 };
 
@@ -100,8 +97,9 @@ describe('Issuer test',
         'verificationMethod': identifer,
         'challenge': challenge
       };
-      const result = await issuer.createAndSignPresentation(null, presentationId, controller, options);
-      expect(result.proof['https://w3id.org/security#verificationMethod']['id']).to.equal(identifer);
+      const result: any = await issuer.createAndSignPresentation(null, presentationId, controller, options);
+      const vmResult = getProofProperty(result.proof, 'verificationMethod');
+      expect(vmResult).to.equal(identifer);
     }).slow(5000).timeout(10000);
 
 
@@ -115,6 +113,10 @@ describe('Issuer test',
     }).slow(5000).timeout(10000);
 
     it("should get demo credential", async () => {
+      const options = {
+        'verificationMethod': identifer,
+        'challenge': challenge
+      };
       const credential = await issuer.requestDemoCredential(verifiablePresentation);
       expect(credential.credentialSubject.id).to.equal("did:web:digitalcredentials.github.io");
     }).slow(5000).timeout(10000);
