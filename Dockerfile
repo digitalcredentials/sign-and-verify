@@ -1,10 +1,17 @@
-FROM node:14.14-stretch-slim
+FROM node:14.14-buster-slim
 
 WORKDIR /usr/src/app
 
 ADD package.json package-lock.json ./
 
-RUN npm install
+# Install OS dependencies, install Node packages, and purge OS packages in one step
+# to reduce the size of the resulting image.
+RUN apt-get update && \
+    apt-get install -y python3-minimal build-essential && \
+    npm install && \
+    apt-get clean && \
+    apt-get purge -y python3-minimal build-essential && \
+    apt-get -y autoremove
 
 COPY . /usr/src/app
 
