@@ -1,8 +1,8 @@
 import jsonld from "jsonld";
 import { JsonWebKey, JsonWebSignature } from "@transmute/json-web-signature-2020";
 import vc from "vc-js";
-import { PublicKey } from "./types";
-import { Config, getConfig } from "./config";
+import { PublicKey, DIDDocument } from "./types"
+import { ConfigurationError } from "./errors";
 import { SignatureOptions, getSigningKeyIdentifier, getSigningDate, getProofProperty } from "./signatures";
 import { default as demoCredential } from "./demoCredential.json";
 import { v4 as uuidv4 } from 'uuid';
@@ -14,26 +14,33 @@ export function getController(fullDid: string) {
   return fullDid.split('#')[0];
 }
 
-export function createIssuer(config: Config) {
-  const preloadedDocs: { [key: string]: any; } = {};
-  const unlockedDid = config.unlockedDid
+export function createIssuer(unlockedDID: DIDDocument) {
+
   const unlockedAssertionMethods = new Map<string, PublicKey>([
-    [unlockedDid.publicKey[0].id, unlockedDid.publicKey[0]]
+    [unlockedDID.publicKey[0].id, unlockedDID.publicKey[0]]
   ]);
 
   // preload DIDs for docLoader
   // TODO: split between issuer and verifier, which doesn't need private
-  preloadedDocs[config.unlockedDid.id] = unlockedDid;
-  config.unlockedDid.publicKey.forEach((pk) => {
-    preloadedDocs[pk.id] = unlockedDid;
+  const preloadedDocs: { [key: string]: any; } = {};
+  preloadedDocs[unlockedDID.id] = unlockedDID;
+  unlockedDID.publicKey.forEach((pk: { id: string | number; }) => {
+    preloadedDocs[pk.id] = unlockedDID;
   })
 
+  // A documentLoader loads jsonld documents from a url.
+  // In our case we've already got the relevant document in this case (the unlocked DID) in
+  // the local filesystem, and we've
+  // loaded it into the unlockedID variable.
+  // So, we pass this customLoader to the signing/verifying methods to override normal network calls,
+  // and just return the unlockedDID
+  // NOTE:  this unlockedDID contains the public AND private keys
   const customLoader = (url: string) => {
-    const context = preloadedDocs[url];
-    if (context) {
+    const doc = preloadedDocs[url];
+    if (doc) {
       return {
         contextUrl: null, // this is for a context via a link header
-        document: context, // this is the actual document that was loaded
+        document: doc, // this is the actual document that was loaded
         documentUrl: url // this is the actual contxt URL after redirects
       };
     }
@@ -145,7 +152,7 @@ export function createIssuer(config: Config) {
     }
 
     const subjectDid = verifiablePresentation.holder;
-    const verificationMethod = unlockedDid.assertionMethod[0];
+    const verificationMethod = unlockedDID.assertionMethod[0];
     const signatureOptions = {
       verificationMethod: verificationMethod
     };
@@ -171,5 +178,11 @@ export function createIssuer(config: Config) {
 
 
 export function getDefaultIssuer() {
-  return createIssuer(getConfig())
+  if (!process.env.UNLOCKED_DID) {
+    throw new ConfigurationError("Environment variable 'UNLOCKED_DID' is not set");
+  }
+  const unlockedDID = JSON.parse(
+    Buffer.from(process.env.UNLOCKED_DID, "base64").toString("ascii")
+  )
+  return createIssuer(unlockedDID)
 }
