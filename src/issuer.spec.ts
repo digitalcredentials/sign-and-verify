@@ -4,6 +4,7 @@ import 'mocha';
 
 import { createIssuer, getController } from './issuer';
 import { getProofProperty } from './signatures';
+import { Config } from './config';
 
 const identifer = 'did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs';
 const controller = 'did:web:digitalcredentials.github.io';
@@ -52,8 +53,15 @@ const verifiablePresentation = {
   }
 };
 
-const unlockedDidDocument = JSON.parse(readFileSync("data/unlocked-did:web:digitalcredentials.github.io.json").toString("ascii"));
-const issuer = createIssuer(unlockedDidDocument)
+const config: Config = {
+  port: 5000,
+  unlockedDid: JSON.parse(readFileSync("data/unlocked-did:web:digitalcredentials.github.io.json").toString("ascii")),
+  hmacSecret: null,
+  hmacRequiredHeaders: [],
+  digestCheck: false,
+  digestAlorithms: []
+};
+const issuer = createIssuer(config)
 
 describe('Issuer test',
   () => {
