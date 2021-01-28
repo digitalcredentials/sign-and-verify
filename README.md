@@ -67,7 +67,7 @@ For issuers when signing a Verifiable Credential.
 ```
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"credential": <Verifiable Credential To Sign> \
+  --data '{"credential": <Verifiable Credential To Sign>, \
           "options": <Signing Options>' \
   <sign-and-verify-service>/issue/credentials
 ```
@@ -79,7 +79,7 @@ Request:
 ```
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json"],"id":"http://example.gov/credentials/3732","type":["VerifiableCredential","UniversityDegreeCredential"],"issuer":"did:web:digitalcredentials.github.io","issuanceDate":"2020-03-10T04:24:12.164Z","credentialSubject":{"id":"did:example:abcdef","degree":{"type":"BachelorDegree","name":"Bachelor of Science and Arts"}}}' \
+  --data '{"credential": {"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json"],"id":"http://example.gov/credentials/3732","type":["VerifiableCredential","UniversityDegreeCredential"],"issuer":"did:web:digitalcredentials.github.io","issuanceDate":"2020-03-10T04:24:12.164Z","credentialSubject":{"id":"did:example:abcdef","degree":{"type":"BachelorDegree","name":"Bachelor of Science and Arts"}}}, "options": {"verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}' \
   http://127.0.0.1:5000/issue/credentials
 ```
 
@@ -104,19 +104,19 @@ Additional implementation details are [Overview of Credential Request Flow](#Ove
 ```
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"verifiablePresentation": <Verifiable Presentation> \
+  --data '{"verifiablePresentation": <Verifiable Presentation>, \
             "options": <Verification Options>' \
     <sign-and-verify-service>/verify/presentations
 ```
 
-### Example
+### Example  TOTODDODODO
 
 Request:
 
 ```
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json"],"type":["VerifiablePresentation"],"id":"456","holder":"did:web:digitalcredentials.github.io","proof":{"type":"JsonWebSignature2020","created":"2020-11-12T22:00:33.393Z","challenge":"123","jws":"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..nuQE1vdLcf0YJSI_ojCdOpkQ53Amf4admAfA1eds9ONz9iskp5NBHqoz_YpzyRPxRvj4zblDDAhR524Dn4BtBA","proofPurpose":"authentication","verificationMethod":"did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}' \
+  --data '{"verifiablePresentation": {"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json"],"type":["VerifiablePresentation"],"id":"456","holder":"did:web:digitalcredentials.github.io","proof":{"type":"JsonWebSignature2020","created":"2020-11-12T22:00:33.393Z","challenge":"123","jws":"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..nuQE1vdLcf0YJSI_ojCdOpkQ53Amf4admAfA1eds9ONz9iskp5NBHqoz_YpzyRPxRvj4zblDDAhR524Dn4BtBA","proofPurpose":"authentication","verificationMethod":"did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}, "options": {"verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs", "challenge": "123"}}' \
   http://127.0.0.1:5000/verify/presentations
 ```
 
@@ -215,7 +215,7 @@ Used to verify a Verifable Credential.
 ```
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"verifiableCredential": <Verifiable Credential> \
+  --data '{"verifiableCredential": <Verifiable Credential>, \
             "options": <Verification Options>' \
     <sign-and-verify-service>/verify/credentials
 ```
@@ -228,7 +228,7 @@ Request:
 ```
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json"],"id":"http://example.gov/credentials/3732","type":["VerifiableCredential","UniversityDegreeCredential"],"issuer":"did:web:digitalcredentials.github.io","issuanceDate":"2020-03-10T04:24:12.164Z","credentialSubject":{"id":"did:example:abcdef","degree":{"type":"BachelorDegree","name":"Bachelor of Science and Arts"}},"proof":{"type":"JsonWebSignature2020","created":"2020-11-12T23:56:27.928Z","jws":"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..2DppQ4Euf9PUX6NrFPyJwHKPmeAqNWAC6UH8kiFNbsoiinebPpwdortHe-bLzDOQ_W7MQD5nqOnNN8JIVGarAA","proofPurpose":"assertionMethod","verificationMethod":"did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}' \
+  --data '{"verifiableCredential": {"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json"],"id":"http://example.gov/credentials/3732","type":["VerifiableCredential","UniversityDegreeCredential"],"issuer":"did:web:digitalcredentials.github.io","issuanceDate":"2020-03-10T04:24:12.164Z","credentialSubject":{"id":"did:example:abcdef","degree":{"type":"BachelorDegree","name":"Bachelor of Science and Arts"}},"proof":{"type":"JsonWebSignature2020","created":"2020-11-12T23:56:27.928Z","jws":"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..2DppQ4Euf9PUX6NrFPyJwHKPmeAqNWAC6UH8kiFNbsoiinebPpwdortHe-bLzDOQ_W7MQD5nqOnNN8JIVGarAA","proofPurpose":"assertionMethod","verificationMethod":"did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}, "options": {"verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}' \
   http://127.0.0.1:5000/verify/credentials
 ```
 
@@ -343,7 +343,7 @@ Experimental code (partially) demonstrating this: https://github.com/digitalcred
 #### CURL command to verify VP
 
 ```
-curl --header "Content-Type: application/json" --request POST --data '{"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json"],"type":["VerifiablePresentation"],"id":"456","holder":"did:web:digitalcredentials.github.io","proof":{"type":"JsonWebSignature2020","created":"2020-11-12T22:00:33.393Z","challenge":"123","jws":"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..nuQE1vdLcf0YJSI_ojCdOpkQ53Amf4admAfA1eds9ONz9iskp5NBHqoz_YpzyRPxRvj4zblDDAhR524Dn4BtBA","proofPurpose":"authentication","verificationMethod":"did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}' http://127.0.0.1:5000/verify/presentations
+curl --header "Content-Type: application/json" --request POST --data '{"verifiablePresentation": {"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json"],"type":["VerifiablePresentation"],"id":"456","holder":"did:web:digitalcredentials.github.io","proof":{"type":"JsonWebSignature2020","created":"2020-11-12T22:00:33.393Z","challenge":"123","jws":"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..nuQE1vdLcf0YJSI_ojCdOpkQ53Amf4admAfA1eds9ONz9iskp5NBHqoz_YpzyRPxRvj4zblDDAhR524Dn4BtBA","proofPurpose":"authentication","verificationMethod":"did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}, "options": {"verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs", "challenge": "123"}}' http://127.0.0.1:5000/verify/presentations
 ```
 
 
