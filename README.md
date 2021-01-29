@@ -109,7 +109,7 @@ curl --header "Content-Type: application/json" \
     <sign-and-verify-service>/verify/presentations
 ```
 
-### Example  TOTODDODODO
+### Example
 
 Request:
 
