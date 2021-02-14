@@ -242,9 +242,9 @@ Note: VerificationResult from vc-http-api isn't especially helpful at the moment
 
 ## Request a Demo Credential
 
-With proof of control of DID. `<REQUEST_PAYLOAD>` is a Verifiable Presentation proving control of the did. See details below.
+ `<REQUEST_PAYLOAD>` is a Verifiable Presentation proving control of the did. See details below.
 
-### Example
+### Example with DID proof of control
 ```
 curl --header "Content-Type: application/json" \
   --request POST \
@@ -252,10 +252,7 @@ curl --header "Content-Type: application/json" \
   http://127.0.0.1:5000/request/democredential
 ```
 
-
-Without proof of control of DID
-
-### Example
+### Example without DID proof of control
 ```
 curl --header "Content-Type: application/json" \
   --request POST \
