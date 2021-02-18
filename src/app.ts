@@ -160,5 +160,66 @@ export function build(opts = {}) {
         }
     )
 
+    server.post('/validation/cred-check', async (request, reply) => {
+        const error: {code: string; description: string} = {
+            code: 'customCode',
+            description: 'subject error'
+        };
+        const timeOfWaiting = (): number => {
+            return Math.floor(Math.random() * (4000 - 2000)) + 2000;
+        };
+        setTimeout(() => {
+            reply
+                .code(200)
+                .header('Content-Type', 'application/json; charset=utf-8')
+                .send([
+                    {key: 'subject', error},
+                    {key: 'issuer', error: null},
+                    {key: 'issuanceDate', error: null},
+                ]);
+        }, timeOfWaiting())
+    });
+
+    server.post('/validation/proof', async (request, reply) => {
+        const error: {code: string; description: string} = {
+            code: 'customCode',
+            description: 'metadata error'
+        };
+        const timeOfWaiting = (): number => {
+            return Math.floor(Math.random() * (4000 - 2000)) + 2000;
+        };
+        setTimeout(() => {
+            reply
+                .code(200)
+                .header('Content-Type', 'application/json; charset=utf-8')
+                .send([
+                    {key: 'metadata', error},
+                    {key: 'isCorrectKey', error: null},
+                    {key: 'isCorrectSignature', error: null},
+                    {key: 'proofPurpose', error: null},
+                ]);
+        }, timeOfWaiting())
+    });
+
+    server.post('/validation/final-check', async (request, reply) => {
+        const error: {code: string; description: string} = {
+            code: 'customCode',
+            description: 'expiration error'
+        };
+        const timeOfWaiting = (): number => {
+            return Math.floor(Math.random() * (4000 - 2000)) + 2000;
+        };
+        setTimeout(() => {
+            reply
+                .code(200)
+                .header('Content-Type', 'application/json; charset=utf-8')
+                .send([
+                    {key: 'expiration', error},
+                    {key: 'status', error: null},
+                    {key: 'fitnessForPurpose', error: null}
+                ]);
+        }, timeOfWaiting())
+    });
+
     return server
 }
