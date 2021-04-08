@@ -14,7 +14,7 @@ const sampleUnsignedCredential = {
     "@context": [
         "https://www.w3.org/2018/credentials/v1",
         "https://www.w3.org/2018/credentials/examples/v1",
-        "https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json"
+        "https://w3id.org/security/jws/v1"
     ],
     "id": "http://example.gov/credentials/3732",
     "type": ["VerifiableCredential", "UniversityDegreeCredential"],
@@ -33,7 +33,7 @@ const sampleSignedCredential = {
     '@context': [
         'https://www.w3.org/2018/credentials/v1',
         'https://www.w3.org/2018/credentials/examples/v1',
-        'https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json'
+        'https://w3id.org/security/jws/v1'
     ],
     id: 'http://example.gov/credentials/3732',
     type: ['VerifiableCredential', 'UniversityDegreeCredential'],
@@ -56,7 +56,7 @@ const sampleUnsignedPresentation = {
     '@context': [
         'https://www.w3.org/2018/credentials/v1',
         'https://www.w3.org/2018/credentials/examples/v1',
-        'https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json'
+        'https://w3id.org/security/jws/v1'
     ],
     type: ['VerifiablePresentation'],
     id: '456',
@@ -68,7 +68,7 @@ const sampleSignedPresentation = {
     "@context": [
         "https://www.w3.org/2018/credentials/v1",
         "https://www.w3.org/2018/credentials/examples/v1",
-        "https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json"
+        "https://w3id.org/security/jws/v1"
     ],
     "type": ["VerifiablePresentation"],
     "id": "456",
