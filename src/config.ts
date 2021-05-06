@@ -1,4 +1,4 @@
-import { DIDDocument } from "./types"
+import { DIDDocument } from "@digitalcredentials/sign-and-verify-core";
 import { ConfigurationError } from "./errors";
 
 export type Config = {
