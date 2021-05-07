@@ -11,83 +11,82 @@ const unlockedDid = readFileSync("data/unlocked-did:web:digitalcredentials.githu
 const validEnv = { UNLOCKED_DID: unlockedDid.toString("base64") };
 
 const sampleUnsignedCredential = {
-    "@context": [
-        "https://www.w3.org/2018/credentials/v1",
-        "https://www.w3.org/2018/credentials/examples/v1",
-        "https://w3id.org/security/jws/v1"
-    ],
-    "id": "http://example.gov/credentials/3732",
-    "type": ["VerifiableCredential", "UniversityDegreeCredential"],
-    "issuer": "did:web:digitalcredentials.github.io",
-    "issuanceDate": "2020-03-10T04:24:12.164Z",
-    "credentialSubject": {
-        "id": "did:example:abcdef",
-        "degree": {
-            "type": "BachelorDegree",
-            "name": "Bachelor of Science and Arts"
-        }
-    }
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://w3id.org/security/suites/ed25519-2020/v1"
+  ],
+  "id": "http://example.gov/credentials/3732",
+  "type": [
+    "VerifiableCredential"
+  ],
+  "issuer": "did:web:digitalcredentials.github.io",
+  "issuanceDate": "2020-03-10T04:24:12.164Z",
+  "credentialSubject": {
+    "id": "did:example:abcdef"
+  }
 }
 
 const sampleSignedCredential = {
-    '@context': [
-        'https://www.w3.org/2018/credentials/v1',
-        'https://www.w3.org/2018/credentials/examples/v1',
-        'https://w3id.org/security/jws/v1'
-    ],
-    id: 'http://example.gov/credentials/3732',
-    type: ['VerifiableCredential', 'UniversityDegreeCredential'],
-    issuer: 'did:web:digitalcredentials.github.io',
-    issuanceDate: '2020-03-10T04:24:12.164Z',
-    credentialSubject: {
-        id: 'did:example:abcdef',
-        degree: { type: 'BachelorDegree', name: 'Bachelor of Science and Arts' }
-    },
-    proof: {
-        type: 'JsonWebSignature2020',
-        created: '2020-12-15T22:45:18.623Z',
-        jws: 'eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..1YXA13VGtZKJZrDVlPXYpQfCAxits3NEVlDGHg-59rUW4w66rXrk1yqoMVDLrhGdk8-IpY24HcvPdOLPOo1OBw',
-        proofPurpose: 'assertionMethod',
-        verificationMethod: 'did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs'
-    }
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://w3id.org/security/suites/ed25519-2020/v1"
+  ],
+  "id": "http://example.gov/credentials/3732",
+  "type": [
+    "VerifiableCredential"
+  ],
+  "issuer": "did:web:digitalcredentials.github.io",
+  "issuanceDate": "2020-03-10T04:24:12.164Z",
+  "credentialSubject": {
+    "id": "did:example:abcdef"
+  },
+  "proof": {
+    "type": "Ed25519Signature2020",
+    "created": "2021-05-04T18:59:42Z",
+    "verificationMethod": "did:web:digitalcredentials.github.io#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z4jnMia8Q1EDAQDNnurAnQgNmc1PmhrXx87j6zr9rjvrpGqSFxcHqJf55HjQPJm7Qj712KU3DXpNF1N6gYh77k9M3"
+  }
 }
 
 const sampleUnsignedPresentation = {
-    '@context': [
-        'https://www.w3.org/2018/credentials/v1',
-        'https://www.w3.org/2018/credentials/examples/v1',
-        'https://w3id.org/security/jws/v1'
-    ],
-    type: ['VerifiablePresentation'],
-    id: '456',
-    holder: 'did:web:digitalcredentials.github.io'
-}
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://w3id.org/security/suites/ed25519-2020/v1"
+  ],
+  "type": [
+    "VerifiablePresentation"
+  ],
+  "id": "123",
+  "holder": "did:key:z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy"
+};
 
 
 const sampleSignedPresentation = {
-    "@context": [
-        "https://www.w3.org/2018/credentials/v1",
-        "https://www.w3.org/2018/credentials/examples/v1",
-        "https://w3id.org/security/jws/v1"
-    ],
-    "type": ["VerifiablePresentation"],
-    "id": "456",
-    "holder": "did:web:digitalcredentials.github.io",
-    "proof": {
-        "type": "JsonWebSignature2020",
-        "created": "2020-11-12T22:00:33.393Z",
-        "challenge": "123",
-        "jws": "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..nuQE1vdLcf0YJSI_ojCdOpkQ53Amf4admAfA1eds9ONz9iskp5NBHqoz_YpzyRPxRvj4zblDDAhR524Dn4BtBA",
-        "proofPurpose": "authentication",
-        "verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"
-    }
-}
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://w3id.org/security/suites/ed25519-2020/v1"
+  ],
+  "type": [
+    "VerifiablePresentation"
+  ],
+  "id": "123",
+  "holder": "did:key:z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy",
+  "proof": {
+    "type": "Ed25519Signature2020",
+    "created": "2021-05-01T23:38:10Z",
+    "verificationMethod": "did:key:z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy#z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy",
+    "proofPurpose": "authentication",
+    "challenge": "test123",
+    "proofValue": "z3Ukrcvwg59pPywog48R6xB6Fd5XWmPazqPCjdpaXpdKzaeNAc1Un1EF8VnVLbf4nvRk5SGiVDvgxddS66bi7kdAo"
+  }
+};
 
 const credentialOptions = {
-    "verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs",
+    "verificationMethod": "did:web:digitalcredentials.github.io#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7",
 }
 // same as above for credentials, but also with a 'challenge':
-const presentationOptions = { ...credentialOptions, "challenge": "123" }
+const presentationOptions = { ...credentialOptions, challenge: "test123" }
 
 describe("api", () => {
     let server: FastifyInstance<Server, IncomingMessage, ServerResponse>;
@@ -112,8 +111,6 @@ describe("api", () => {
         });
     });
 
-
-
     describe("/issue/credentials", () => {
         const url = "/issue/credentials"
         it("POST returns 201 and cred", async () => {
@@ -124,7 +121,7 @@ describe("api", () => {
             });
             expect(response.statusCode).to.equal(201);
             const payload = JSON.parse(response.payload);
-            expect(payload.proof.type).to.equal('JsonWebSignature2020');
+            expect(payload.proof.type).to.equal('Ed25519Signature2020');
             expect(payload.issuer).to.equal('did:web:digitalcredentials.github.io')
         }).timeout(6000);
     });
@@ -139,9 +136,9 @@ describe("api", () => {
             });
             expect(response.statusCode).to.equal(201);
             const payload = JSON.parse(response.payload);
-            expect(payload.proof.type).to.equal('JsonWebSignature2020');
-            expect(payload.proof.challenge).to.equal('123')
-            expect(payload.holder).to.equal('did:web:digitalcredentials.github.io')
+            expect(payload.proof.type).to.equal('Ed25519Signature2020');
+            expect(payload.proof.challenge).to.equal('test123')
+            expect(payload.holder).to.equal('did:key:z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy')
         }).timeout(6000);
     });
 
@@ -155,8 +152,8 @@ describe("api", () => {
             });
             expect(response.statusCode).to.equal(200);
             const payload = JSON.parse(response.payload);
-            expect(payload.results[0].proof.type).to.equal('sec:JsonWebSignature2020');
-            expect(payload.verified).to.be.true
+            expect(payload.results[0].proof.type).to.equal('Ed25519Signature2020');
+            expect(payload.verified).to.be.true;
         }).timeout(6000);
     });
 
@@ -170,7 +167,7 @@ describe("api", () => {
             });
             expect(response.statusCode).to.equal(201);
             const payload = JSON.parse(response.payload);
-            expect(payload.proof.type).to.equal('JsonWebSignature2020');
+            expect(payload.proof.type).to.equal('Ed25519Signature2020');
             expect(payload.issuer.id).to.equal('did:web:digitalcredentials.github.io')
         }).timeout(6000);
 
@@ -184,15 +181,6 @@ describe("api", () => {
     describe("/request/democredential", () => {
         const url = "/request/democredential"
         it("POST returns 201 and cred", async () => {
-            /*  
-             // Could also use a dynamically generated presentation
-            const controlProofResponse = await server.inject({ 
-                 method: "POST", 
-                 url: '/generate/controlproof',
-                 payload: {"presentationId": "456", "holder": "did:web:digitalcredentials.github.io", "verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs", "challenge": "123"}
-             });
-             const signedPresentation = JSON.parse(controlProofResponse.payload) */
-
             const response = await server.inject({
                 method: "POST",
                 url: url,
@@ -200,7 +188,7 @@ describe("api", () => {
             });
             expect(response.statusCode).to.equal(201);
             const payload = JSON.parse(response.payload);
-            expect(payload.proof.type).to.equal('JsonWebSignature2020');
+            expect(payload.proof.type).to.equal('Ed25519Signature2020');
             expect(payload.issuer.id).to.equal('did:web:digitalcredentials.github.io')
         }).timeout(9000);
     });
@@ -208,43 +196,16 @@ describe("api", () => {
     describe("/verify/presentations", () => {
         const url = "/verify/presentations"
         it("POST returns 200", async () => {
-
-            const controlProofResponse = await server.inject({
-                method: "POST",
-                url: '/generate/controlproof',
-                payload: { "presentationId": "456", "holder": "did:web:digitalcredentials.github.io", "verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs", "challenge": "123" }
-            });
-            const verifiablePresentation = JSON.parse(controlProofResponse.payload)
-
             const response = await server.inject({
                 method: "POST",
                 url: url,
-                payload: { verifiablePresentation, options: presentationOptions }
+                payload: { verifiablePresentation: sampleSignedPresentation, options: presentationOptions }
             });
             expect(response.statusCode).to.equal(200);
             const payload = JSON.parse(response.payload);
-            expect(payload).to.deep.equal({ "holder": "did:web:digitalcredentials.github.io" });
+            expect(payload).to.deep.equal({ "holder": "did:key:z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy" });
         }).timeout(9000);
     });
-
-    describe("/generate/controlproof", () => {
-        const url = "/generate/controlproof"
-        it("POST returns 201 and cred", async () => {
-            const response = await server.inject({
-                method: "POST",
-                url: url,
-                payload: { "presentationId": "456", "holder": "did:web:digitalcredentials.github.io", "verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs", "challenge": "123" }
-            });
-            expect(response.statusCode).to.equal(201);
-            const payload = JSON.parse(response.payload);
-            expect(payload.holder).to.equal("did:web:digitalcredentials.github.io");
-        }).timeout(6000);
-
-
-    });
-
-
-
 })
 
 

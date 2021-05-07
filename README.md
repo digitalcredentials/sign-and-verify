@@ -79,7 +79,7 @@ Request:
 ```
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"credential": {"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3id.org/security/jws/v1"],"id":"http://example.gov/credentials/3732","type":["VerifiableCredential","UniversityDegreeCredential"],"issuer":"did:web:digitalcredentials.github.io","issuanceDate":"2020-03-10T04:24:12.164Z","credentialSubject":{"id":"did:example:abcdef","degree":{"type":"BachelorDegree","name":"Bachelor of Science and Arts"}}}, "options": {"verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}' \
+  --data '{"credential": {"@context":["https://www.w3.org/2018/credentials/v1","https://w3id.org/security/suites/ed25519-2020/v1"],"id":"http://example.gov/credentials/3732","type":["VerifiableCredential"],"issuer":"did:web:digitalcredentials.github.io","issuanceDate":"2020-03-10T04:24:12.164Z","credentialSubject":{"id":"did:example:abcdef"}}, "options": {"verificationMethod":"did:web:digitalcredentials.github.io#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7"}}' \
   http://127.0.0.1:5000/issue/credentials
 ```
 
@@ -89,7 +89,6 @@ Response Codes:
 - 500: error
 
 [Reference: vc-http-api /issue/credentials](https://w3c-ccg.github.io/vc-http-api/#/Issuer/issueCredential)
-
 
 ## Verify Presentation
 
@@ -116,7 +115,7 @@ Request:
 ```
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"verifiablePresentation": {"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3id.org/security/jws/v1"],"type":["VerifiablePresentation"],"id":"456","holder":"did:web:digitalcredentials.github.io","proof":{"type":"JsonWebSignature2020","created":"2020-11-12T22:00:33.393Z","challenge":"123","jws":"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..nuQE1vdLcf0YJSI_ojCdOpkQ53Amf4admAfA1eds9ONz9iskp5NBHqoz_YpzyRPxRvj4zblDDAhR524Dn4BtBA","proofPurpose":"authentication","verificationMethod":"did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}, "options": {"verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs", "challenge": "123"}}' \
+  --data '{"verifiablePresentation": {"@context":["https://www.w3.org/2018/credentials/v1","https://w3id.org/security/suites/ed25519-2020/v1"],"type":["VerifiablePresentation"],"id":"123","holder":"did:key:z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy","proof":{"type":"Ed25519Signature2020","created":"2021-05-01T23:38:10Z","verificationMethod":"did:key:z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy#z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy","proofPurpose":"authentication","challenge":"test123","proofValue":"z3Ukrcvwg59pPywog48R6xB6Fd5XWmPazqPCjdpaXpdKzaeNAc1Un1EF8VnVLbf4nvRk5SGiVDvgxddS66bi7kdAo"}}, "options": {"verificationMethod":"did:web:digitalcredentials.github.io#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7","challenge":"test123"}}' \
   http://127.0.0.1:5000/verify/presentations
 ```
 
@@ -137,73 +136,6 @@ Note: VerificationResult from vc-http-api isn't especially helpful at the moment
 ```
 
 [Reference: vc-http-api /verify/presentations](https://w3c-ccg.github.io/vc-http-api/#/Verifier/verifyPresentation)
-
-
-## Generate proof of control
-> non-standard
-
-This is used by the learner's wallet (as a library) to generate proof of control over a DID. This is a special case of `/prove/presentations` (which this also implements), but customizes for this use case.
-
-### General Format
-
-```
-curl --header "Content-Type: application/json" \
-  --request POST \
-  --data '<PROOF OPTIONS>' \
-    <sign-and-verify-service>/generate/controlproof
-```
-
-
-PROOF_OPTIONS look like this:
-```
-{
-  "presentationId": "<optional; provided by the wallet>",
-  "holder": "<did proving control over>",
-  "verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs",
-  "challenge": "<challenge provided by issuer and passed through from wallet; should match>"
-}
-```
-
-### Example
-
-Request
-
-```
-curl --header "Content-Type: application/json" \
-  --request POST  \
-  --data '{"presentationId": "456", "holder": "did:web:digitalcredentials.github.io", "verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs", "challenge": "123"}' \
-  http://127.0.0.1:5000/generate/controlproof
-```
-
-Response Codes:
-- 201: success, with VP demonstrating proof of control (see response for this example below)
-- 400: invalid input
-- 500: error
-
-
-Response:
-```
-{
-  "@context": [
-    "https://www.w3.org/2018/credentials/v1",
-    "https://www.w3.org/2018/credentials/examples/v1",
-    "https://w3id.org/security/jws/v1"
-  ],
-  "type": [
-    "VerifiablePresentation"
-  ],
-  "id": "456",
-  "holder": "did:web:digitalcredentials.github.io",
-  "proof": {
-    "type": "JsonWebSignature2020",
-    "created": "2020-11-12T22:00:33.393Z",
-    "challenge": "123",
-    "jws": "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..nuQE1vdLcf0YJSI_ojCdOpkQ53Amf4admAfA1eds9ONz9iskp5NBHqoz_YpzyRPxRvj4zblDDAhR524Dn4BtBA",
-    "proofPurpose": "authentication",
-    "verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"
-  }
-}
-```
 
 
 ## Verify Credential
@@ -228,7 +160,7 @@ Request:
 ```
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"verifiableCredential": {"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3id.org/security/jws/v1"],"id":"http://example.gov/credentials/3732","type":["VerifiableCredential","UniversityDegreeCredential"],"issuer":"did:web:digitalcredentials.github.io","issuanceDate":"2020-03-10T04:24:12.164Z","credentialSubject":{"id":"did:example:abcdef","degree":{"type":"BachelorDegree","name":"Bachelor of Science and Arts"}},"proof":{"type":"JsonWebSignature2020","created":"2020-11-12T23:56:27.928Z","jws":"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..2DppQ4Euf9PUX6NrFPyJwHKPmeAqNWAC6UH8kiFNbsoiinebPpwdortHe-bLzDOQ_W7MQD5nqOnNN8JIVGarAA","proofPurpose":"assertionMethod","verificationMethod":"did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}, "options": {"verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}' \
+  --data '{"verifiableCredential": {"@context":["https://www.w3.org/2018/credentials/v1","https://w3id.org/security/suites/ed25519-2020/v1"],"id":"http://example.gov/credentials/3732","type":["VerifiableCredential"],"issuer":"did:web:digitalcredentials.github.io","issuanceDate":"2020-03-10T04:24:12.164Z","credentialSubject":{"id":"did:example:abcdef"},"proof":{"type":"Ed25519Signature2020","created":"2021-05-04T18:59:42Z","verificationMethod":"did:web:digitalcredentials.github.io#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7","proofPurpose":"assertionMethod","proofValue":"z4jnMia8Q1EDAQDNnurAnQgNmc1PmhrXx87j6zr9rjvrpGqSFxcHqJf55HjQPJm7Qj712KU3DXpNF1N6gYh77k9M3"}}, "options": {"verificationMethod":"did:web:digitalcredentials.github.io#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7"}}' \
   http://127.0.0.1:5000/verify/credentials
 ```
 
@@ -327,59 +259,6 @@ As described in [Verify Presentation](#Verify-Presentation), response code 200 m
    holder : did:web:digitalcredentials.github.io
 }
 ```
-
-
-### Example
-
-Assumptions:
-- sign-and-verify is running locally on port 5000
-- subject DID is `did:web:digitalcredentials.github.io` in this example
-
-Experimental code (partially) demonstrating this: https://github.com/digitalcredentials/issuer-demo
-
-#### CURL command to verify VP
-
-```
-curl --header "Content-Type: application/json" --request POST --data '{"verifiablePresentation": {"@context":["https://www.w3.org/2018/credentials/v1","https://www.w3.org/2018/credentials/examples/v1","https://w3id.org/security/jws/v1"],"type":["VerifiablePresentation"],"id":"456","holder":"did:web:digitalcredentials.github.io","proof":{"type":"JsonWebSignature2020","created":"2020-11-12T22:00:33.393Z","challenge":"123","jws":"eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..nuQE1vdLcf0YJSI_ojCdOpkQ53Amf4admAfA1eds9ONz9iskp5NBHqoz_YpzyRPxRvj4zblDDAhR524Dn4BtBA","proofPurpose":"authentication","verificationMethod":"did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"}}, "options": {"verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs", "challenge": "123"}}' http://127.0.0.1:5000/verify/presentations
-```
-
-
-##### Verifiable Presentation (formatted):
-Formatted for clarity and security-context normalized. This payload is passed through from subject (`REQUEST_PAYLOAD`):
-```
-{
-  "@context": [
-    "https://www.w3.org/2018/credentials/v1",
-    "https://www.w3.org/2018/credentials/examples/v1",
-    "https://w3id.org/security/jws/v1"
-  ],
-  "type": [
-    "VerifiablePresentation"
-  ],
-  "id": "456",
-  "holder": "did:web:digitalcredentials.github.io",
-  "proof": {
-    "type": "JsonWebSignature2020",
-    "created": "2020-11-12T22:00:33.393Z",
-    "challenge": "123",
-    "jws": "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..nuQE1vdLcf0YJSI_ojCdOpkQ53Amf4admAfA1eds9ONz9iskp5NBHqoz_YpzyRPxRvj4zblDDAhR524Dn4BtBA",
-    "proofPurpose": "authentication",
-    "verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs"
-  }
-}
-```
-
-##### Options (formatted):
-
-Formatted for clarity.
-
-```
-{
-  "verificationMethod": "did:web:digitalcredentials.github.io#96K4BSIWAkhcclKssb8yTWMQSz4QzPWBy-JsAFlwoIs",
-  "challenge": "123"
-}
-```
-
 
 ## Security
 
