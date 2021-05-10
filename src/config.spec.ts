@@ -15,7 +15,9 @@ const expectedConfig: Config = {
   hmacSecret: null,
   hmacRequiredHeaders: ["date", "digest"],
   digestCheck: false,
-  digestAlorithms: ["SHA256", "SHA512"]
+  digestAlorithms: ["SHA256", "SHA512"],
+  demoIssuerMethod: null,
+  demoIssuerChallenge: null,
 };
 const validEnv = {
   UNLOCKED_DID: unlockedDid.toString("base64"),
@@ -98,6 +100,28 @@ describe("config", () => {
       expect(parseConfig()).to.deep.equal({
         ...expectedConfig,
         hmacRequiredHeaders: ["abc", "def", "gher", "asf"],
+      });
+    });
+
+    it("should parse env.DEMO_ISSUER_METHOD", () => {
+      sandbox.stub(process, "env").value({
+        ...validEnv,
+        DEMO_ISSUER_METHOD: "did:example:123#abc"
+      });
+      expect(parseConfig()).to.deep.equal({
+        ...expectedConfig,
+        demoIssuerMethod: "did:example:123#abc"
+      });
+    });
+
+    it("should parse env.DEMO_ISSUER_CHALLENGE", () => {
+      sandbox.stub(process, "env").value({
+        ...validEnv,
+        DEMO_ISSUER_CHALLENGE: "challenge123"
+      });
+      expect(parseConfig()).to.deep.equal({
+        ...expectedConfig,
+        demoIssuerChallenge: "challenge123"
       });
     });
 

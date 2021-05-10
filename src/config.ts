@@ -7,7 +7,9 @@ export type Config = {
   hmacSecret: string | null,
   hmacRequiredHeaders: Array<string>,
   digestCheck: boolean,
-  digestAlorithms: Array<string>
+  digestAlorithms: Array<string>,
+  demoIssuerMethod: string | null,
+  demoIssuerChallenge: string | null
 }
 
 let CONFIG: null | Config = null;
@@ -28,7 +30,9 @@ export function parseConfig(): Config {
     digestCheck: process.env.DIGEST_CHECK?.toLowerCase() === 'true',
     digestAlorithms: (
       process.env.DIGEST_ALGORITHMS || "SHA256,SHA512"
-    ).split(",").map((alg) => alg.trim())
+    ).split(",").map((alg) => alg.trim()),
+    demoIssuerMethod : process.env.DEMO_ISSUER_METHOD || null,
+    demoIssuerChallenge: process.env.DEMO_ISSUER_CHALLENGE || null
   });
 }
 

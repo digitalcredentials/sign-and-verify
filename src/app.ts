@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export function build(opts = {}) {
 
-  const { unlockedDid } = getConfig();
+  const { unlockedDid, demoIssuerMethod, demoIssuerChallenge } = getConfig();
   const publicDid: DIDDocument = JSON.parse(JSON.stringify(unlockedDid));
   delete publicDid.assertionMethod[0].privateKeyMultibase;
   const { sign, signPresentation } = createIssuer([unlockedDid]);
@@ -113,54 +113,6 @@ export function build(opts = {}) {
   )
 
   server.post(
-    '/request/democredential/nodidproof', async (request, reply) => {
-      const requestInfo: any = request.body;
-      const verifiablePresentation = requestInfo;
-      const holder = verifiablePresentation.holder;
-
-      const options = {
-        "verificationMethod": "did:web:digitalcredentials.github.io#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7",
-      }
-
-      const demoCredential = constructDemoCredential(holder);
-      const result = await sign(demoCredential, options);
-      reply
-        .code(201)
-        .header('Content-Type', 'application/json; charset=utf-8')
-        .send(result);
-    }
-
-  )
-
-  server.post(
-    '/request/democredential', async (request, reply) => {
-
-      const requestInfo: any = request.body;
-      const verifiablePresentation = requestInfo;
-      const holder = verifiablePresentation.holder;
-
-      const verificationResult = await verifyPresentation(verifiablePresentation);
-      if (verificationResult.verified) {
-
-        const demoCredential = constructDemoCredential(holder);
-        const options = {
-          "verificationMethod": "did:web:digitalcredentials.github.io#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7",
-        }
-        const result = await sign(demoCredential, options);
-        reply
-          .code(201)
-          .header('Content-Type', 'application/json; charset=utf-8')
-          .send(result);
-      } else {
-        reply
-          .code(500)
-          .send({ message: 'Could not validate request', error: verificationResult });
-      }
-
-    }
-  )
-
-  server.post(
     '/verify/presentations', async (request, reply) => {
       const requestInfo: any = request.body;
       const verifiablePresentation = requestInfo.verifiablePresentation;
@@ -180,6 +132,63 @@ export function build(opts = {}) {
           .code(500)
           .send({ message: 'Could not validate DID', error: verificationResult });
       }
+    }
+  )
+
+  server.post(
+    '/request/democredential/nodidproof', async (request, reply) => {
+      if (!demoIssuerMethod || !demoIssuerMethod) {
+        throw new Error('Demo credential issuange is not supported');
+      }
+
+      const requestInfo: any = request.body;
+      const verifiablePresentation = requestInfo;
+      const holder = verifiablePresentation.holder;
+
+      const options = {
+        "verificationMethod": demoIssuerMethod!,
+      }
+
+      const demoCredential = constructDemoCredential(holder);
+      const result = await sign(demoCredential, options);
+      reply
+        .code(201)
+        .header('Content-Type', 'application/json; charset=utf-8')
+        .send(result);
+    }
+
+  )
+
+  server.post(
+    '/request/democredential', async (request, reply) => {
+      if (!demoIssuerMethod || !demoIssuerMethod) {
+        throw new Error('Demo credential issuange is not supported');
+      }
+      const requestInfo: any = request.body;
+      const verifiablePresentation = requestInfo;
+      const holder = verifiablePresentation.holder;
+      const options = {
+        "challenge": demoIssuerChallenge!
+      };
+
+      const verificationResult = await verifyPresentation(verifiablePresentation, options);
+      if (verificationResult.verified) {
+
+        const demoCredential = constructDemoCredential(holder);
+        const options = {
+          "verificationMethod": demoIssuerMethod!,
+        }
+        const result = await sign(demoCredential, options);
+        reply
+          .code(201)
+          .header('Content-Type', 'application/json; charset=utf-8')
+          .send(result);
+      } else {
+        reply
+          .code(500)
+          .send({ message: 'Could not validate request', error: verificationResult });
+      }
+
     }
   )
 
