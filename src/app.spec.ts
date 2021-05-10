@@ -213,8 +213,7 @@ describe("api with demo issuance", () => {
     sandbox.stub(process, "env").value(
       {
         ...validEnv,
-        DEMO_ISSUER_METHOD: 'did:web:digitalcredentials.github.io#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7',
-        DEMO_ISSUER_CHALLENGE: 'test123'
+        DEMO_ISSUER_METHOD: 'did:web:digitalcredentials.github.io#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7'
       }
     );
     server = build()
@@ -232,7 +231,8 @@ describe("api with demo issuance", () => {
       expect(response.statusCode).to.equal(201);
       const payload = JSON.parse(response.payload);
       expect(payload.proof.type).to.equal('Ed25519Signature2020');
-      expect(payload.issuer.id).to.equal('did:web:digitalcredentials.github.io')
+      expect(payload.issuer.id).to.equal('did:web:digitalcredentials.github.io');
+      expect(payload.credentialSubject.id).to.equal("did:example:me");
     }).timeout(6000);
 
     it("GET returns 404", async () => {

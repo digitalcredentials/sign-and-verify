@@ -8,8 +8,7 @@ export type Config = {
   hmacRequiredHeaders: Array<string>,
   digestCheck: boolean,
   digestAlorithms: Array<string>,
-  demoIssuerMethod: string | null,
-  demoIssuerChallenge: string | null
+  demoIssuerMethod: string | null
 }
 
 let CONFIG: null | Config = null;
@@ -31,8 +30,7 @@ export function parseConfig(): Config {
     digestAlorithms: (
       process.env.DIGEST_ALGORITHMS || "SHA256,SHA512"
     ).split(",").map((alg) => alg.trim()),
-    demoIssuerMethod : process.env.DEMO_ISSUER_METHOD || null,
-    demoIssuerChallenge: process.env.DEMO_ISSUER_CHALLENGE || null
+    demoIssuerMethod : process.env.DEMO_ISSUER_METHOD || null
   });
 }
 
