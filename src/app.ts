@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export function build(opts = {}) {
 
-  const { unlockedDid, demoIssuerMethod, demoIssuerChallenge } = getConfig();
+  const { unlockedDid, demoIssuerMethod } = getConfig();
   const publicDid: DIDDocument = JSON.parse(JSON.stringify(unlockedDid));
   delete publicDid.assertionMethod[0].privateKeyMultibase;
   const { sign, signPresentation } = createIssuer([unlockedDid]);
@@ -137,7 +137,7 @@ export function build(opts = {}) {
 
   server.post(
     '/request/democredential/nodidproof', async (request, reply) => {
-      if (!demoIssuerMethod || !demoIssuerMethod) {
+      if (!demoIssuerMethod) {
         throw new Error('Demo credential issuange is not supported');
       }
 
@@ -161,14 +161,17 @@ export function build(opts = {}) {
 
   server.post(
     '/request/democredential', async (request, reply) => {
-      if (!demoIssuerMethod || !demoIssuerMethod) {
+      if (!demoIssuerMethod) {
         throw new Error('Demo credential issuange is not supported');
       }
       const requestInfo: any = request.body;
       const verifiablePresentation = requestInfo;
       const holder = verifiablePresentation.holder;
+      // just use the challenge provided in the payload for demos
+      const challenge = verifiablePresentation?.proof?.challenge;
+
       const options = {
-        "challenge": demoIssuerChallenge!
+        "challenge": challenge
       };
 
       const verificationResult = await verifyPresentation(verifiablePresentation, options);
