@@ -4,9 +4,6 @@ WORKDIR /usr/src/app
 
 ADD package.json package-lock.json ./
 
-# FIXME: temporary workaround because of git-based dependencies
-RUN npm install -g rollup
-
 # Install OS dependencies, install Node packages, and purge OS packages in one step
 # to reduce the size of the resulting image.
 RUN apt-get update && \
