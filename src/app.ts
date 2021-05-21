@@ -195,6 +195,7 @@ export function build(opts = {}) {
     }
   )
 
+  // DO NOT DELETE: Allows clients to generate test payloads
   server.post(
     '/generate/controlproof', async (request, reply) => {
         const req: any = request.body;
