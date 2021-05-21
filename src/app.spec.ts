@@ -83,8 +83,9 @@ const sampleSignedPresentation = {
   }
 };
 
+const verificationMethod = "did:web:digitalcredentials.github.io#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7";
 const credentialOptions = {
-  "verificationMethod": "did:web:digitalcredentials.github.io#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7",
+  "verificationMethod": verificationMethod,
 }
 // same as above for credentials, but also with a 'challenge':
 const presentationOptions = { ...credentialOptions, challenge: "test123" }
@@ -201,6 +202,26 @@ describe("api", () => {
       });
       expect(response.statusCode).to.equal(500);
     }).timeout(9000);
+  });
+
+
+  describe("/generate/controlproof", () => {
+    const url = "/generate/controlproof"
+    it("POST returns 201 and cred", async () => {
+        const response = await server.inject({
+            method: "POST",
+            url: url,
+            payload: { 
+              "presentationId": "456", 
+              "holder": "did:web:digitalcredentials.github.io", 
+              "verificationMethod": verificationMethod, 
+              "challenge": "123" 
+            }
+        });
+        expect(response.statusCode).to.equal(201);
+        const payload = JSON.parse(response.payload);
+        expect(payload.holder).to.equal("did:web:digitalcredentials.github.io");
+    }).timeout(6000);
   });
 })
 

@@ -13,7 +13,7 @@ export function build(opts = {}) {
   const { unlockedDid, demoIssuerMethod } = getConfig();
   const publicDid: DIDDocument = JSON.parse(JSON.stringify(unlockedDid));
   delete publicDid.assertionMethod[0].privateKeyMultibase;
-  const { sign, signPresentation } = createIssuer([unlockedDid]);
+  const { sign, signPresentation, createAndSignPresentation } = createIssuer([unlockedDid]);
   const { verify, verifyPresentation } = createVerifier([publicDid]);
 
   const server = fastify({
@@ -194,6 +194,20 @@ export function build(opts = {}) {
 
     }
   )
+
+  server.post(
+    '/generate/controlproof', async (request, reply) => {
+        const req: any = request.body;
+        const { presentationId, holder, ...options } = req;
+
+        const result = await createAndSignPresentation(null, presentationId, holder, options);
+
+        reply
+            .code(201)
+            .header('Content-Type', 'application/json; charset=utf-8')
+            .send(result);
+    }
+)
 
   server.post('/validation/cred-check', async (request, reply) => {
     const error: { code: string; description: string } = {
