@@ -275,3 +275,24 @@ If the verification fails a response with a 400 status code and an appropriate e
 Digest Verification alone only isn't useful if the header and request body have been tampered with. To combat this, a request signature check can be made which verifies the signature of the request headers using a shared HMAC secret. Only a client that knows this secret will be able to generate a correct signature.
 
 This, combined with Digest Verification, ensures that a) the request (specifically the headers in the signature) came from a trusted source and b) the request contents (encapsulated by the `Digest` header, which is part of the signature) haven't been tampered with and can be trusted.
+
+## Generate a test control proof 
+
+This generates a sample payload that would come from a wallet
+
+```
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '$PARAMS' \
+    <sign-and-verify-service>/generate/controlproof
+```
+
+Where PARAMS looks like:
+```
+PARAMS = {
+  "presentationId": "456",
+  "holder": "did:web:digitalcredentials.github.io",
+  "verificationMethod": "did:web:digitalcredentials.github.io#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7",
+  "challenge": "123"
+}
+```
