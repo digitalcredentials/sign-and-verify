@@ -8,7 +8,9 @@ The REST service implements a subset of the W3C CCG [vc-http-api draft standard]
 
 ## Configuration
 
-The service can be configured with the following environment variables:
+Follow these steps to properly configure a `sign-and-verify` service deployment for your organization:
+
+1. Configure the service with the following environment variables:
 
 - `UNLOCKED_DID` - a base64 encoded DID json blob (required)
 - `PORT` - the port the web service will bind to (optional, default: `5000`)
@@ -17,7 +19,9 @@ The service can be configured with the following environment variables:
 - `HMAC_SECRET` - set to the shared HMAC secret to require [HMAC signing](https://tools.ietf.org/html/draft-ietf-httpbis-message-signatures-00) of the request via the `Signature` header (optional, default: `null`)
 - `HMAC_REQUIRED_HEADERS` - a comma-delimited list of headers that are required to be in the HMAC signature (optional, default: `date,digest`)
 
-Locally, you need to copy `.env.example` to `.env`, which `npm run start` will pick up, to test these values.
+2. Copy `.env.example` to `.env`, which `npm run start` will pick up, to test these values.
+
+3. Implement the `credentialRequestHandler` method in `./src/issuer-helper.ts`
 
 NOTE: the `UNLOCKED_DID` included as an example is just for your reference. Do not check in unlocked dids, private keys, or the equivalent.
 
