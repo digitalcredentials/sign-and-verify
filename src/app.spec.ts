@@ -1,5 +1,5 @@
-import { build } from './app'
-import { expect, assert } from 'chai';
+import { build } from './app';
+import { expect } from 'chai';
 import { createSandbox } from "sinon";
 import 'mocha';
 import { FastifyInstance } from 'fastify';
@@ -16,12 +16,12 @@ const issuerVerificationMethod = `${issuerId}#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7m
 
 const holderKey = 'z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy';
 const holderId = `did:key:${holderKey}`;
-const holderVerificationMethod = `${holderId}#${holderKey}`
+const holderVerificationMethod = `${holderId}#${holderKey}`;
 
 const challenge = 'test123';
 const credentialOptions = { verificationMethod: issuerVerificationMethod };
 // same as above for credentials, but also with a 'challenge':
-const presentationOptions = { ...credentialOptions, challenge }
+const presentationOptions = { ...credentialOptions, challenge };
 
 const sampleUnsignedCredential = {
   "@context": [
@@ -37,7 +37,7 @@ const sampleUnsignedCredential = {
   "credentialSubject": {
     "id": "did:example:abcdef"
   }
-}
+};
 
 const sampleSignedCredential = {
   "@context": [
@@ -60,7 +60,7 @@ const sampleSignedCredential = {
     "proofPurpose": "assertionMethod",
     "proofValue": "z4jnMia8Q1EDAQDNnurAnQgNmc1PmhrXx87j6zr9rjvrpGqSFxcHqJf55HjQPJm7Qj712KU3DXpNF1N6gYh77k9M3"
   }
-}
+};
 
 const sampleUnsignedPresentation = {
   "@context": [
@@ -100,27 +100,28 @@ describe("api", () => {
   before(async () => {
     resetConfig();
     sandbox.stub(process, "env").value(validEnv);
-    server = build()
-    await server.ready()
+    server = build();
+    await server.ready();
   });
 
   describe("/status", () => {
+    const url = "/status";
     it("GET returns 200", async () => {
-      const response = await server.inject({ method: "GET", url: "/status" });
+      const response = await server.inject({ method: "GET", url: url });
       expect(response.statusCode).to.equal(200);
       const payload: { status: String } = JSON.parse(response.payload);
       expect(payload).to.deep.equal({ status: 'OK' });
     });
 
     it("POST returns 404", async () => {
-      const response = await server.inject({ method: "POST", url: "/status" });
+      const response = await server.inject({ method: "POST", url: url });
       expect(response.statusCode).to.equal(404);
       expect(response.payload).to.deep.equal('{"message":"Route POST:/status not found","error":"Not Found","statusCode":404}');
     });
   });
 
   describe("/issue/credentials", () => {
-    const url = "/issue/credentials"
+    const url = "/issue/credentials";
     it("POST returns 201 and cred", async () => {
       const response = await server.inject({
         method: "POST",
@@ -135,7 +136,7 @@ describe("api", () => {
   });
 
   describe("/prove/presentations", () => {
-    const url = "/prove/presentations"
+    const url = "/prove/presentations";
     it("POST returns 201 and presentation", async () => {
       const response = await server.inject({
         method: "POST",
@@ -151,7 +152,7 @@ describe("api", () => {
   });
 
   describe("/verify/credentials", () => {
-    const url = "/verify/credentials"
+    const url = "/verify/credentials";
     it("POST returns 200", async () => {
       const response = await server.inject({
         method: "POST",
@@ -166,7 +167,7 @@ describe("api", () => {
   });
 
   describe("/verify/presentations", () => {
-    const url = "/verify/presentations"
+    const url = "/verify/presentations";
     it("POST returns 200", async () => {
       const response = await server.inject({
         method: "POST",
@@ -180,7 +181,7 @@ describe("api", () => {
   });
 
   describe("/request/credential", () => {
-    const url = "/request/credential"
+    const url = "/request/credential";
     it("POST returns 201", async () => {
       const response = await server.inject({
         method: "POST",
@@ -195,7 +196,7 @@ describe("api", () => {
   });
 
   describe("/request/democredential/nodidproof", () => {
-    const url = "/request/democredential/nodidproof"
+    const url = "/request/democredential/nodidproof";
     it("POST returns 500 if demo issuance not supported", async () => {
       const response = await server.inject({
         method: "POST",
@@ -213,7 +214,7 @@ describe("api", () => {
   });
 
   describe("/request/democredential", () => {
-    const url = "/request/democredential"
+    const url = "/request/democredential";
     it("POST returns 500 if demo issuance not supported", async () => {
       const response = await server.inject({
         method: "POST",
@@ -225,7 +226,7 @@ describe("api", () => {
   });
 
   describe("/generate/controlproof", () => {
-    const url = "/generate/controlproof"
+    const url = "/generate/controlproof";
     it("POST returns 201 and cred", async () => {
         const response = await server.inject({
             method: "POST",
@@ -255,12 +256,12 @@ describe("api with demo issuance", () => {
         DEMO_ISSUER_METHOD: issuerVerificationMethod
       }
     );
-    server = build()
-    await server.ready()
+    server = build();
+    await server.ready();
   });
 
   describe("/request/democredential/nodidproof", () => {
-    const url = "/request/democredential/nodidproof"
+    const url = "/request/democredential/nodidproof";
     it("POST returns 201 and credential", async () => {
       const response = await server.inject({
         method: "POST",
@@ -282,7 +283,7 @@ describe("api with demo issuance", () => {
   });
 
   describe("/request/democredential", () => {
-    const url = "/request/democredential"
+    const url = "/request/democredential";
     it("POST returns 201 and credential", async () => {
       const response = await server.inject({
         method: "POST",
