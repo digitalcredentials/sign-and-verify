@@ -2,9 +2,9 @@ import fastify from 'fastify';
 import fastifyRawBody from 'fastify-raw-body';
 import fastifySensible from "fastify-sensible"
 import { createIssuer, createVerifier, DIDDocument } from '@digitalcredentials/sign-and-verify-core'
-import { getConfig } from "./config";
+import { getConfig } from './config';
 import { verifyRequestDigest, verifyRequestSignature } from './hooks';
-import { default as demoCredential } from "./demoCredential.json";
+import { default as demoCredential } from './demoCredential.json';
 import { v4 as uuidv4 } from 'uuid';
 
 
@@ -156,7 +156,7 @@ export function build(opts = {}) {
         // TODO: may be useful to use the challenge as a unique request ID,
         // in case the issuer is tracking multiple credentials for the learner
         // (e.g., course certificate, program certificate, transcript, diploma)
-        const credential = credentialRequestHandler(holder, challenge);
+        const credential = await credentialRequestHandler(holder, challenge);
         const options = {
           "verificationMethod": verificationMethod,
         }

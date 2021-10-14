@@ -1,6 +1,6 @@
-import { DIDDocument } from "@digitalcredentials/sign-and-verify-core";
-import { ConfigurationError } from "./errors";
-import { credentialRequestHandler } from "./issuer-helper";
+import { DIDDocument } from '@digitalcredentials/sign-and-verify-core';
+import { ConfigurationError } from './errors';
+import { credentialRequestHandler } from './issuer-helper';
 
 export type Config = {
   port: number,
@@ -10,7 +10,7 @@ export type Config = {
   digestCheck: boolean,
   digestAlorithms: Array<string>,
   demoIssuerMethod: string | null,
-  credentialRequestHandler: (holderId: string, requestId?: string) => any;
+  credentialRequestHandler: (holderId: string, requestId?: string) => Promise<any>;
 }
 
 let CONFIG: null | Config = null;
