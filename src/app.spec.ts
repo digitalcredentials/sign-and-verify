@@ -1,5 +1,5 @@
-import { build } from './app'
-import { expect, assert } from 'chai';
+import { build } from './app';
+import { expect } from 'chai';
 import { createSandbox } from "sinon";
 import 'mocha';
 import { FastifyInstance } from 'fastify';
@@ -11,6 +11,18 @@ const sandbox = createSandbox();
 const unlockedDid = readFileSync("data/unlocked-did:web:digitalcredentials.github.io.json");
 const validEnv = { UNLOCKED_DID: unlockedDid.toString("base64") };
 
+const issuerId = 'did:web:digitalcredentials.github.io';
+const issuerVerificationMethod = `${issuerId}#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7`;
+
+const holderKey = 'z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy';
+const holderId = `did:key:${holderKey}`;
+const holderVerificationMethod = `${holderId}#${holderKey}`;
+
+const challenge = 'test123';
+const credentialOptions = { verificationMethod: issuerVerificationMethod };
+// same as above for credentials, but also with a 'challenge':
+const presentationOptions = { ...credentialOptions, challenge };
+
 const sampleUnsignedCredential = {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
@@ -20,12 +32,12 @@ const sampleUnsignedCredential = {
   "type": [
     "VerifiableCredential"
   ],
-  "issuer": "did:web:digitalcredentials.github.io",
+  "issuer": issuerId,
   "issuanceDate": "2020-03-10T04:24:12.164Z",
   "credentialSubject": {
     "id": "did:example:abcdef"
   }
-}
+};
 
 const sampleSignedCredential = {
   "@context": [
@@ -36,7 +48,7 @@ const sampleSignedCredential = {
   "type": [
     "VerifiableCredential"
   ],
-  "issuer": "did:web:digitalcredentials.github.io",
+  "issuer": issuerId,
   "issuanceDate": "2020-03-10T04:24:12.164Z",
   "credentialSubject": {
     "id": "did:example:abcdef"
@@ -44,11 +56,11 @@ const sampleSignedCredential = {
   "proof": {
     "type": "Ed25519Signature2020",
     "created": "2021-05-04T18:59:42Z",
-    "verificationMethod": "did:web:digitalcredentials.github.io#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7",
+    "verificationMethod": issuerVerificationMethod,
     "proofPurpose": "assertionMethod",
     "proofValue": "z4jnMia8Q1EDAQDNnurAnQgNmc1PmhrXx87j6zr9rjvrpGqSFxcHqJf55HjQPJm7Qj712KU3DXpNF1N6gYh77k9M3"
   }
-}
+};
 
 const sampleUnsignedPresentation = {
   "@context": [
@@ -59,9 +71,8 @@ const sampleUnsignedPresentation = {
     "VerifiablePresentation"
   ],
   "id": "123",
-  "holder": "did:key:z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy"
+  "holder": holderId
 };
-
 
 const sampleSignedPresentation = {
   "@context": [
@@ -72,23 +83,16 @@ const sampleSignedPresentation = {
     "VerifiablePresentation"
   ],
   "id": "123",
-  "holder": "did:key:z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy",
+  "holder": holderId,
   "proof": {
     "type": "Ed25519Signature2020",
     "created": "2021-05-01T23:38:10Z",
-    "verificationMethod": "did:key:z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy#z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy",
+    "verificationMethod": holderVerificationMethod,
     "proofPurpose": "authentication",
-    "challenge": "test123",
+    "challenge": challenge,
     "proofValue": "z3Ukrcvwg59pPywog48R6xB6Fd5XWmPazqPCjdpaXpdKzaeNAc1Un1EF8VnVLbf4nvRk5SGiVDvgxddS66bi7kdAo"
   }
 };
-
-const verificationMethod = "did:web:digitalcredentials.github.io#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7";
-const credentialOptions = {
-  "verificationMethod": verificationMethod,
-}
-// same as above for credentials, but also with a 'challenge':
-const presentationOptions = { ...credentialOptions, challenge: "test123" }
 
 describe("api", () => {
   let server: FastifyInstance<Server, IncomingMessage, ServerResponse>;
@@ -96,26 +100,28 @@ describe("api", () => {
   before(async () => {
     resetConfig();
     sandbox.stub(process, "env").value(validEnv);
-    server = build()
-    await server.ready()
+    server = build();
+    await server.ready();
   });
 
   describe("/status", () => {
+    const url = "/status";
     it("GET returns 200", async () => {
-      const response = await server.inject({ method: "GET", url: "/status" });
+      const response = await server.inject({ method: "GET", url: url });
       expect(response.statusCode).to.equal(200);
       const payload: { status: String } = JSON.parse(response.payload);
       expect(payload).to.deep.equal({ status: 'OK' });
     });
+
     it("POST returns 404", async () => {
-      const response = await server.inject({ method: "POST", url: "/status" });
+      const response = await server.inject({ method: "POST", url: url });
       expect(response.statusCode).to.equal(404);
-      expect(response.payload).to.deep.equal('{"message":"Route POST:/status not found","error":"Not Found","statusCode":404}')
+      expect(response.payload).to.deep.equal('{"message":"Route POST:/status not found","error":"Not Found","statusCode":404}');
     });
   });
 
   describe("/issue/credentials", () => {
-    const url = "/issue/credentials"
+    const url = "/issue/credentials";
     it("POST returns 201 and cred", async () => {
       const response = await server.inject({
         method: "POST",
@@ -125,12 +131,12 @@ describe("api", () => {
       expect(response.statusCode).to.equal(201);
       const payload = JSON.parse(response.payload);
       expect(payload.proof.type).to.equal('Ed25519Signature2020');
-      expect(payload.issuer).to.equal('did:web:digitalcredentials.github.io')
+      expect(payload.issuer).to.equal(issuerId);
     }).timeout(6000);
   });
 
   describe("/prove/presentations", () => {
-    const url = "/prove/presentations"
+    const url = "/prove/presentations";
     it("POST returns 201 and presentation", async () => {
       const response = await server.inject({
         method: "POST",
@@ -140,13 +146,13 @@ describe("api", () => {
       expect(response.statusCode).to.equal(201);
       const payload = JSON.parse(response.payload);
       expect(payload.proof.type).to.equal('Ed25519Signature2020');
-      expect(payload.proof.challenge).to.equal('test123')
-      expect(payload.holder).to.equal('did:key:z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy')
+      expect(payload.proof.challenge).to.equal(challenge);
+      expect(payload.holder).to.equal(holderId);
     }).timeout(6000);
   });
 
   describe("/verify/credentials", () => {
-    const url = "/verify/credentials"
+    const url = "/verify/credentials";
     it("POST returns 200", async () => {
       const response = await server.inject({
         method: "POST",
@@ -161,7 +167,7 @@ describe("api", () => {
   });
 
   describe("/verify/presentations", () => {
-    const url = "/verify/presentations"
+    const url = "/verify/presentations";
     it("POST returns 200", async () => {
       const response = await server.inject({
         method: "POST",
@@ -170,12 +176,27 @@ describe("api", () => {
       });
       expect(response.statusCode).to.equal(200);
       const payload = JSON.parse(response.payload);
-      expect(payload).to.deep.equal({ "holder": "did:key:z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy" });
+      expect(payload).to.deep.equal({ "holder": holderId });
+    }).timeout(9000);
+  });
+
+  describe("/request/credential", () => {
+    const url = "/request/credential";
+    it("POST returns 201", async () => {
+      const response = await server.inject({
+        method: "POST",
+        url: url,
+        payload: { verifiablePresentation: sampleSignedPresentation, verificationMethod: issuerVerificationMethod }
+      });
+      expect(response.statusCode).to.equal(201);
+      const payload = JSON.parse(response.payload);
+      expect(payload.proof.type).to.equal('Ed25519Signature2020');
+      expect(payload.issuer.id).to.equal(issuerId);
     }).timeout(9000);
   });
 
   describe("/request/democredential/nodidproof", () => {
-    const url = "/request/democredential/nodidproof"
+    const url = "/request/democredential/nodidproof";
     it("POST returns 500 if demo issuance not supported", async () => {
       const response = await server.inject({
         method: "POST",
@@ -188,12 +209,12 @@ describe("api", () => {
     it("GET returns 404", async () => {
       const response = await server.inject({ method: "GET", url: url });
       expect(response.statusCode).to.equal(404);
-      expect(response.payload).to.deep.equal('{"message":"Route GET:/request/democredential/nodidproof not found","error":"Not Found","statusCode":404}')
+      expect(response.payload).to.deep.equal('{"message":"Route GET:/request/democredential/nodidproof not found","error":"Not Found","statusCode":404}');
     });
   });
 
   describe("/request/democredential", () => {
-    const url = "/request/democredential"
+    const url = "/request/democredential";
     it("POST returns 500 if demo issuance not supported", async () => {
       const response = await server.inject({
         method: "POST",
@@ -204,27 +225,25 @@ describe("api", () => {
     }).timeout(9000);
   });
 
-
   describe("/generate/controlproof", () => {
-    const url = "/generate/controlproof"
+    const url = "/generate/controlproof";
     it("POST returns 201 and cred", async () => {
         const response = await server.inject({
             method: "POST",
             url: url,
             payload: { 
               "presentationId": "456", 
-              "holder": "did:web:digitalcredentials.github.io", 
-              "verificationMethod": verificationMethod, 
+              "holder": issuerId, 
+              "verificationMethod": issuerVerificationMethod, 
               "challenge": "123" 
             }
         });
         expect(response.statusCode).to.equal(201);
         const payload = JSON.parse(response.payload);
-        expect(payload.holder).to.equal("did:web:digitalcredentials.github.io");
+        expect(payload.holder).to.equal(issuerId);
     }).timeout(6000);
   });
-})
-
+});
 
 describe("api with demo issuance", () => {
   let server: FastifyInstance<Server, IncomingMessage, ServerResponse>;
@@ -234,15 +253,15 @@ describe("api with demo issuance", () => {
     sandbox.stub(process, "env").value(
       {
         ...validEnv,
-        DEMO_ISSUER_METHOD: 'did:web:digitalcredentials.github.io#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7'
+        DEMO_ISSUER_METHOD: issuerVerificationMethod
       }
     );
-    server = build()
-    await server.ready()
+    server = build();
+    await server.ready();
   });
 
   describe("/request/democredential/nodidproof", () => {
-    const url = "/request/democredential/nodidproof"
+    const url = "/request/democredential/nodidproof";
     it("POST returns 201 and credential", async () => {
       const response = await server.inject({
         method: "POST",
@@ -252,19 +271,19 @@ describe("api with demo issuance", () => {
       expect(response.statusCode).to.equal(201);
       const payload = JSON.parse(response.payload);
       expect(payload.proof.type).to.equal('Ed25519Signature2020');
-      expect(payload.issuer.id).to.equal('did:web:digitalcredentials.github.io');
+      expect(payload.issuer.id).to.equal(issuerId);
       expect(payload.credentialSubject.id).to.equal("did:example:me");
     }).timeout(6000);
 
     it("GET returns 404", async () => {
       const response = await server.inject({ method: "GET", url: url });
       expect(response.statusCode).to.equal(404);
-      expect(response.payload).to.deep.equal('{"message":"Route GET:/request/democredential/nodidproof not found","error":"Not Found","statusCode":404}')
+      expect(response.payload).to.deep.equal('{"message":"Route GET:/request/democredential/nodidproof not found","error":"Not Found","statusCode":404}');
     });
   });
 
   describe("/request/democredential", () => {
-    const url = "/request/democredential"
+    const url = "/request/democredential";
     it("POST returns 201 and credential", async () => {
       const response = await server.inject({
         method: "POST",
@@ -274,8 +293,7 @@ describe("api with demo issuance", () => {
       expect(response.statusCode).to.equal(201);
       const payload = JSON.parse(response.payload);
       expect(payload.proof.type).to.equal('Ed25519Signature2020');
-      expect(payload.issuer.id).to.equal('did:web:digitalcredentials.github.io')
+      expect(payload.issuer.id).to.equal(issuerId);
     }).timeout(9000);
   });
-
-})
+});

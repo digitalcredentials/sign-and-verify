@@ -3,6 +3,7 @@ import { createSandbox } from "sinon";
 import 'mocha';
 
 import { parseConfig, getConfig, resetConfig, Config } from "./config";
+import { credentialRequestHandler } from "./issuer-helper";
 import { ConfigurationError } from "./errors";
 import { readFileSync } from 'fs';
 
@@ -16,7 +17,8 @@ const expectedConfig: Config = {
   hmacRequiredHeaders: ["date", "digest"],
   digestCheck: false,
   digestAlorithms: ["SHA256", "SHA512"],
-  demoIssuerMethod: null
+  demoIssuerMethod: null,
+  credentialRequestHandler
 };
 const validEnv = {
   UNLOCKED_DID: unlockedDid.toString("base64"),

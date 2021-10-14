@@ -1,5 +1,6 @@
-import { DIDDocument } from "@digitalcredentials/sign-and-verify-core";
-import { ConfigurationError } from "./errors";
+import { DIDDocument } from '@digitalcredentials/sign-and-verify-core';
+import { ConfigurationError } from './errors';
+import { credentialRequestHandler } from './issuer-helper';
 
 export type Config = {
   port: number,
@@ -8,7 +9,8 @@ export type Config = {
   hmacRequiredHeaders: Array<string>,
   digestCheck: boolean,
   digestAlorithms: Array<string>,
-  demoIssuerMethod: string | null
+  demoIssuerMethod: string | null,
+  credentialRequestHandler: (holderId: string, requestId?: string) => Promise<any>;
 }
 
 let CONFIG: null | Config = null;
@@ -30,7 +32,8 @@ export function parseConfig(): Config {
     digestAlorithms: (
       process.env.DIGEST_ALGORITHMS || "SHA256,SHA512"
     ).split(",").map((alg) => alg.trim()),
-    demoIssuerMethod : process.env.DEMO_ISSUER_METHOD || null
+    demoIssuerMethod : process.env.DEMO_ISSUER_METHOD || null,
+    credentialRequestHandler: credentialRequestHandler
   });
 }
 
