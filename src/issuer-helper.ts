@@ -1,5 +1,5 @@
 // NOTE: The operations in this file are specific to MongoDB
-// and the databse schema used in early deployments of this code.
+// and the database schema used in early deployments of this code.
 // You may modify the content of credentialRequestHandler to
 // suit your organization's DBMS deployment infrastructure
 
