@@ -7,6 +7,8 @@ import { Server, IncomingMessage, ServerResponse } from 'http';
 import LRU from 'lru-cache';
 import { readFileSync } from 'fs';
 import { resetConfig } from './config';
+import * as IssuerHelper from './issuer-helper';
+import demoCredential from './demoCredential.json';
 
 const sandbox = createSandbox();
 const lruStub = sandbox.createStubInstance(LRU) as SinonStubbedInstance<LRU> & LRU;
@@ -200,6 +202,7 @@ describe("api", () => {
   });
 
   describe("/request/credential", () => {
+    sandbox.stub(IssuerHelper, 'credentialRequestHandler').returns(Promise.resolve(demoCredential));
     const url = "/request/credential";
     it("POST returns 201", async () => {
       const response = await server.inject({
