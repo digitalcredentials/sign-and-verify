@@ -1,14 +1,14 @@
 import { build } from './app';
 import { expect } from 'chai';
-import { createSandbox } from "sinon";
+import { createSandbox } from 'sinon';
 import 'mocha';
 import { FastifyInstance } from 'fastify';
-import { Server, IncomingMessage, ServerResponse } from "http";
+import { Server, IncomingMessage, ServerResponse } from 'http';
 import { readFileSync } from 'fs';
 import { resetConfig } from './config';
 
 const sandbox = createSandbox();
-const unlockedDid = readFileSync("data/unlocked-did:web:digitalcredentials.github.io.json");
+const unlockedDid = readFileSync('data/unlocked-did:web:digitalcredentials.github.io.json');
 const validEnv = { UNLOCKED_DID: unlockedDid.toString("base64") };
 
 const issuerId = 'did:web:digitalcredentials.github.io';
