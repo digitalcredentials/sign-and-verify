@@ -19,9 +19,9 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 - `DIGEST_ALGORITHMS` - a comma-delimited list of acceptable digest algorithms (optional, default: `sha256,sha512`)
 - `HMAC_SECRET` - set to the shared HMAC secret to require [HMAC signing](https://tools.ietf.org/html/draft-ietf-httpbis-message-signatures-00) of the request via the `Signature` header (optional, default: `null`)
 - `HMAC_REQUIRED_HEADERS` - a comma-delimited list of headers that are required to be in the HMAC signature (optional, default: `date,digest`)
-- `DB_USER` - database client username
-- `DB_PASS` - database client password
-- `DB_HOST` - database client hostname
+- `DB_USER` - database client username (optional)
+- `DB_PASS` - database client password (optional)
+- `DB_HOST` - database client hostname (optional)
 
 2. Copy `.env.example` to `.env`, which `npm run start` will pick up, to test these values.
 
