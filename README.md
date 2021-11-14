@@ -13,6 +13,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 1. Configure the service with the following environment variables:
 
 - `UNLOCKED_DID` - a base64 encoded DID json blob (required)
+- `ISSUER_MEMBERSHIP_REGISTRY_URL` - location of registry used to confirm issuer's membership status in DCC (required)
 - `PORT` - the port the web service will bind to (optional, default: `5000`)
 - `DIGEST_CHECK` - set to `true` to enable `Digest` header verification (optional, default: `false`)
 - `DIGEST_ALGORITHMS` - a comma-delimited list of acceptable digest algorithms (optional, default: `sha256,sha512`)

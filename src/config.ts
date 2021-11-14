@@ -10,6 +10,7 @@ export type Config = {
   digestCheck: boolean,
   digestAlorithms: Array<string>,
   demoIssuerMethod: string | null,
+  issuerMembershipRegistryUrl: string,
   credentialRequestHandler: (holderId: string, requestId?: string) => Promise<any>;
 }
 
@@ -33,6 +34,7 @@ export function parseConfig(): Config {
       process.env.DIGEST_ALGORITHMS || "SHA256,SHA512"
     ).split(",").map((alg) => alg.trim()),
     demoIssuerMethod : process.env.DEMO_ISSUER_METHOD || null,
+    issuerMembershipRegistryUrl: process.env.ISSUER_MEMBERSHIP_REGISTRY_URL || 'https://digitalcredentials.github.io/issuer-registry/registry.json',
     credentialRequestHandler: credentialRequestHandler
   });
 }
