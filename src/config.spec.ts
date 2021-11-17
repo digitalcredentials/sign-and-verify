@@ -1,10 +1,10 @@
 import { expect, assert } from 'chai';
-import { createSandbox } from "sinon";
+import { createSandbox } from 'sinon';
 import 'mocha';
 
-import { parseConfig, getConfig, resetConfig, Config } from "./config";
-import { credentialRequestHandler } from "./issuer-helper";
-import { ConfigurationError } from "./errors";
+import { parseConfig, getConfig, resetConfig, Config } from './config';
+import { credentialRequestHandler } from './issuer-helper';
+import { ConfigurationError } from './errors';
 import { readFileSync } from 'fs';
 
 const sandbox = createSandbox();
@@ -18,6 +18,7 @@ const expectedConfig: Config = {
   digestCheck: false,
   digestAlorithms: ["SHA256", "SHA512"],
   demoIssuerMethod: null,
+  issuerMembershipRegistryUrl: "https://digitalcredentials.github.io/issuer-registry/registry.json",
   credentialRequestHandler
 };
 const validEnv = {

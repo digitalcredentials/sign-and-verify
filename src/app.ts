@@ -7,7 +7,7 @@ import { getConfig } from './config';
 import { verifyRequestDigest, verifyRequestSignature } from './hooks';
 import { default as demoCredential } from './demoCredential.json';
 import { v4 as uuidv4 } from 'uuid';
-import * as LRU from 'lru-cache';
+import LRU from 'lru-cache';
 
 // LRU Cache with max age of one hour
 const LRU_OPTIONS = { maxAge: 1000 * 60 * 60 };

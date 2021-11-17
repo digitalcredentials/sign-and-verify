@@ -1,15 +1,33 @@
 import { build } from './app';
 import { expect } from 'chai';
-import { createSandbox } from 'sinon';
+import { createSandbox, SinonStubbedInstance } from 'sinon';
 import 'mocha';
 import { FastifyInstance } from 'fastify';
 import { Server, IncomingMessage, ServerResponse } from 'http';
+import LRU from 'lru-cache';
 import { readFileSync } from 'fs';
 import { resetConfig } from './config';
 
+const sampleIssuerRegistry = {
+  meta: {
+    created: "2020-12-02T02:32:16+0000",
+    updated: "2021-09-20T01:06:23+0000"
+  },
+  registry: {
+    "did:key:z6Mktpn6cXks1PBKLMgZH2VaahvCtBMF6K8eCa7HzrnuYLZv": {}
+  }
+};
+
 const sandbox = createSandbox();
-const unlockedDid = readFileSync('data/unlocked-did:web:digitalcredentials.github.io.json');
-const validEnv = { UNLOCKED_DID: unlockedDid.toString("base64") };
+const lruStub = sandbox.createStubInstance(LRU) as SinonStubbedInstance<LRU> & LRU;
+lruStub.get.returns(sampleIssuerRegistry);
+lruStub.set.returns(true);
+
+const unlockedDid = readFileSync("data/unlocked-did:web:digitalcredentials.github.io.json");
+const validEnv = {
+  UNLOCKED_DID: unlockedDid.toString("base64"),
+  ISSUER_MEMBERSHIP_REGISTRY_URL: "https://digitalcredentials.github.io/issuer-registry/registry.json"
+};
 
 const issuerId = 'did:web:digitalcredentials.github.io';
 const issuerVerificationMethod = `${issuerId}#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7`;
@@ -100,7 +118,7 @@ describe("api", () => {
   before(async () => {
     resetConfig();
     sandbox.stub(process, "env").value(validEnv);
-    server = build();
+    server = await build();
     await server.ready();
   });
 
@@ -256,7 +274,7 @@ describe("api with demo issuance", () => {
         DEMO_ISSUER_METHOD: issuerVerificationMethod
       }
     );
-    server = build();
+    server = await build();
     await server.ready();
   });
 
