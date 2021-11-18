@@ -8,7 +8,10 @@ import LRU from 'lru-cache';
 import { readFileSync } from 'fs';
 import { resetConfig } from './config';
 
-const sampleIssuerRegistry = {
+const sandbox = createSandbox();
+const lruStub = sandbox.createStubInstance(LRU) as SinonStubbedInstance<LRU> & LRU;
+
+const sampleIssuerMembershipRegistry = {
   meta: {
     created: "2020-12-02T02:32:16+0000",
     updated: "2021-09-20T01:06:23+0000"
@@ -18,9 +21,7 @@ const sampleIssuerRegistry = {
   }
 };
 
-const sandbox = createSandbox();
-const lruStub = sandbox.createStubInstance(LRU) as SinonStubbedInstance<LRU> & LRU;
-lruStub.get.returns(sampleIssuerRegistry);
+lruStub.get.returns(sampleIssuerMembershipRegistry);
 lruStub.set.returns(true);
 
 const unlockedDid = readFileSync("data/unlocked-did:web:digitalcredentials.github.io.json");

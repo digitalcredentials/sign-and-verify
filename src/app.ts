@@ -159,7 +159,7 @@ export async function build(opts = {}) {
         "challenge": challenge
       };
 
-      const verificationResult = await verifyPresentation(verifiablePresentation, options);
+      const verificationResult = await verifyPresentation({verifiablePresentation, issuerMembershipRegistry, options});
       if (verificationResult.verified) {
         // TODO: may be useful to use the challenge as a unique request ID,
         // in case the issuer is tracking multiple credentials for the learner
@@ -221,7 +221,7 @@ export async function build(opts = {}) {
         "challenge": challenge
       };
 
-      const verificationResult = await verifyPresentation(verifiablePresentation, options);
+      const verificationResult = await verifyPresentation({verifiablePresentation, issuerMembershipRegistry, options});
       if (verificationResult.verified) {
 
         const demoCredential = constructDemoCredential(holder);
