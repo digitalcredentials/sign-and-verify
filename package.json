@@ -1,6 +1,6 @@
 {
   "name": "@digitalcredentials/sign-and-verify",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Basic demo of signing functionality using vc-js and lds-jws2020",
   "main": "index.js",
   "scripts": {
@@ -16,7 +16,7 @@
   "license": "MIT",
   "repository": "git@github.com:digitalcredentials/sign-and-verify.git",
   "dependencies": {
-    "@digitalcredentials/sign-and-verify-core": "0.0.17",
+    "@digitalcredentials/sign-and-verify-core": "digitalcredentials/sign-and-verify-core#update-dcc-npm-libraries",
     "dotenv": "^8.2.0",
     "fastify": "^3.14.2",
     "fastify-cors": "^4.1.0",

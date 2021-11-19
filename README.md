@@ -12,7 +12,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 
 1. Configure the service with the following environment variables:
 
-- `UNLOCKED_DID` - a base64 encoded DID json blob (required)
+- `DID_SEED` - a secret seed used to generate DID document for issuer (required)
 - `PORT` - the port the web service will bind to (optional, default: `5000`)
 - `DIGEST_CHECK` - set to `true` to enable `Digest` header verification (optional, default: `false`)
 - `DIGEST_ALGORITHMS` - a comma-delimited list of acceptable digest algorithms (optional, default: `sha256,sha512`)
@@ -23,7 +23,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 
 3. Implement the `credentialRequestHandler` method in `./src/issuer-helper.ts`
 
-NOTE: the `UNLOCKED_DID` included as an example is just for your reference. Do not check in unlocked dids, private keys, or the equivalent.
+NOTE: the `DID_SEED` included as an example is just for your reference. Do not check in production did seeds, private keys, or the equivalent.
 
 ## Install
 
