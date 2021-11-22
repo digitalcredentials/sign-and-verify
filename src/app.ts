@@ -1,20 +1,52 @@
 import fastify from 'fastify';
 import fastifyRawBody from 'fastify-raw-body';
-import fastifySensible from "fastify-sensible"
-import { createIssuer, createVerifier, DIDDocument } from '@digitalcredentials/sign-and-verify-core'
+import axios from 'axios';
+import fastifySensible from 'fastify-sensible';
+import { createIssuer, createVerifier, DIDDocument } from '@digitalcredentials/sign-and-verify-core';
+import { driver } from '@digitalcredentials/did-method-key';
 import { getConfig } from './config';
 import { verifyRequestDigest, verifyRequestSignature } from './hooks';
 import { default as demoCredential } from './demoCredential.json';
 import { v4 as uuidv4 } from 'uuid';
+import LRU from 'lru-cache';
 
+// LRU cache for issuer membership registry with max age of one hour
+const LRU_OPTIONS = { maxAge: 1000 * 60 * 60 };
+const issuerMembershipRegistryCache = new LRU(LRU_OPTIONS);
 
-export function build(opts = {}) {
+// Tool used to generate DID from secret seed
+const didKeyDriver = driver();
 
-  const { unlockedDid, demoIssuerMethod, credentialRequestHandler } = getConfig();
-  const publicDid: DIDDocument = JSON.parse(JSON.stringify(unlockedDid));
-  delete publicDid.assertionMethod[0].privateKeyMultibase;
-  const { sign, signPresentation, createAndSignPresentation } = createIssuer([unlockedDid]);
+export async function build(opts = {}) {
+
+  const privatizeDid = (didDocument, getMethodForPurpose) => {
+    const didDocumentClone = JSON.parse(JSON.stringify(didDocument));
+    const purposes = [
+      'authentication',
+      'assertionMethod',
+      'verificationMethod',
+      'capabilityDelegation',
+      'capabilityInvocation',
+      'keyAgreement'
+    ];
+    purposes.forEach((purpose) => {
+      const methodForPurpose = getMethodForPurpose({ purpose });
+      didDocumentClone[purpose][0] = JSON.parse(JSON.stringify(methodForPurpose));
+    });
+    return didDocumentClone;
+  };
+
+  const { didSeed, demoIssuerMethod, issuerMembershipRegistryUrl, credentialRequestHandler } = getConfig();
+  const didSeedBytes = (new TextEncoder()).encode(didSeed).slice(0, 32);
+  const { didDocument, methodFor } = await didKeyDriver.generate({ seed: didSeedBytes });
+  const publicDid: DIDDocument = JSON.parse(JSON.stringify(didDocument));
+  const privateDid = privatizeDid(didDocument, methodFor);
+
+  const { sign, signPresentation, createAndSignPresentation } = createIssuer([privateDid]);
   const { verify, verifyPresentation } = createVerifier([publicDid]);
+
+  const issuerMembershipRegistry = (await axios.get(issuerMembershipRegistryUrl)).data.registry;
+  issuerMembershipRegistryCache.set('issuerMembershipRegistry', issuerMembershipRegistry);
 
   const server = fastify({
     logger: true
@@ -104,11 +136,16 @@ export function build(opts = {}) {
       const verifiableCredential = req.verifiableCredential;
       const options = req.options;
 
-      const result = await verify(verifiableCredential);
+      let issuerMembershipRegistry = issuerMembershipRegistryCache.get('issuerMembershipRegistry');
+      if (!issuerMembershipRegistry) {
+        issuerMembershipRegistry = (await axios.get(issuerMembershipRegistryUrl)).data.registry;
+        issuerMembershipRegistryCache.set('issuerMembershipRegistry', issuerMembershipRegistry);
+      }
+      const verificationResult = await verify({verifiableCredential, issuerMembershipRegistry});
       reply
         .code(200)
         .header('Content-Type', 'application/json; charset=utf-8')
-        .send(result);
+        .send(verificationResult);
     }
   )
 
@@ -118,20 +155,16 @@ export function build(opts = {}) {
       const verifiablePresentation = requestInfo.verifiablePresentation;
       const options = requestInfo.options;
 
-      const verificationResult = await verifyPresentation(verifiablePresentation, options);
-      if (verificationResult.verified) {
-        reply
-          .code(200)
-          .header('Content-Type', 'application/json; charset=utf-8')
-          .send({
-            // note: holder is not part of the vc-http-api standard
-            holder: verifiablePresentation.holder
-          });
-      } else {
-        reply
-          .code(500)
-          .send({ message: 'Could not validate DID', error: verificationResult });
+      let issuerMembershipRegistry = issuerMembershipRegistryCache.get('issuerMembershipRegistry');
+      if (!issuerMembershipRegistry) {
+        issuerMembershipRegistry = (await axios.get(issuerMembershipRegistryUrl)).data.registry;
+        issuerMembershipRegistryCache.set('issuerMembershipRegistry', issuerMembershipRegistry);
       }
+      const verificationResult = await verifyPresentation({verifiablePresentation, issuerMembershipRegistry, options});
+      reply
+        .code(200)
+        .header('Content-Type', 'application/json; charset=utf-8')
+        .send(verificationResult);
     }
   )
 
@@ -151,7 +184,7 @@ export function build(opts = {}) {
         "challenge": challenge
       };
 
-      const verificationResult = await verifyPresentation(verifiablePresentation, options);
+      const verificationResult = await verifyPresentation({verifiablePresentation, issuerMembershipRegistry, options});
       if (verificationResult.verified) {
         // TODO: may be useful to use the challenge as a unique request ID,
         // in case the issuer is tracking multiple credentials for the learner
@@ -213,7 +246,7 @@ export function build(opts = {}) {
         "challenge": challenge
       };
 
-      const verificationResult = await verifyPresentation(verifiablePresentation, options);
+      const verificationResult = await verifyPresentation({verifiablePresentation, issuerMembershipRegistry, options});
       if (verificationResult.verified) {
 
         const demoCredential = constructDemoCredential(holder);

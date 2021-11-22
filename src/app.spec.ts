@@ -1,18 +1,37 @@
 import { build } from './app';
 import { expect } from 'chai';
-import { createSandbox } from 'sinon';
+import { createSandbox, SinonStubbedInstance } from 'sinon';
 import 'mocha';
 import { FastifyInstance } from 'fastify';
 import { Server, IncomingMessage, ServerResponse } from 'http';
+import LRU from 'lru-cache';
 import { readFileSync } from 'fs';
 import { resetConfig } from './config';
 
 const sandbox = createSandbox();
-const unlockedDid = readFileSync('data/unlocked-did:web:digitalcredentials.github.io.json');
-const validEnv = { UNLOCKED_DID: unlockedDid.toString("base64") };
+const lruStub = sandbox.createStubInstance(LRU) as SinonStubbedInstance<LRU> & LRU;
 
-const issuerId = 'did:web:digitalcredentials.github.io';
-const issuerVerificationMethod = `${issuerId}#z6MkrXSQTybtqyMasfSxeRBJxDvDUGqb7mt9fFVXkVn6xTG7`;
+const sampleIssuerMembershipRegistry = {
+  meta: {
+    created: "2020-12-02T02:32:16+0000",
+    updated: "2021-09-20T01:06:23+0000"
+  },
+  registry: {
+    "did:key:z6Mktpn6cXks1PBKLMgZH2VaahvCtBMF6K8eCa7HzrnuYLZv": {}
+  }
+};
+
+lruStub.get.returns(sampleIssuerMembershipRegistry);
+lruStub.set.returns(true);
+
+const validEnv = {
+  DID_SEED: 'DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2',
+  ISSUER_MEMBERSHIP_REGISTRY_URL: "https://digitalcredentials.github.io/issuer-registry/registry.json"
+};
+
+const issuerKey = 'z6MkhVTX9BF3NGYX6cc7jWpbNnR7cAjH8LUffabZP8Qu4ysC';
+const issuerId = `did:key:${issuerKey}`;
+const issuerVerificationMethod = `${issuerId}#${issuerKey}`;
 
 const holderKey = 'z6MkoSu3TY7zYt7RF9LAqXbW7VegC3SFAdLp32VWudSfv8Qy';
 const holderId = `did:key:${holderKey}`;
@@ -55,10 +74,10 @@ const sampleSignedCredential = {
   },
   "proof": {
     "type": "Ed25519Signature2020",
-    "created": "2021-05-04T18:59:42Z",
+    "created": "2021-11-19T05:22:46Z",
     "verificationMethod": issuerVerificationMethod,
     "proofPurpose": "assertionMethod",
-    "proofValue": "z4jnMia8Q1EDAQDNnurAnQgNmc1PmhrXx87j6zr9rjvrpGqSFxcHqJf55HjQPJm7Qj712KU3DXpNF1N6gYh77k9M3"
+    "proofValue": "z2xonscEusWqAUJDFjdZsqtBNy4uDfzJaVvzZZgrVLMKhzLgjoj197j3AyBkL5scmR1Gq7PXJEMwSwtk5b9z2LbCV"
   }
 };
 
@@ -100,7 +119,7 @@ describe("api", () => {
   before(async () => {
     resetConfig();
     sandbox.stub(process, "env").value(validEnv);
-    server = build();
+    server = await build();
     await server.ready();
   });
 
@@ -176,7 +195,7 @@ describe("api", () => {
       });
       expect(response.statusCode).to.equal(200);
       const payload = JSON.parse(response.payload);
-      expect(payload).to.deep.equal({ "holder": holderId });
+      expect(payload.verified).to.be.true;
     }).timeout(9000);
   });
 
@@ -256,7 +275,7 @@ describe("api with demo issuance", () => {
         DEMO_ISSUER_METHOD: issuerVerificationMethod
       }
     );
-    server = build();
+    server = await build();
     await server.ready();
   });
 

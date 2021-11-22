@@ -1,4 +1,3 @@
-import { readFileSync } from 'fs';
 import { createSandbox } from 'sinon';
 import { createHmac, createHash } from "crypto";
 import { expect } from 'chai';
@@ -12,9 +11,8 @@ import { verifyRequestSignature, verifyRequestDigest } from "./hooks";
 import { resetConfig } from './config';
 
 const sandbox = createSandbox();
-const unlockedDid = readFileSync("data/unlocked-did:web:digitalcredentials.github.io.json");
 const validEnv = {
-  UNLOCKED_DID: unlockedDid.toString("base64"),
+  DID_SEED: 'DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2',
   DIGEST_CHECK: "true",
   HMAC_SECRET: "secret"
 };
