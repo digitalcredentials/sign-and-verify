@@ -24,9 +24,8 @@ const sampleIssuerMembershipRegistry = {
 lruStub.get.returns(sampleIssuerMembershipRegistry);
 lruStub.set.returns(true);
 
-const unlockedDid = readFileSync("data/unlocked-did:web:digitalcredentials.github.io.json");
 const validEnv = {
-  UNLOCKED_DID: unlockedDid.toString("base64"),
+  DID_SEED: 'DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2',
   ISSUER_MEMBERSHIP_REGISTRY_URL: "https://digitalcredentials.github.io/issuer-registry/registry.json"
 };
 
@@ -75,7 +74,7 @@ const sampleSignedCredential = {
   },
   "proof": {
     "type": "Ed25519Signature2020",
-    "created": "2021-05-04T18:59:42Z",
+    "created": "2021-11-19T05:22:46Z",
     "verificationMethod": issuerVerificationMethod,
     "proofPurpose": "assertionMethod",
     "proofValue": "z2xonscEusWqAUJDFjdZsqtBNy4uDfzJaVvzZZgrVLMKhzLgjoj197j3AyBkL5scmR1Gq7PXJEMwSwtk5b9z2LbCV"

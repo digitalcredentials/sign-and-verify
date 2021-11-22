@@ -1,10 +1,9 @@
-import { DIDDocument } from '@digitalcredentials/sign-and-verify-core';
 import { ConfigurationError } from './errors';
 import { credentialRequestHandler } from './issuer-helper';
 
 export type Config = {
   port: number,
-  unlockedDid: DIDDocument,
+  didSeed: string;
   hmacSecret: string | null,
   hmacRequiredHeaders: Array<string>,
   digestCheck: boolean,
@@ -17,14 +16,12 @@ export type Config = {
 let CONFIG: null | Config = null;
 
 export function parseConfig(): Config {
-  if (!process.env.UNLOCKED_DID) {
-    throw new ConfigurationError("Environment variable 'UNLOCKED_DID' is not set");
+  if (!process.env.DID_SEED) {
+    throw new ConfigurationError("Environment variable 'DID_SEED' is not set");
   }
   return Object.freeze({
     port: process.env.PORT ? Number(process.env.PORT) : 5000,
-    unlockedDid: JSON.parse(
-      Buffer.from(process.env.UNLOCKED_DID, "base64").toString("ascii")
-    ),
+    didSeed: process.env.DID_SEED,
     hmacSecret: process.env.HMAC_SECRET || null,
     hmacRequiredHeaders: (
       process.env.HMAC_REQUIRED_HEADERS || "date,digest"

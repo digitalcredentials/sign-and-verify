@@ -7,7 +7,7 @@ const run = async () => {
   const server = await build({
     logger: true
   });
-  
+
   server.listen(port, '::', (err, address) => {
     if (err) {
       console.error(err);

@@ -5,14 +5,13 @@ import 'mocha';
 import { parseConfig, getConfig, resetConfig, Config } from './config';
 import { credentialRequestHandler } from './issuer-helper';
 import { ConfigurationError } from './errors';
-import { readFileSync } from 'fs';
 
 const sandbox = createSandbox();
 
-const unlockedDid = readFileSync("data/unlocked-did:web:digitalcredentials.github.io.json");
+const didSeed = 'DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2';
 const expectedConfig: Config = {
   port: 5000,
-  unlockedDid: JSON.parse(unlockedDid.toString("ascii")),
+  didSeed,
   hmacSecret: null,
   hmacRequiredHeaders: ["date", "digest"],
   digestCheck: false,
@@ -22,7 +21,7 @@ const expectedConfig: Config = {
   credentialRequestHandler
 };
 const validEnv = {
-  UNLOCKED_DID: unlockedDid.toString("base64"),
+  DID_SEED: didSeed
 };
 
 describe("config", () => {
@@ -116,9 +115,9 @@ describe("config", () => {
       });
     });
 
-    it("should throw an exception if env.UNLOCKED_DID isn't set", () => {
+    it("should throw an exception if env.DID_SEED isn't set", () => {
       sandbox.stub(process, "env").value({});
-      assert.throws(parseConfig, ConfigurationError, "Environment variable 'UNLOCKED_DID' is not set");
+      assert.throws(parseConfig, ConfigurationError, "Environment variable 'DID_SEED' is not set");
     });
   });
 

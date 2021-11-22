@@ -1,23 +1,48 @@
 import fastify from 'fastify';
 import fastifyRawBody from 'fastify-raw-body';
-import fastifySensible from "fastify-sensible"
 import axios from 'axios';
-import { createIssuer, createVerifier, DIDDocument } from '@digitalcredentials/sign-and-verify-core'
+import fastifySensible from 'fastify-sensible';
+import { createIssuer, createVerifier, DIDDocument } from '@digitalcredentials/sign-and-verify-core';
+import { driver } from '@digitalcredentials/did-method-key';
 import { getConfig } from './config';
 import { verifyRequestDigest, verifyRequestSignature } from './hooks';
 import { default as demoCredential } from './demoCredential.json';
 import { v4 as uuidv4 } from 'uuid';
 import LRU from 'lru-cache';
 
-// LRU Cache with max age of one hour
+// LRU cache for issuer membership registry with max age of one hour
 const LRU_OPTIONS = { maxAge: 1000 * 60 * 60 };
 const issuerMembershipRegistryCache = new LRU(LRU_OPTIONS);
 
+// Tool used to generate DID from secret seed
+const didKeyDriver = driver();
+
 export async function build(opts = {}) {
-  const { unlockedDid, demoIssuerMethod, issuerMembershipRegistryUrl, credentialRequestHandler } = getConfig();
-  const publicDid: DIDDocument = JSON.parse(JSON.stringify(unlockedDid));
-  delete publicDid.assertionMethod[0].privateKeyMultibase;
-  const { sign, signPresentation, createAndSignPresentation } = createIssuer([unlockedDid]);
+
+  const privatizeDid = (didDocument, getMethodForPurpose) => {
+    const didDocumentClone = JSON.parse(JSON.stringify(didDocument));
+    const purposes = [
+      'authentication',
+      'assertionMethod',
+      'verificationMethod',
+      'capabilityDelegation',
+      'capabilityInvocation',
+      'keyAgreement'
+    ];
+    purposes.forEach((purpose) => {
+      const methodForPurpose = getMethodForPurpose({ purpose });
+      didDocumentClone[purpose][0] = JSON.parse(JSON.stringify(methodForPurpose));
+    });
+    return didDocumentClone;
+  };
+
+  const { didSeed, demoIssuerMethod, issuerMembershipRegistryUrl, credentialRequestHandler } = getConfig();
+  const didSeedBytes = (new TextEncoder()).encode(didSeed).slice(0, 32);
+  const { didDocument, methodFor } = await didKeyDriver.generate({ seed: didSeedBytes });
+  const publicDid: DIDDocument = JSON.parse(JSON.stringify(didDocument));
+  const privateDid = privatizeDid(didDocument, methodFor);
+
+  const { sign, signPresentation, createAndSignPresentation } = createIssuer([privateDid]);
   const { verify, verifyPresentation } = createVerifier([publicDid]);
 
   const issuerMembershipRegistry = (await axios.get(issuerMembershipRegistryUrl)).data.registry;

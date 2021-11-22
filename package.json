@@ -1,6 +1,6 @@
 {
   "name": "@digitalcredentials/sign-and-verify",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Basic demo of signing functionality using vc-js and lds-jws2020",
   "main": "index.js",
   "scripts": {
