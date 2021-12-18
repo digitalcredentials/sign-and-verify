@@ -1,0 +1,8 @@
+{
+  "ISSUER_NAME": "Example Institute of Technology",
+  "ISSUER_URL": "https://cs.example.edu",
+  "ISSUER_STREET": "123 Main Street",
+  "ISSUER_CITY": "Bronx",
+  "ISSUER_STATE": "NY",
+  "ISSUER_ZIP": "12345"
+}
