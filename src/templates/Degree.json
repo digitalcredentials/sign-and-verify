@@ -7,6 +7,10 @@
   ],
   "id": "{{CREDENTIAL_ID}}",
   "type": ["VerifiableCredential", "Assertion"],
+  "issuer": {
+    "id": "{{ISSUER_DID}}",
+    "name": "{{ISSUER_NAME}}"
+  },
   "credentialSubject": {
     "id": "{{LEARNER_DID}}",
     "name": "{{LEARNER_NAME}}",
