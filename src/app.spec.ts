@@ -208,7 +208,7 @@ describe("api", () => {
       const response = await server.inject({
         method: "POST",
         url: url,
-        payload: { verifiablePresentation: sampleSignedPresentation, verificationMethod: issuerVerificationMethod }
+        payload: { verifiablePresentation: sampleSignedPresentation }
       });
       expect(response.statusCode).to.equal(201);
       const payload = JSON.parse(response.payload);
