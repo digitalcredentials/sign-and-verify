@@ -3,9 +3,9 @@
 # Setup issuer configuration
 
 # Install important node modules for this script
-# npm install -g fs
-# npm install -g minimist
-# npm install -g digitalcredentials/did-cli#main
+npm install -g fs
+npm install -g minimist
+npm install -g digitalcredentials/did-cli#main
 
 # Define all file locations that are relevant for setup
 jsonCli=$PWD/bin/json.js
