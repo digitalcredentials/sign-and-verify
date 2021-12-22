@@ -174,6 +174,7 @@ export async function build(opts = {}) {
       const verifiablePresentation = requestInfo.verifiablePresentation;
       const options = requestInfo.options;
       // provided by issuer via diploma, email, LMS (e.g., Canvas), etc.
+      // TODO: should this be accessed from vp or options above?
       const challenge = verifiablePresentation?.proof?.challenge;
       // retrieved from issuer DID document
       const verificationMethod = publicDid.assertionMethod[0];
