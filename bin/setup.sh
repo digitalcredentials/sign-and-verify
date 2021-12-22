@@ -23,6 +23,8 @@ echo [IMPORTANT] Please make sure you are running npm version 14 or later
 # Create did
 did id create > $didTmpFile
 
+echo [IMPORTANT] Please make sure you are running npm version 14 or later
+
 echo Beginning issuer configuration...
 
 read -p "Does your learning institution already own a secret DID seed you would like to use to generate your DID document (yes / no (default)) [ENTER]: " didSeedExists
