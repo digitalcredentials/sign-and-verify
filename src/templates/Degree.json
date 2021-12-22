@@ -8,30 +8,30 @@
   "type": ["VerifiableCredential", "Assertion"],
   "issuer": {
     "id": "{{ISSUER_DID}}",
-    "name": "{{ISSUER_NAME}}"
+    "name": "{{ISSUER_NAME}}",
+    "url": "{{ISSUER_URL}}"
   },
   "issuanceDate": "{{ISSUANCE_DATE}}",
   "credentialSubject": {
     "id": "{{LEARNER_DID}}",
     "name": "{{LEARNER_NAME}}",
     "hasCredential": {
-      "type": ["EducationalOccupationalProgram"],
-      "name": "{{DEGREE}} degree in {{MAJOR}} from {{ISSUER_NAME}}",
-      "provider": {
-        "type": "CollegeOrUniversity",
+      "id": "{{CREDENTIAL_ID}}",
+      "type": ["EducationalOccupationalCredential"],
+      "name": "{{MAJOR}} {{DEGREE}}",
+      "description": "{{DEGREE}} degree in {{MAJOR}} from {{ISSUER_NAME}}",
+      "institution": {
+        "type": ["CollegeOrUniversity"],
         "name": "{{ISSUER_NAME}}",
         "url": "{{ISSUER_URL}}",
         "address": {
-          "type": "PostalAddress",
-          "streetAddress": "{{ISSUER_STREET}}",
-          "addressLocality": "{{ISSUER_CITY}}",
-          "addressRegion": "{{ISSUER_STATE}}",
-          "postalCode": "{{ISSUER_ZIP}}"
+          "type": ["PostalAddress"],
+          "street": "{{ISSUER_STREET}}",
+          "city": "{{ISSUER_CITY}}",
+          "state": "{{ISSUER_STATE}}",
+          "zip": "{{ISSUER_ZIP}}",
+          "country": "{{ISSUER_COUNTRY}}"
         }
-      },
-      "educationalCredentialAwarded": {
-        "type": "EducationalOccupationalCredential",
-        "credentialCategory": "{{DEGREE}} degree in {{MAJOR}}"
       }
     }
   }
