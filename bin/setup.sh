@@ -20,6 +20,7 @@ issuerStreetKey=ISSUER_STREET
 issuerCityKey=ISSUER_CITY
 issuerStateKey=ISSUER_STATE
 issuerZipKey=ISSUER_ZIP
+issuerCountryKey=ISSUER_COUNTRY
 
 # Define did-cli keys
 didKey=id
@@ -31,6 +32,8 @@ echo {} > $configFile
 # Create did
 did id create > $didTmpFile
 
+echo [IMPORTANT] Please make sure you are running npm version 14 or later
+
 echo Beginning issuer configuration...
 
 read -p "Please enter the official name of your learning institution [ENTER]: " issuerName
@@ -38,7 +41,8 @@ read -p "Please enter the official website of your learning institution [ENTER]:
 read -p "Please enter the street address of your learning institution [ENTER]: " issuerStreet
 read -p "Please enter the city of your learning institution [ENTER]: " issuerCity
 read -p "Please enter the state of your learning institution [ENTER]: " issuerState
-read -p "Please enter the postal code of your learning institution [ENTER]: " issuerZip
+read -p "Please enter the zip code of your learning institution [ENTER]: " issuerZip
+read -p "Please enter the country of your learning institution [ENTER]: " issuerCountry
 read -p "Does your learning institution already own a secret DID seed you would like to use to generate your DID document (yes / no (default)) [ENTER]: " didSeedExists
 didSeedExists=${didSeedExists:-no}
 
@@ -61,6 +65,7 @@ node $jsonCli --write --key=$issuerStreetKey --value="$issuerStreet" --json=$con
 node $jsonCli --write --key=$issuerCityKey --value="$issuerCity" --json=$configFile
 node $jsonCli --write --key=$issuerStateKey --value="$issuerState" --json=$configFile
 node $jsonCli --write --key=$issuerZipKey --value="$issuerZip" --json=$configFile
+node $jsonCli --write --key=$issuerCountryKey --value="$issuerCountry" --json=$configFile
 
 echo
 echo Finished issuer configuration!
