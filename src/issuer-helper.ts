@@ -14,8 +14,9 @@ const credentialRequestHandler = async (holderId: string, credentialId: string):
   // TODO: REPLACE WITH BUSINESS LOGIC FOR RETRIEVING CREDENTIAL FOR LEARNER
   // NOTE: HOLDER ID IS GENERATED FROM AN EXTERNAL WALLET, NOT THE ISSUER
   const CredentialModel = await dbCredClient.open();
-  const credQuery = { [credentialId]: { '$exists': 1 } };
-  const learnerRecord = await CredentialModel.findOne(credQuery);
+  const credentialKey = `availableCreds.${credentialId}`;
+  const credentialQuery = { [credentialKey]: { '$exists': true } };
+  const learnerRecord = await CredentialModel.findOne(credentialQuery);
   await dbCredClient.close();
   if (!learnerRecord) {
     return Promise.resolve({});
@@ -28,11 +29,12 @@ const credentialRequestHandler = async (holderId: string, credentialId: string):
     LEARNER_DID: holderId,
     LEARNER_NAME: learnerRecord.learnerName,
     DEGREE: learnerRecord.degree,
-    MAJOR: learnerRecord.major
+    MAJOR: learnerRecord.major,
+    ISSUANCE_DATE: learnerRecord.issuanceDate
   };
 
   // Select desired credential template, as specified by institution in learner record
-  const template = fs.readFileSync(path.resolve(__dirname, `./templates/${learnerRecord['credTypes'][credentialId]}.json`));
+  const template = fs.readFileSync(path.resolve(__dirname, `./templates/${learnerRecord['availableCreds'][credentialId]}.json`), { encoding:'utf8' });
   const templateHbars = Handlebars.compile(template);
   const credential = JSON.parse(templateHbars(credentialConfig));
   return Promise.resolve(credential);

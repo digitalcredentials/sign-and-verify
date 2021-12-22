@@ -38,7 +38,7 @@ class DatabaseClient {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     };
-    this.client = MongoClient(dbServerUri, connectionOpts);
+    this.client = new MongoClient(dbServerUri, connectionOpts);
     await this.client.connect();
   }
 
@@ -52,4 +52,3 @@ class DatabaseClient {
 }
 
 export const dbCredClient = new DatabaseClient(DB_URI, 'mitdcc', 'Credential');
-
