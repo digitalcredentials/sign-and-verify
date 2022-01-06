@@ -30,7 +30,7 @@ const credentialRequestHandler = async (holderId: string, credentialId: string):
     LEARNER_NAME: learnerRecord.learnerName,
     DEGREE: learnerRecord.degree,
     MAJOR: learnerRecord.major,
-    ISSUANCE_DATE: learnerRecord.issuanceDate
+    ISSUANCE_DATE: new Date(learnerRecord.issuanceDate).toISOString()
   };
 
   // Select desired credential template, as specified by institution in learner record
