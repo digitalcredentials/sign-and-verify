@@ -4,37 +4,53 @@
 
 import fs from 'fs';
 import path from 'path';
+import { get, keys, reduce } from 'lodash';
 import Handlebars from 'handlebars';
 import { dbCredClient } from './database';
 import { default as issuerConfig } from './issuer-config.json';
 
+// NOTE: THIS FUNCTION WAS DESIGNED TO BE AS GENERAL AS POSSIBLE, BUT FEEL FREE TO
+// ALTER IT TO CONTAIN LOGIC FOR RETRIEVING CREDENTIALS FOR LEARNERS IN YOUR ORG
+// NOTE: HOLDER ID IS GENERATED FROM AN EXTERNAL WALLET, NOT THE ISSUER
 // Method for issuer to retrieve credential on behalf of learner
 const credentialRequestHandler = async (holderId: string, credentialId: string): Promise<any> => {
-  // NOTE: DEMO CREDENTIAL IS ONLY USED AS A PLACEHOLDER AND MAY BE DELETED ALONG WITH IMPORT
-  // TODO: REPLACE WITH BUSINESS LOGIC FOR RETRIEVING CREDENTIAL FOR LEARNER
-  // NOTE: HOLDER ID IS GENERATED FROM AN EXTERNAL WALLET, NOT THE ISSUER
+  // TODO: need to find a way to receive credential type from request payload
+  // Select desired credential schema
+  const credentialType = 'Certificate';
+  const schemaFileName = path.resolve(__dirname, `./schema/${credentialType}.json`);
+  const schemaFileString = fs.readFileSync(schemaFileName, { encoding:'utf8' });
+  const schemaObj = JSON.parse(schemaFileString);
+  const primaryKey = schemaObj.id;
+  const schema = schemaObj.schema;
+
   const CredentialModel = await dbCredClient.open();
-  const credentialKey = `availableCreds.${credentialId}`;
-  const credentialQuery = { [credentialKey]: { '$exists': true } };
-  const learnerRecord = await CredentialModel.findOne(credentialQuery);
+  const credentialQuery = { [primaryKey]: credentialId };
+  const credentialRecord = await CredentialModel.findOne(credentialQuery);
   await dbCredClient.close();
-  if (!learnerRecord) {
+  if (!credentialRecord) {
     return Promise.resolve({});
   }
 
   // Populate remainder of credential config
+  const templateTokens = keys(schema);
+  const learnerCredentialConfig = reduce(
+    templateTokens,
+    (config, token) => {
+      const value = get(credentialRecord, schema[token]);
+      config[token] = value;
+      return config;
+    },
+    {}
+  );
   const credentialConfig = {
     ...issuerConfig,
-    CREDENTIAL_ID: credentialId,
-    LEARNER_DID: holderId,
-    LEARNER_NAME: learnerRecord.learnerName,
-    DEGREE: learnerRecord.degree,
-    MAJOR: learnerRecord.major,
-    ISSUANCE_DATE: new Date(learnerRecord.issuanceDate).toISOString()
+    ...learnerCredentialConfig,
+    LEARNER_DID: holderId
   };
 
-  // Select desired credential template, as specified by institution in learner record
-  const template = fs.readFileSync(path.resolve(__dirname, `./templates/${learnerRecord['availableCreds'][credentialId]}.json`), { encoding:'utf8' });
+  // Select desired credential template
+  const templateFileName = path.resolve(__dirname, `./templates/${credentialType}.json`);
+  const template = fs.readFileSync(templateFileName, { encoding:'utf8' });
   const templateHbars = Handlebars.compile(template);
   const credential = JSON.parse(templateHbars(credentialConfig));
   return Promise.resolve(credential);

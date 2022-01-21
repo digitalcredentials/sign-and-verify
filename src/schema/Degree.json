@@ -1,0 +1,13 @@
+{
+  "id": "credentialSubject.email",
+  "schema": {
+    "MAJOR": "major",
+    "DEGREE": "degree",
+    "ISSUER_NAME": "issuer.name",
+    "ISSUER_URL": "issuer.url",
+    "ISSUER_IMAGE": "issuer.image",
+    "ISSUANCE_DATE": "issuer.date",
+    "LEARNER_NAME": "credentialSubject.name",
+    "LEARNER_EMAIL": "credentialSubject.email"
+  }
+}
