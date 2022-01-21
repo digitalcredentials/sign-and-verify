@@ -17,8 +17,8 @@
     "name": "{{LEARNER_NAME}}",
     "hasCredential": {
       "type": ["EducationalOccupationalCredential"],
-      "name": "{{MAJOR}} {{DEGREE}}",
-      "description": "{{DEGREE}} degree in {{MAJOR}} from {{ISSUER_NAME}}"
+      "name": "{{CREDENTIAL_NAME}}",
+      "description": "{{CREDENTIAL_DESC}}"
     }
   }
 }

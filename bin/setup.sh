@@ -16,11 +16,7 @@ didTmpFile=$PWD/.did.tmp
 issuerDidKey=ISSUER_DID
 issuerNameKey=ISSUER_NAME
 issuerUrlKey=ISSUER_URL
-issuerStreetKey=ISSUER_STREET
-issuerCityKey=ISSUER_CITY
-issuerStateKey=ISSUER_STATE
-issuerZipKey=ISSUER_ZIP
-issuerCountryKey=ISSUER_COUNTRY
+issuerImageKey=ISSUER_IMAGE
 
 # Define did-cli keys
 didKey=id
@@ -38,11 +34,7 @@ echo Beginning issuer configuration...
 
 read -p "Please enter the official name of your learning institution [ENTER]: " issuerName
 read -p "Please enter the official website of your learning institution [ENTER]: " issuerUrl
-read -p "Please enter the street address of your learning institution [ENTER]: " issuerStreet
-read -p "Please enter the city of your learning institution [ENTER]: " issuerCity
-read -p "Please enter the state of your learning institution [ENTER]: " issuerState
-read -p "Please enter the zip code of your learning institution [ENTER]: " issuerZip
-read -p "Please enter the country of your learning institution [ENTER]: " issuerCountry
+read -p "Please enter a link to an image of the official logo of your learning institution [ENTER]: " issuerImage
 read -p "Does your learning institution already own a secret DID seed you would like to use to generate your DID document (yes / no (default)) [ENTER]: " didSeedExists
 didSeedExists=${didSeedExists:-no}
 
@@ -61,11 +53,7 @@ issuerDid=`node $jsonCli --read --key=$didKey --json=$didTmpFile`
 node $jsonCli --write --key=$issuerDidKey --value="$issuerDid" --json=$configFile
 node $jsonCli --write --key=$issuerNameKey --value="$issuerName" --json=$configFile
 node $jsonCli --write --key=$issuerUrlKey --value="$issuerUrl" --json=$configFile
-node $jsonCli --write --key=$issuerStreetKey --value="$issuerStreet" --json=$configFile
-node $jsonCli --write --key=$issuerCityKey --value="$issuerCity" --json=$configFile
-node $jsonCli --write --key=$issuerStateKey --value="$issuerState" --json=$configFile
-node $jsonCli --write --key=$issuerZipKey --value="$issuerZip" --json=$configFile
-node $jsonCli --write --key=$issuerCountryKey --value="$issuerCountry" --json=$configFile
+node $jsonCli --write --key=$issuerImageKey --value="$issuerImage" --json=$configFile
 
 echo
 echo Finished issuer configuration!
