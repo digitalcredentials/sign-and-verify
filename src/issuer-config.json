@@ -2,9 +2,5 @@
   "ISSUER_DID": "did:key:1234567890",
   "ISSUER_NAME": "Example Institute of Technology",
   "ISSUER_URL": "https://cs.example.edu",
-  "ISSUER_STREET": "123 Main Street",
-  "ISSUER_CITY": "Bronx",
-  "ISSUER_STATE": "NY",
-  "ISSUER_ZIP": "12345",
-  "ISSUER_COUNTRY": "USA"
+  "ISSUER_IMAGE": "https://cs.example.edu/logo.png"
 }
