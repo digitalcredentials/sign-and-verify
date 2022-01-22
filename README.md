@@ -329,11 +329,13 @@ This is specific to users who use Ubuntu as their local machines, users of Windo
 
 - Go to your folder `~/.ssh/` or create it, if not available (`mkdir ~/.ssh/`).
 - Edit or create the `config` file to include following lines:
-> Host sign-and-verify
->	HostName IP_ADDRESS
->	Port 22
->	user ubuntu
->	IdentityFile ~/.ssh/PEMFILE.pem
+```
+Host sign-and-verify
+    HostName IP_ADDRESS
+    Port 22
+    user ubuntu
+    IdentityFile ~/.ssh/PEMFILE.pem
+```
 - Connect to your instance by executing `ssh sign-and-verify`
 
 ### 3. Preprocessing
