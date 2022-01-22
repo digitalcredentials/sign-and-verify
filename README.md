@@ -328,7 +328,7 @@ During the setup, you'll receive a `.pem`-file that you need to use to connect t
 This is specific to users who use Ubuntu as their local machines, users of Windows / MacOS might need to adapt commands. Details for anyone can be found [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html). 
 
 - Go to your folder `~/.ssh/` or create it, if not available (`mkdir ~/.ssh/`).
-- Edit or create the `config` file to include following lines:
+- Edit or create the `config` file to include following lines. Also replace `IP_ADDRESS` with the IP-address of your instance as well check if the path to your `.pem` file is correct.
 ```
 Host sign-and-verify
     HostName IP_ADDRESS
