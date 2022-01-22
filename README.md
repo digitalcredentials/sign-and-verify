@@ -378,7 +378,7 @@ If you want to work with a non-root user without using `sudo`, log in to your in
 `git clone https://github.com/digitalcredentials/sign-and-verify.git`
 - Change the `.env` variables to your liking; first, rename the `.env.example` to `.env` by
 `mv .env.example .env`
-- Second, edit the `.env` file with vim ([cheatsheet](https://devhints.io/vim)) or your preferred editor. Variable descriptions can be found [here](#configuration).
+- Second, edit the `.env` file with vim ([cheatsheet](https://devhints.io/vim)) or your preferred editor. Variable descriptions can be found [here](#configuration). (In case you change the port in the `.env` file, you need to also change the ports a) in AWS and b) in the `docker-compose.yml` file.)
 - Check if the `.dockerignore` file includes `.env`. If so, remove it.
 - Start the docker container by 
 `docker-compose up -d`
