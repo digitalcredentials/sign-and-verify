@@ -1,5 +1,4 @@
 .github/
 data/
-.env
 .env.example
 node_modules/
