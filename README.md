@@ -310,3 +310,88 @@ PARAMS = {
   "challenge": "123"
 }
 ```
+
+
+## Docker setup
+
+
+### 1. Setup an EC2 Instance
+Use following configurations for creating a new AWS EC2 instance:
+- Image: Ubuntu 20.04
+- Instance size: `t2.medium`
+- Storage: `32GB`
+- Security group: Add a target tcp for port 5000 and allow access from `0.0.0.0/0, ::/0` (both ipv4 and ipv6 addresses)
+
+During the setup, you'll receive a `.pem`-file that you need to use to connect to the instance.
+
+### 2. Connect to the EC2 instance
+This is specific to users who use Ubuntu as their local machines, users of Windows / MacOS might need to adapt commands. Details for anyone can be found [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html). 
+
+- Go to your folder `~/.ssh/` or create it, if not available (`mkdir ~/.ssh/`).
+- Edit or create the `config` file to include following lines:
+> Host sign-and-verify
+>	HostName IP_ADDRESS
+>	Port 22
+>	user ubuntu
+>	IdentityFile ~/.ssh/PEMFILE.pem
+- Connect to your instance by executing `ssh sign-and-verify`
+
+### 3. Preprocessing
+Prepare your instance by executing following steps:
+- Update the machine by executing `sudo apt update -y && sudo apt upgrade -y`
+(Questions about keeping the old config can be answered with yes; only means that a ssh-login with password is disabled)
+
+### 4. Docker installation
+In case, any of this fails, please check out the [Docker installation guide for Ubuntu](https://docs.docker.com/engine/install/ubuntu/).
+
+- Delete any old docker version (skip if new instance) by executing 
+`sudo apt-get remove docker docker-engine docker.io containerd runc`
+
+- Install required packages 
+`sudo apt-get install ca-certificates curl gnupg lsb-release`
+
+- Add the official Docker GPG key by 
+ `curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg`
+
+- Use the stable repository
+`echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null`
+
+- Install Docker engine and docker-compose
+`sudo apt-get update && sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose -y`
+
+- Verify the correct functionality of Docker by 
+ `sudo docker run hello-world`
+
+### 5. Use a non-root user (optional)
+If you want to work with a non-root user without using `sudo`, log in to your instance with the respective user and execute following commands. [Source](https://askubuntu.com/questions/477551/how-can-i-use-docker-without-sudo)
+- `sudo groupadd docker`
+- `sudo gpasswd -a $USER docker`
+- Either do a `newgrp docker` or log out/in to activate the changes to groups.
+
+
+### 6. Install `sign-and-verify` repository
+- Clone the  `sign-and-verify` repo with
+`git clone https://github.com/digitalcredentials/sign-and-verify.git`
+- Change the `.env` variables to your liking; first, rename the `.env.example` to `.env` by
+`mv .env.example .env`
+- Second, edit the `.env` file with vim ([cheatsheet](https://devhints.io/vim)) or your preferred editor. Variable descriptions can be found [here](#configuration).
+- Check if the `.dockerignore` file includes `.env`. If so, remove it.
+- Start the docker container by 
+`docker-compose up -d`
+
+### 7. Inspect, understand and shut down Docker container
+- Get the docker logs with
+`docker logs sign-and-verify`
+- Attach (observe the log) to docker by
+`docker attach --sig-proxy=false signandverify`
+(cancel with Ctrl+C)
+- Shut down the Docker container with
+`docker-compose down`
+
+### 8. Usage
+If everything works as intended, then you should be able to execute any of the [above-mentioned commands](#api-docs). The `sign-and-verify` service is available at `YOUR_IPADDRESS:5000`.
+
+### 9. SSL/TLS-Certificate
+TBD
