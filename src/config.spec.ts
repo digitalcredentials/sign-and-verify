@@ -24,7 +24,8 @@ const expectedConfig: Config = {
   credentialRequestHandler
 };
 const validEnv = {
-  DID_SEED: didSeed
+  DID_SEED: didSeed,
+  DID_WEB_URL: didWebUrl
 };
 
 describe("config", () => {
