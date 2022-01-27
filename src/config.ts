@@ -2,14 +2,15 @@ import { ConfigurationError } from './errors';
 import { credentialRequestHandler } from './issuer-helper';
 
 export type Config = {
-  port: number,
+  port: number;
   didSeed: string;
-  hmacSecret: string | null,
-  hmacRequiredHeaders: Array<string>,
-  digestCheck: boolean,
-  digestAlorithms: Array<string>,
-  demoIssuerMethod: string | null,
-  issuerMembershipRegistryUrl: string,
+  didWebUrl: string | undefined;
+  hmacSecret: string | null;
+  hmacRequiredHeaders: Array<string>;
+  digestCheck: boolean;
+  digestAlorithms: Array<string>;
+  demoIssuerMethod: string | null;
+  issuerMembershipRegistryUrl: string;
   credentialRequestHandler: (issuerId: string, holderId: string, idToken: string) => Promise<any>;
 }
 
@@ -22,6 +23,7 @@ export function parseConfig(): Config {
   return Object.freeze({
     port: process.env.PORT ? Number(process.env.PORT) : 5000,
     didSeed: process.env.DID_SEED,
+    didWebUrl: process.env.DID_WEB_URL,
     hmacSecret: process.env.HMAC_SECRET || null,
     hmacRequiredHeaders: (
       process.env.HMAC_REQUIRED_HEADERS || "date,digest"
