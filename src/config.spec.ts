@@ -8,16 +8,19 @@ import { ConfigurationError } from './errors';
 
 const sandbox = createSandbox();
 
-const didSeed = 'DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2';
+const didSeed = "DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2";
+const didWebUrl = "https://issuer.example.com";
+const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
 const expectedConfig: Config = {
   port: 5000,
   didSeed,
+  didWebUrl,
   hmacSecret: null,
   hmacRequiredHeaders: ["date", "digest"],
   digestCheck: false,
   digestAlorithms: ["SHA256", "SHA512"],
   demoIssuerMethod: null,
-  issuerMembershipRegistryUrl: "https://digitalcredentials.github.io/issuer-registry/registry.json",
+  issuerMembershipRegistryUrl: issuerMembershipRegistryUrl,
   credentialRequestHandler
 };
 const validEnv = {

@@ -3,19 +3,30 @@ import fastifyRawBody from 'fastify-raw-body';
 import axios from 'axios';
 import fastifySensible from 'fastify-sensible';
 import { createIssuer, createVerifier, DIDDocument } from '@digitalcredentials/sign-and-verify-core';
-import { driver } from '@digitalcredentials/did-method-key';
+import { Ed25519VerificationKey2020 } from '@digitalcredentials/ed25519-verification-key-2020';
+import { X25519KeyAgreementKey2020 } from '@digitalcredentials/x25519-key-agreement-key-2020';
+import { CryptoLD } from 'crypto-ld';
+import * as didWeb from '@interop/did-web-resolver';
+import * as didKey from '@digitalcredentials/did-method-key';
 import { getConfig } from './config';
 import { verifyRequestDigest, verifyRequestSignature } from './hooks';
 import { default as demoCredential } from './demoCredential.json';
 import { v4 as uuidv4 } from 'uuid';
 import LRU from 'lru-cache';
 
+const cryptoLd = new CryptoLD()
+cryptoLd.use(Ed25519VerificationKey2020)
+cryptoLd.use(X25519KeyAgreementKey2020)
+
 // LRU cache for issuer membership registry with max age of one hour
 const LRU_OPTIONS = { maxAge: 1000 * 60 * 60 };
 const issuerMembershipRegistryCache = new LRU(LRU_OPTIONS);
 
-// Tool used to generate DID from secret seed
-const didKeyDriver = driver();
+// Tool used to generate did:web from secret seed
+const didWebDriver = didWeb.driver({ cryptoLd });
+
+// Tool used to generate did:key from secret seed
+const didKeyDriver = didKey.driver();
 
 export async function build(opts = {}) {
 
@@ -26,31 +37,54 @@ export async function build(opts = {}) {
     return field;
   };
 
-  const privatizeDid = (didDocument, getMethodForPurpose) => {
+  const VERIFICATION_METHOD_PURPOSES = [
+    'authentication',
+    'assertionMethod',
+    'capabilityDelegation',
+    'capabilityInvocation',
+    'keyAgreement'
+  ];
+
+  const copyFromMethod = (didDocument, methodToCopy) => {
     const didDocumentClone = JSON.parse(JSON.stringify(didDocument));
-    const purposes = [
-      'authentication',
-      'assertionMethod',
-      'verificationMethod',
-      'capabilityDelegation',
-      'capabilityInvocation',
-      'keyAgreement'
-    ];
-    purposes.forEach((purpose) => {
-      const methodForPurpose = getMethodForPurpose({ purpose });
-      didDocumentClone[purpose][0] = JSON.parse(JSON.stringify(methodForPurpose));
+    const methodForPurpose = didDocument[methodToCopy][0];
+    const methodForPurposeClone = JSON.parse(JSON.stringify(methodForPurpose));
+    VERIFICATION_METHOD_PURPOSES.forEach((purpose) => {
+      didDocumentClone[purpose] = [methodForPurposeClone];
     });
     return didDocumentClone;
   };
 
-  const { didSeed, demoIssuerMethod, issuerMembershipRegistryUrl, credentialRequestHandler } = getConfig();
-  const didSeedBytes = (new TextEncoder()).encode(didSeed).slice(0, 32);
-  const { didDocument, methodFor } = await didKeyDriver.generate({ seed: didSeedBytes });
-  const publicDid: DIDDocument = JSON.parse(JSON.stringify(didDocument));
-  const privateDid = privatizeDid(didDocument, methodFor);
+  const privatizeDid = (didDocument, getMethodForPurpose, methodToCopy?) => {
+    const didDocumentClone = JSON.parse(JSON.stringify(didDocument));
+    VERIFICATION_METHOD_PURPOSES.forEach((purpose) => {
+      const methodForPurpose = getMethodForPurpose({ purpose: methodToCopy || purpose });
+      const methodForPurposeClone = JSON.parse(JSON.stringify(methodForPurpose));
+      didDocumentClone[purpose] = [methodForPurposeClone];
+    });
+    return didDocumentClone;
+  };
 
-  const { sign, signPresentation, createAndSignPresentation } = createIssuer([privateDid]);
-  const { verify, verifyPresentation } = createVerifier([publicDid]);
+  const { didSeed, didWebUrl, demoIssuerMethod, issuerMembershipRegistryUrl, credentialRequestHandler } = getConfig();
+  const didSeedBytes = (new TextEncoder()).encode(didSeed).slice(0, 32);
+  const { didDocument: didKeyDocument, methodFor: didKeyMethodFor } = await didKeyDriver.generate({ seed: didSeedBytes });
+  const publicDidKey: DIDDocument = JSON.parse(JSON.stringify(didKeyDocument));
+  const privateDidKey = privatizeDid(didKeyDocument, didKeyMethodFor);
+  const publicDids = [publicDidKey];
+  const privateDids = [privateDidKey];
+
+  if (didWebUrl) {
+    const { didDocument: didWebDocument, methodFor: didWebMethodFor } = await didWebDriver.generate({ url: didWebUrl, seed: didSeedBytes });
+    let publicDidWeb: DIDDocument = JSON.parse(JSON.stringify(didWebDocument));
+    const methodToCopy = 'assertionMethod';
+    publicDidWeb = copyFromMethod(publicDidWeb, methodToCopy);
+    const privateDidWeb = privatizeDid(didWebDocument, didWebMethodFor, methodToCopy);
+    publicDids.push(publicDidWeb);
+    privateDids.push(privateDidWeb);
+  }
+
+  const { sign, signPresentation, createAndSignPresentation } = createIssuer(privateDids);
+  const { verify, verifyPresentation } = createVerifier(publicDids);
 
   const issuerMembershipRegistry = (await axios.get(issuerMembershipRegistryUrl)).data.registry;
   issuerMembershipRegistryCache.set('issuerMembershipRegistry', issuerMembershipRegistry);
@@ -192,11 +226,11 @@ export async function build(opts = {}) {
       // provided by issuer via diploma, email, LMS (e.g., Canvas), etc.
       const challenge = options.challenge || verifiablePresentation?.proof?.challenge;
       // retrieved from issuer DID document
-      const verificationMethod = ensureId(publicDid.assertionMethod[0]);
+      const verificationMethod = ensureId(publicDids[0].assertionMethod[0]);
       // holder DID generated by credential wallet
       const holderDid = verifiablePresentation.holder;
       // issuer DID generated by build function above
-      const issuerDid = publicDid.id;
+      const issuerDid = publicDids[0].id;
 
       options = { challenge, ...options };
       const verificationResult = await verifyPresentation({verifiablePresentation, issuerMembershipRegistry, options});
