@@ -14,6 +14,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 
 - `DID_SEED` - a secret seed used to generate DID document for issuer (required)
 - `ISSUER_MEMBERSHIP_REGISTRY_URL` - location of registry used to confirm issuer's membership status in DCC (required)
+- `DID_WEB_URL` - the url used to generate `did:web` document and keys for issuer (optional, default: `undefined`)
 - `PORT` - the port the web service will bind to (optional, default: `5000`)
 - `DIGEST_CHECK` - set to `true` to enable `Digest` header verification (optional, default: `false`)
 - `DIGEST_ALGORITHMS` - a comma-delimited list of acceptable digest algorithms (optional, default: `sha256,sha512`)
