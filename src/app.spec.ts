@@ -26,9 +26,13 @@ const sampleIssuerMembershipRegistry = {
 lruStub.get.returns(sampleIssuerMembershipRegistry);
 lruStub.set.returns(true);
 
+const didSeed = "DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2";
+const didWebUrl = "https://digitalcredentials.mit.edu";
+const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
 const validEnv = {
-  DID_SEED: 'DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2',
-  ISSUER_MEMBERSHIP_REGISTRY_URL: "https://digitalcredentials.github.io/issuer-registry/registry.json"
+  DID_SEED: didSeed,
+  DID_WEB_URL: didWebUrl,
+  ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl
 };
 
 const issuerKey = 'z6MkhVTX9BF3NGYX6cc7jWpbNnR7cAjH8LUffabZP8Qu4ysC';

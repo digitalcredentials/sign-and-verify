@@ -25,7 +25,8 @@ const expectedConfig: Config = {
 };
 const validEnv = {
   DID_SEED: didSeed,
-  DID_WEB_URL: didWebUrl
+  DID_WEB_URL: didWebUrl,
+  ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl
 };
 
 describe("config", () => {
