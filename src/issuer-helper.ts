@@ -1,4 +1,5 @@
 // NOTE: The operations in this file are specific to MongoDB
+// and the databse schema used in early deployments of this code.
 // You may modify the content of credentialRequestHandler to
 // suit your organization's DBMS deployment infrastructure
 
@@ -7,12 +8,11 @@ import path from 'path';
 import jwt_decode from "jwt-decode";
 import Handlebars from 'handlebars';
 import { dbCredClient } from './database';
-import { default as issuerConfig } from './issuer-config.json';
 
 // NOTE: FEEL FREE TO ALTER IT TO CONTAIN LOGIC FOR RETRIEVING CREDENTIALS FOR LEARNERS IN YOUR ORG
 // NOTE: HOLDER ID IS GENERATED FROM AN EXTERNAL WALLET, NOT THE ISSUER
 // Method for issuer to retrieve credential on behalf of learner
-const credentialRequestHandler = async (holderId: string, idToken: string): Promise<any> => {
+const credentialRequestHandler = async (issuerId: string, holderId: string, idToken: string): Promise<any> => {
   // NOTE: using one credential type for now
   // Select credential type
   const credentialType = 'Certificate';
@@ -36,15 +36,15 @@ const credentialRequestHandler = async (holderId: string, idToken: string): Prom
 
   // Populate credential config
   const credentialConfig = {
-    ...issuerConfig,
+    ISSUER_DID: issuerId,
+    LEARNER_DID: holderId,
     CREDENTIAL_NAME: credentialRecord.name,
     CREDENTIAL_DESC: credentialRecord.description,
     ISSUANCE_DATE: credentialRecord.issuanceDate,
     ISSUER_NAME: credentialRecord.issuer.name,
     ISSUER_URL: credentialRecord.issuer.url,
     ISSUER_IMAGE: credentialRecord.issuer.image,
-    LEARNER_NAME: credentialRecord.credentialSubject.name,
-    LEARNER_DID: holderId
+    LEARNER_NAME: credentialRecord.credentialSubject.name
   };
 
   // Select desired credential template

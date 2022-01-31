@@ -10,7 +10,7 @@ export type Config = {
   digestAlorithms: Array<string>,
   demoIssuerMethod: string | null,
   issuerMembershipRegistryUrl: string,
-  credentialRequestHandler: (holderId: string, credentialId: string) => Promise<any>;
+  credentialRequestHandler: (issuerId: string, holderId: string, idToken: string) => Promise<any>;
 }
 
 let CONFIG: null | Config = null;

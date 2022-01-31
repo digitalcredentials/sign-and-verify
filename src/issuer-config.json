@@ -1,6 +1,0 @@
-{
-  "ISSUER_DID": "did:key:1234567890",
-  "ISSUER_NAME": "Example Institute of Technology",
-  "ISSUER_URL": "https://cs.example.edu",
-  "ISSUER_IMAGE": "https://cs.example.edu/logo.png"
-}
