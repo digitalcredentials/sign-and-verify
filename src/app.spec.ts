@@ -208,6 +208,9 @@ describe("api", () => {
       const response = await server.inject({
         method: "POST",
         url: url,
+        headers: {
+          authorization: 'Bearer ey012abc.345ghi.678xyz'
+        },
         payload: { verifiablePresentation: sampleSignedPresentation, options: presentationOptions }
       });
       expect(response.statusCode).to.equal(201);
