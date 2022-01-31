@@ -5,7 +5,6 @@ import 'mocha';
 import { FastifyInstance } from 'fastify';
 import { Server, IncomingMessage, ServerResponse } from 'http';
 import LRU from 'lru-cache';
-import { readFileSync } from 'fs';
 import { resetConfig } from './config';
 import * as IssuerHelper from './issuer-helper';
 import demoCredential from './demoCredential.json';
