@@ -29,7 +29,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 
 4. Modify the `credentialRequestHandler` method in `./src/issuer-helper.ts` to suit your organization's DBMS deployment infrastructure
 
-5. Run `./bin/setup.sh` and follow output deployment instructions (please use Node version 14 or higher)
+5. Run `npm run setup` or `yarn setup` and follow output deployment instructions (please use Node version 14 or higher)
 
 NOTE: the `DID_SEED` included as an example is just for your reference. Do not check in production did seeds, private keys, or the equivalent.
 
