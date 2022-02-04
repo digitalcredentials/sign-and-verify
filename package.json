@@ -17,7 +17,7 @@
   "license": "MIT",
   "repository": "git@github.com:digitalcredentials/sign-and-verify.git",
   "dependencies": {
-    "@digitalcredentials/sign-and-verify-core": "github:digitalcredentials/sign-and-verify-core#use-dcc-context",
+    "@digitalcredentials/sign-and-verify-core": "^1.0.0",
     "axios": "^0.24.0",
     "dotenv": "^8.2.0",
     "fastify": "^3.14.2",
