@@ -17,7 +17,7 @@
   "license": "MIT",
   "repository": "git@github.com:digitalcredentials/sign-and-verify.git",
   "dependencies": {
-    "@digitalcredentials/sign-and-verify-core": "github:digitalcredentials/sign-and-verify-core#add-support-for-did-web",
+    "@digitalcredentials/sign-and-verify-core": "^2.0.0",
     "@interop/did-web-resolver": "^2.2.0",
     "axios": "^0.24.0",
     "dotenv": "^8.2.0",
