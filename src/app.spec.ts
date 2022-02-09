@@ -26,7 +26,7 @@ lruStub.get.returns(sampleIssuerMembershipRegistry);
 lruStub.set.returns(true);
 
 const didSeed = "DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2";
-const didWebUrl = "https://digitalcredentials.mit.edu";
+const didWebUrl = "https://issuer.example.com";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
 const validEnv = {
   DID_SEED: didSeed,
