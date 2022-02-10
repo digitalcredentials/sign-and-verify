@@ -214,7 +214,7 @@ describe("api", () => {
         headers: {
           authorization: 'Bearer ey012abc.345ghi.678xyz'
         },
-        payload: { verifiablePresentation: sampleSignedPresentation, options: presentationOptions }
+        payload: sampleSignedPresentation
       });
       expect(response.statusCode).to.equal(201);
       const payload = JSON.parse(response.payload);
