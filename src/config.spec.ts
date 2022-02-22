@@ -9,24 +9,27 @@ import { ConfigurationError } from './errors';
 const sandbox = createSandbox();
 
 const didSeed = "DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2";
-const didWebUrl = "https://issuer.example.com";
+const didWebUrl = "https://vc-issuer.example.com";
+const oidcIssuerUrl = "https://oidc-issuer.example.com";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
 const expectedConfig: Config = {
   port: 5000,
   didSeed,
   didWebUrl,
+  oidcIssuerUrl,
+  issuerMembershipRegistryUrl,
   hmacSecret: null,
   hmacRequiredHeaders: ["date", "digest"],
   digestCheck: false,
   digestAlorithms: ["SHA256", "SHA512"],
   demoIssuerMethod: null,
-  issuerMembershipRegistryUrl: issuerMembershipRegistryUrl,
   credentialRequestHandler
 };
 const validEnv = {
   DID_SEED: didSeed,
   DID_WEB_URL: didWebUrl,
-  ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl
+  ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl,
+  OIDC_ISSUER_URL: oidcIssuerUrl
 };
 
 describe("config", () => {

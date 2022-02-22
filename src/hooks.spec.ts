@@ -12,7 +12,8 @@ import { resetConfig } from './config';
 
 const sandbox = createSandbox();
 const validEnv = {
-  DID_SEED: 'DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2',
+  DID_SEED: "DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2",
+  OIDC_ISSUER_URL: "https://oidc-issuer.example.com",
   DIGEST_CHECK: "true",
   HMAC_SECRET: "secret"
 };

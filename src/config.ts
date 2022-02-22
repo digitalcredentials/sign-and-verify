@@ -5,13 +5,14 @@ export type Config = {
   port: number;
   didSeed: string;
   didWebUrl: string | undefined;
+  oidcIssuerUrl: string | undefined;
+  issuerMembershipRegistryUrl: string;
   hmacSecret: string | null;
   hmacRequiredHeaders: Array<string>;
   digestCheck: boolean;
   digestAlorithms: Array<string>;
   demoIssuerMethod: string | null;
-  issuerMembershipRegistryUrl: string;
-  credentialRequestHandler: (issuerId: string, holderId: string, idToken: string) => Promise<any>;
+  credentialRequestHandler: (issuerId: string, holderId: string, accessToken: string) => Promise<any>;
 }
 
 let CONFIG: null | Config = null;
@@ -20,10 +21,15 @@ export function parseConfig(): Config {
   if (!process.env.DID_SEED) {
     throw new ConfigurationError("Environment variable 'DID_SEED' is not set");
   }
+  if (!process.env.OIDC_ISSUER_URL) {
+    throw new ConfigurationError("Environment variable 'OIDC_ISSUER_URL' is not set");
+  }
   return Object.freeze({
     port: process.env.PORT ? Number(process.env.PORT) : 5000,
     didSeed: process.env.DID_SEED,
     didWebUrl: process.env.DID_WEB_URL,
+    oidcIssuerUrl: process.env.OIDC_ISSUER_URL,
+    issuerMembershipRegistryUrl: process.env.ISSUER_MEMBERSHIP_REGISTRY_URL || 'https://digitalcredentials.github.io/issuer-registry/registry.json',
     hmacSecret: process.env.HMAC_SECRET || null,
     hmacRequiredHeaders: (
       process.env.HMAC_REQUIRED_HEADERS || "date,digest"
@@ -33,7 +39,6 @@ export function parseConfig(): Config {
       process.env.DIGEST_ALGORITHMS || "SHA256,SHA512"
     ).split(",").map((alg) => alg.trim()),
     demoIssuerMethod : process.env.DEMO_ISSUER_METHOD || null,
-    issuerMembershipRegistryUrl: process.env.ISSUER_MEMBERSHIP_REGISTRY_URL || 'https://digitalcredentials.github.io/issuer-registry/registry.json',
     credentialRequestHandler: credentialRequestHandler
   });
 }

@@ -13,6 +13,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 1. Configure the service with the following environment variables:
 
 - `DID_SEED` - a secret seed used to generate DID document for issuer (required)
+- `OIDC_ISSUER_URL`: OIDC issuer discovery URL (required)
 - `ISSUER_MEMBERSHIP_REGISTRY_URL` - location of registry used to confirm issuer's membership status in DCC (required)
 - `DID_WEB_URL` - the url used to generate `did:web` document and keys for issuer (optional, default: `undefined`)
 - `PORT` - the port the web service will bind to (optional, default: `5000`)
