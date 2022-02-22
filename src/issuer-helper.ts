@@ -5,14 +5,16 @@
 
 import fs from 'fs';
 import path from 'path';
-import jwt_decode from "jwt-decode";
+import axios from 'axios';
 import Handlebars from 'handlebars';
+import { Issuer } from 'openid-client';
 import { dbCredClient } from './database';
+import { getConfig } from './config';
 
 // NOTE: FEEL FREE TO ALTER IT TO CONTAIN LOGIC FOR RETRIEVING CREDENTIALS FOR LEARNERS IN YOUR ORG
 // NOTE: HOLDER ID IS GENERATED FROM AN EXTERNAL WALLET, NOT THE ISSUER
 // Method for issuer to retrieve credential on behalf of learner
-const credentialRequestHandler = async (issuerId: string, holderId: string, idToken: string): Promise<any> => {
+const credentialRequestHandler = async (issuerId: string, holderId: string, accessToken: string): Promise<any> => {
   // NOTE: using one credential type for now
   // Select credential type
   const credentialType = 'Certificate';
@@ -20,8 +22,11 @@ const credentialRequestHandler = async (issuerId: string, holderId: string, idTo
   // Select credential primary key
   const primaryKey = 'credentialSubject.email';
   // Extract email from ID token
-  const idObject: any = jwt_decode(idToken);
-  const email = idObject.email;
+  const { oidcIssuerUrl } = getConfig();
+  const oidcIssuer = await Issuer.discover(oidcIssuerUrl as string);
+  const userinfoEndpoint = oidcIssuer.metadata.userinfo_endpoint as string;
+  const userinfo = (await axios.get(userinfoEndpoint, { headers: {'Authorization': `Bearer ${accessToken}`}, })).data;
+  const email = userinfo.email;
   if (!email) {
     throw new Error('ID token does not contain email');
   }

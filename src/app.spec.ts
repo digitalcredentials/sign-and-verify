@@ -26,11 +26,13 @@ lruStub.get.returns(sampleIssuerMembershipRegistry);
 lruStub.set.returns(true);
 
 const didSeed = "DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2";
-const didWebUrl = "https://issuer.example.com";
+const didWebUrl = "https://vc-issuer.example.com";
+const oidcIssuerUrl = "https://oidc-issuer.example.com";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
 const validEnv = {
   DID_SEED: didSeed,
   DID_WEB_URL: didWebUrl,
+  OIDC_ISSUER_URL: oidcIssuerUrl,
   ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl
 };
 
@@ -212,7 +214,7 @@ describe("api", () => {
         method: "POST",
         url: url,
         headers: {
-          authorization: 'Bearer ey012abc.345ghi.678xyz'
+          authorization: 'Bearer @cc3$$t0k3n123'
         },
         payload: sampleSignedPresentation
       });

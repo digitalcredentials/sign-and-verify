@@ -214,14 +214,14 @@ export async function build(opts = {}) {
 
   server.post(
     '/request/credential', async (request, reply) => {
-      // Verify that ID token was included in request
-      let idToken;
+      // Verify that access token was included in request
+      let accessToken;
       if (request.headers.authorization && request.headers.authorization.split(' ')[0] === 'Bearer') {
-        idToken = request.headers.authorization.split(' ')[1];
+        accessToken = request.headers.authorization.split(' ')[1];
       } else {
         return reply
           .code(401)
-          .send({ message: 'Failed to provide ID token in request' });
+          .send({ message: 'Failed to provide access token in request' });
       }
       // verifiable presentation is placed directly in body
       // TODO: in a future version, we may decide to specify
@@ -240,7 +240,7 @@ export async function build(opts = {}) {
       if (verificationResult.verified) {
         let credential;
         try {
-          credential = await credentialRequestHandler(issuerDid, holderDid, idToken);
+          credential = await credentialRequestHandler(issuerDid, holderDid, accessToken);
         } catch (error) {
           return reply
             .code(400)
