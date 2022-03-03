@@ -403,4 +403,4 @@ Optional: If you want to have a automatically generated TLS-certificate provided
 If everything works as intended, then you should be able to execute any of the [above-mentioned commands](#api-docs). The `sign-and-verify` service is available at `YOUR_IPADDRESS:5000`.
 
 ### 9. SSL/TLS-Certificate
-TBD
+Please check step 6 for an automatic TLS certificate with Let's Encrypt and ACME.
