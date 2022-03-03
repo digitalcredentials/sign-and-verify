@@ -376,6 +376,13 @@ If you want to work with a non-root user without using `sudo`, log in to your in
 ### 6. Install `sign-and-verify` repository
 - Clone the  `sign-and-verify` repo with
 `git clone https://github.com/digitalcredentials/sign-and-verify.git`
+
+This step might not be needed in the future, but check if the `docker-compose.yml` is in your folder. If not, switch to the `docker-tutorial` branch by
+- `git checkout docker-tutorial`
+
+Optional: If you want to have a automatically generated TLS-certificate provided by Let's Encrypt, then copy the `.yml` file from the `Docker` folder to your main folder by
+- `cp Docker/docker-compose-acme.yml docker-compose.yml
+
 - Change the `.env` variables to your liking; first, rename the `.env.example` to `.env` by
 `mv .env.example .env`
 - Second, edit the `.env` file with vim ([cheatsheet](https://devhints.io/vim)) or your preferred editor. Variable descriptions can be found [here](#configuration). (In case you change the port in the `.env` file, you need to also change the ports a) in AWS and b) in the `docker-compose.yml` file.)
