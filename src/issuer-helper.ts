@@ -25,7 +25,7 @@ const credentialRequestHandler = async (issuerId: string, holderId: string, acce
   const { oidcIssuerUrl } = getConfig();
   const oidcIssuer = await Issuer.discover(oidcIssuerUrl as string);
   const userinfoEndpoint = oidcIssuer.metadata.userinfo_endpoint as string;
-  const userinfo = (await axios.get(userinfoEndpoint, { headers: {'Authorization': `Bearer ${accessToken}`}, })).data;
+  const userinfo = (await axios.get(userinfoEndpoint, { headers: { 'Authorization': `Bearer ${accessToken}` } })).data;
   const email = userinfo.email;
   if (!email) {
     throw new Error('ID token does not contain email');
@@ -46,6 +46,7 @@ const credentialRequestHandler = async (issuerId: string, holderId: string, acce
     CREDENTIAL_NAME: credentialRecord.name,
     CREDENTIAL_DESC: credentialRecord.description,
     ISSUANCE_DATE: credentialRecord.issuanceDate,
+    ...(credentialRecord.expirationDate ? { EXPIRATION_DATE: credentialRecord.expirationDate } : null),
     ISSUER_NAME: credentialRecord.issuer.name,
     ISSUER_URL: credentialRecord.issuer.url,
     ISSUER_IMAGE: credentialRecord.issuer.image,

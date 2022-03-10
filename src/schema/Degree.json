@@ -3,10 +3,11 @@
   "schema": {
     "MAJOR": "major",
     "DEGREE": "degree",
+    "ISSUANCE_DATE": "issuanceDate",
+    "EXPIRATION_DATE": "expirationDate",
     "ISSUER_NAME": "issuer.name",
     "ISSUER_URL": "issuer.url",
     "ISSUER_IMAGE": "issuer.image",
-    "ISSUANCE_DATE": "issuer.date",
     "LEARNER_NAME": "credentialSubject.name",
     "LEARNER_EMAIL": "credentialSubject.email"
   }

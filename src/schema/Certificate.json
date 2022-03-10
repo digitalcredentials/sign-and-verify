@@ -4,6 +4,7 @@
     "CREDENTIAL_NAME": "name",
     "CREDENTIAL_DESC": "description",
     "ISSUANCE_DATE": "issuanceDate",
+    "EXPIRATION_DATE": "expirationDate",
     "ISSUER_NAME": "issuer.name",
     "ISSUER_URL": "issuer.url",
     "ISSUER_IMAGE": "issuer.image",
