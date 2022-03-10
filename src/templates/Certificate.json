@@ -12,6 +12,7 @@
     "image": "{{ISSUER_IMAGE}}"
   },
   "issuanceDate": "{{ISSUANCE_DATE}}",
+  "expirationDate": "{{EXPIRATION_DATE}}",
   "credentialSubject": {
     "id": "{{LEARNER_DID}}",
     "name": "{{LEARNER_NAME}}",
