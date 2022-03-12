@@ -11,11 +11,11 @@ import { Issuer } from 'openid-client';
 import { dbCredClient } from './database';
 import { getConfig } from './config';
 
-// Return mapping from template token (e.g., 'EXPIRATION_DATE')
-// to database field (e.g., 'expirationDate') for given credential record.
+// Return mapping from expiration date token (i.e., 'EXPIRATION_DATE')
+// to expiration date database field (i.e., 'expirationDate') for given credential record.
 // Otherwise, return null.
-const getTokenToFieldMapping = (credentialRecord, token, field) => {
-  return credentialRecord[field] ? { [token]: credentialRecord[field] } : null;
+const getExpirationDate = (credentialRecord) => {
+  return credentialRecord.expirationDate ? { EXPIRATION_DATE: credentialRecord.expirationDate } : null;
 };
 
 // NOTE: FEEL FREE TO ALTER IT TO CONTAIN LOGIC FOR RETRIEVING CREDENTIALS FOR LEARNERS IN YOUR ORG
@@ -53,7 +53,7 @@ const credentialRequestHandler = async (issuerId: string, holderId: string, acce
     CREDENTIAL_NAME: credentialRecord.name,
     CREDENTIAL_DESC: credentialRecord.description,
     ISSUANCE_DATE: credentialRecord.issuanceDate,
-    ...getTokenToFieldMapping(credentialRecord, 'EXPIRATION_DATE', 'expirationDate'),
+    ...getExpirationDate(credentialRecord),
     ISSUER_NAME: credentialRecord.issuer.name,
     ISSUER_URL: credentialRecord.issuer.url,
     ISSUER_IMAGE: credentialRecord.issuer.image,
