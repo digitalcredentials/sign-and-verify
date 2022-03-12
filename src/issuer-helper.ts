@@ -54,7 +54,7 @@ const credentialRequestHandler = async (issuerId: string, holderId: string, acce
   };
 
   // Select desired credential template
-  const templateFileName = path.resolve(__dirname, `./templates/${credentialType}.json`);
+  const templateFileName = path.resolve(__dirname, `./templates/${credentialType}.txt`);
   const template = fs.readFileSync(templateFileName, { encoding:'utf8' });
   const templateHbars = Handlebars.compile(template);
   const credential = JSON.parse(templateHbars(credentialConfig));
