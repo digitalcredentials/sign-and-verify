@@ -10,7 +10,7 @@
     "setup": "bin/setup.sh",
     "start": "node --require dotenv/config dist/index.js",
     "postbuild": "npm run copy-files",
-    "copy-files": "copyfiles -u 1 src/**/*.yaml dist/"
+    "copy-files": "copyfiles -u 1 src/**/*.yaml src/templates/* dist/"
   },
   "keywords": [],
   "author": "Kim Hamilton Duffy",
