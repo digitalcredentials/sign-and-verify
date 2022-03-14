@@ -8,6 +8,7 @@ import LRU from 'lru-cache';
 import { resetConfig } from './config';
 import * as IssuerHelper from './issuer-helper';
 import demoCredential from './demoCredential.json';
+import { AuthType } from './issuer-helper';
 
 const sandbox = createSandbox();
 const lruStub = sandbox.createStubInstance(LRU) as SinonStubbedInstance<LRU> & LRU;
@@ -25,11 +26,13 @@ const sampleIssuerMembershipRegistry = {
 lruStub.get.returns(sampleIssuerMembershipRegistry);
 lruStub.set.returns(true);
 
+const authType = AuthType.OidcToken;
 const didSeed = "DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2";
 const didWebUrl = "https://vc-issuer.example.com";
 const oidcIssuerUrl = "https://oidc-issuer.example.com";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
 const validEnv = {
+  AUTH_TYPE: authType,
   DID_SEED: didSeed,
   DID_WEB_URL: didWebUrl,
   OIDC_ISSUER_URL: oidcIssuerUrl,
@@ -207,7 +210,8 @@ describe("api", () => {
   });
 
   describe("/request/credential", () => {
-    sandbox.stub(IssuerHelper, 'credentialRequestHandler').returns(Promise.resolve(demoCredential));
+    sandbox.stub(IssuerHelper, 'processCredentialRequestViaOidc').returns(Promise.resolve(demoCredential));
+    sandbox.stub(IssuerHelper, 'processCredentialRequestViaVp').returns(Promise.resolve(demoCredential));
     const url = "/request/credential";
     it("POST returns 201", async () => {
       const response = await server.inject({

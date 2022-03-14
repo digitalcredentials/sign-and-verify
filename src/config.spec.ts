@@ -3,17 +3,19 @@ import { createSandbox } from 'sinon';
 import 'mocha';
 
 import { parseConfig, getConfig, resetConfig, Config } from './config';
-import { credentialRequestHandler } from './issuer-helper';
+import { AuthType } from './issuer-helper';
 import { ConfigurationError } from './errors';
 
 const sandbox = createSandbox();
 
+const authType = AuthType.OidcToken;
 const didSeed = "DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2";
 const didWebUrl = "https://vc-issuer.example.com";
 const oidcIssuerUrl = "https://oidc-issuer.example.com";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
 const expectedConfig: Config = {
   port: 5000,
+  authType,
   didSeed,
   didWebUrl,
   oidcIssuerUrl,
@@ -22,14 +24,14 @@ const expectedConfig: Config = {
   hmacRequiredHeaders: ["date", "digest"],
   digestCheck: false,
   digestAlorithms: ["SHA256", "SHA512"],
-  demoIssuerMethod: null,
-  credentialRequestHandler
+  demoIssuerMethod: null
 };
 const validEnv = {
+  AUTH_TYPE: authType,
   DID_SEED: didSeed,
   DID_WEB_URL: didWebUrl,
-  ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl,
-  OIDC_ISSUER_URL: oidcIssuerUrl
+  OIDC_ISSUER_URL: oidcIssuerUrl,
+  ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl
 };
 
 describe("config", () => {
@@ -123,9 +125,19 @@ describe("config", () => {
       });
     });
 
-    it("should throw an exception if env.DID_SEED isn't set", () => {
+    it("should throw an exception if env.AUTH_TYPE isn't set", () => {
       sandbox.stub(process, "env").value({});
+      assert.throws(parseConfig, ConfigurationError, "Environment variable 'AUTH_TYPE' is not set");
+    });
+
+    it("should throw an exception if env.DID_SEED isn't set", () => {
+      sandbox.stub(process, "env").value({ AUTH_TYPE: authType });
       assert.throws(parseConfig, ConfigurationError, "Environment variable 'DID_SEED' is not set");
+    });
+
+    it("should throw an exception if env.OIDC_ISSUER_URL isn't set", () => {
+      sandbox.stub(process, "env").value({ AUTH_TYPE: authType, DID_SEED: didSeed });
+      assert.throws(parseConfig, ConfigurationError, "Environment variable 'OIDC_ISSUER_URL' is not set");
     });
   });
 

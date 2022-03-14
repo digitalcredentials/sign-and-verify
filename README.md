@@ -12,24 +12,25 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 
 1. Configure the service with the following environment variables:
 
-- `DID_SEED` - a secret seed used to generate DID document for issuer (required)
+- `AUTH_TYPE`: the mechanism by which to authorize access to credential (required)
+- `DID_SEED`: a secret seed used to generate DID document for issuer (required)
 - `OIDC_ISSUER_URL`: OIDC issuer discovery URL (required)
-- `ISSUER_MEMBERSHIP_REGISTRY_URL` - location of registry used to confirm issuer's membership status in DCC (required)
-- `DID_WEB_URL` - the url used to generate `did:web` document and keys for issuer (optional, default: `undefined`)
-- `PORT` - the port the web service will bind to (optional, default: `5000`)
-- `DIGEST_CHECK` - set to `true` to enable `Digest` header verification (optional, default: `false`)
-- `DIGEST_ALGORITHMS` - a comma-delimited list of acceptable digest algorithms (optional, default: `sha256,sha512`)
-- `HMAC_SECRET` - set to the shared HMAC secret to require [HMAC signing](https://tools.ietf.org/html/draft-ietf-httpbis-message-signatures-00) of the request via the `Signature` header (optional, default: `null`)
-- `HMAC_REQUIRED_HEADERS` - a comma-delimited list of headers that are required to be in the HMAC signature (optional, default: `date,digest`)
-- `DB_USER` - database client username (optional)
-- `DB_PASS` - database client password (optional)
-- `DB_HOST` - database client hostname (optional)
+- `ISSUER_MEMBERSHIP_REGISTRY_URL`: location of registry used to confirm issuer's membership status in DCC (required)
+- `DID_WEB_URL`: the url used to generate `did:web` document and keys for issuer (optional, default: `undefined`)
+- `PORT`: the port the web service will bind to (optional, default: `5000`)
+- `DIGEST_CHECK`: set to `true` to enable `Digest` header verification (optional, default: `false`)
+- `DIGEST_ALGORITHMS`: a comma-delimited list of acceptable digest algorithms (optional, default: `sha256,sha512`)
+- `HMAC_SECRET`: set to the shared HMAC secret to require [HMAC signing](https://tools.ietf.org/html/draft-ietf-httpbis-message-signatures-00) of the request via the `Signature` header (optional, default: `null`)
+- `HMAC_REQUIRED_HEADERS`: a comma-delimited list of headers that are required to be in the HMAC signature (optional, default: `date,digest`)
+- `DB_USER`: database client username (optional)
+- `DB_PASS`: database client password (optional)
+- `DB_HOST`: database client hostname (optional)
 
 2. Copy `.env.example` to `.env`, which `npm run start` will pick up, to test these values.
 
 3. Modify the `DatabaseClient` class in `./src/database.ts` to suit your organization's DBMS deployment infrastructure
 
-4. Modify the `credentialRequestHandler` method in `./src/issuer-helper.ts` to suit your organization's DBMS deployment infrastructure
+4. Modify the content of `./src/issuer-helper.ts` to suit your organization's DBMS/OIDC deployment infrastructure
 
 5. Run `npm run setup` or `yarn setup` and follow output deployment instructions (please use Node version 14 or higher)
 

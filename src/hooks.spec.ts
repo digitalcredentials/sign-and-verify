@@ -9,9 +9,11 @@ import 'mocha';
 
 import { verifyRequestSignature, verifyRequestDigest } from "./hooks";
 import { resetConfig } from './config';
+import { AuthType } from './issuer-helper';
 
 const sandbox = createSandbox();
 const validEnv = {
+  AUTH_TYPE: AuthType.OidcToken,
   DID_SEED: "DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2",
   OIDC_ISSUER_URL: "https://oidc-issuer.example.com",
   DIGEST_CHECK: "true",

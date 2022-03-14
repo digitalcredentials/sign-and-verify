@@ -1,8 +1,9 @@
 import { ConfigurationError } from './errors';
-import { credentialRequestHandler } from './issuer-helper';
+import { AuthType } from './issuer-helper';
 
 export type Config = {
   port: number;
+  authType: AuthType;
   didSeed: string;
   didWebUrl: string | undefined;
   oidcIssuerUrl: string | undefined;
@@ -12,12 +13,14 @@ export type Config = {
   digestCheck: boolean;
   digestAlorithms: Array<string>;
   demoIssuerMethod: string | null;
-  credentialRequestHandler: (issuerId: string, holderId: string, accessToken: string) => Promise<any>;
 }
 
 let CONFIG: null | Config = null;
 
 export function parseConfig(): Config {
+  if (!process.env.AUTH_TYPE) {
+    throw new ConfigurationError("Environment variable 'AUTH_TYPE' is not set");
+  }
   if (!process.env.DID_SEED) {
     throw new ConfigurationError("Environment variable 'DID_SEED' is not set");
   }
@@ -26,6 +29,7 @@ export function parseConfig(): Config {
   }
   return Object.freeze({
     port: process.env.PORT ? Number(process.env.PORT) : 5000,
+    authType: process.env.AUTH_TYPE as AuthType,
     didSeed: process.env.DID_SEED,
     didWebUrl: process.env.DID_WEB_URL,
     oidcIssuerUrl: process.env.OIDC_ISSUER_URL,
@@ -38,8 +42,7 @@ export function parseConfig(): Config {
     digestAlorithms: (
       process.env.DIGEST_ALGORITHMS || "SHA256,SHA512"
     ).split(",").map((alg) => alg.trim()),
-    demoIssuerMethod : process.env.DEMO_ISSUER_METHOD || null,
-    credentialRequestHandler: credentialRequestHandler
+    demoIssuerMethod : process.env.DEMO_ISSUER_METHOD || null
   });
 }
 
