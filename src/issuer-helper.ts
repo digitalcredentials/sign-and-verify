@@ -11,13 +11,6 @@ import { Issuer } from 'openid-client';
 import { dbCredClient } from './database';
 import { getConfig } from './config';
 
-// Return mapping from expiration date token (i.e., 'EXPIRATION_DATE')
-// to expiration date database field (i.e., 'expirationDate') for given credential record.
-// Otherwise, return null.
-const getExpirationDate = (credentialRecord) => {
-  return credentialRecord.expirationDate ? { EXPIRATION_DATE: credentialRecord.expirationDate } : null;
-};
-
 // NOTE: FEEL FREE TO ALTER IT TO CONTAIN LOGIC FOR RETRIEVING CREDENTIALS FOR LEARNERS IN YOUR ORG
 // NOTE: HOLDER ID IS GENERATED FROM AN EXTERNAL WALLET, NOT THE ISSUER
 // Method for issuer to retrieve credential on behalf of learner
@@ -53,7 +46,6 @@ const credentialRequestHandler = async (issuerId: string, holderId: string, acce
     CREDENTIAL_NAME: credentialRecord.name,
     CREDENTIAL_DESC: credentialRecord.description,
     ISSUANCE_DATE: credentialRecord.issuanceDate,
-    ...getExpirationDate(credentialRecord),
     ISSUER_NAME: credentialRecord.issuer.name,
     ISSUER_URL: credentialRecord.issuer.url,
     ISSUER_IMAGE: credentialRecord.issuer.image,
@@ -61,10 +53,14 @@ const credentialRequestHandler = async (issuerId: string, holderId: string, acce
   };
 
   // Select desired credential template
-  const templateFileName = path.resolve(__dirname, `./templates/${credentialType}.txt`);
+  const templateFileName = path.resolve(__dirname, `./templates/${credentialType}.json`);
   const template = fs.readFileSync(templateFileName, { encoding:'utf8' });
   const templateHbars = Handlebars.compile(template);
   const credential = JSON.parse(templateHbars(credentialConfig));
+
+  if (credentialRecord.expirationDate) {
+    credential.expirationDate = credentialRecord.expirationDate;
+  }
   return Promise.resolve(credential);
 };
 
