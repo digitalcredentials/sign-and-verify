@@ -223,12 +223,14 @@ export async function build(opts = {}) {
     '/request/credential', async (request, reply) => {
       // Verify that access token was included in request
       let accessToken;
-      if (request.headers.authorization && request.headers.authorization.split(' ')[0] === 'Bearer') {
-        accessToken = request.headers.authorization.split(' ')[1];
-      } else {
-        return reply
-          .code(401)
-          .send({ message: 'Failed to provide access token in request' });
+      if (authType === AuthType.OidcToken) {
+        if (request.headers.authorization && request.headers.authorization.split(' ')[0] === 'Bearer') {
+          accessToken = request.headers.authorization.split(' ')[1];
+        } else {
+          return reply
+            .code(401)
+            .send({ message: 'Failed to provide access token in request' });
+        }
       }
       // verifiable presentation is placed directly in body
       // TODO: in a future version, we may decide to specify
