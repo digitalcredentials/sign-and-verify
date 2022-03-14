@@ -35,7 +35,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 
 NOTE: `AUTH_TYPE` accepts the following values:
 - `OIDC_TOKEN`: retrieves email from `userinfo` endpoint using OIDC token and fetches matching credential
-- `VP_CHALLENGE`: fetched credential with matching VP challenge
+- `VP_CHALLENGE`: fetches credential with matching VP challenge
 
 NOTE: the `DID_SEED` included as an example is just for your reference. Do not check in production did seeds, private keys, or the equivalent.
 
