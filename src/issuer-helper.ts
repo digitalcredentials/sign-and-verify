@@ -67,7 +67,7 @@ const processCredentialRequestViaOidc = async (issuerId: string, holderId: strin
   // Select credential type
   const credentialType = 'Certificate';
   // Select desired credential template
-  const templateFileName = path.resolve(__dirname, `./templates/${credentialType}.txt`);
+  const templateFileName = path.resolve(__dirname, `./templates/${credentialType}.json`);
   const template = fs.readFileSync(templateFileName, { encoding:'utf8' });
   // Using credential template and config to generate credential
   const templateHbars = Handlebars.compile(template);
