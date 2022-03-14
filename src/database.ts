@@ -32,7 +32,7 @@ class DatabaseClient {
   async close() {
     await this.client.close();
   }
-  
+
   async connectServer(dbServerUri: string) {
     const connectionOpts = {
       useNewUrlParser: true,
@@ -51,4 +51,4 @@ class DatabaseClient {
   }
 }
 
-export const dbCredClient = new DatabaseClient(DB_URI, 'mitdcc', 'Credential');
+export const dbCredClient = new DatabaseClient(DB_URI, 'sign-and-verify', 'credential-recipients');
