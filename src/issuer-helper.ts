@@ -12,16 +12,9 @@ import { dbCredClient } from './database';
 import { getConfig } from './config';
 
 export enum AuthType {
-  OidcToken = 'OIDC_TOKEN',
-  VpChallenge = 'VP_CHALLENGE'
+  OidcToken = 'oidc_token',
+  VpChallenge = 'vp_challenge'
 }
-
-// Return mapping from expiration date token (i.e., 'EXPIRATION_DATE')
-// to expiration date database field (i.e., 'expirationDate') for given credential record.
-// Otherwise, return null.
-const getExpirationDate = (credentialRecord) => {
-  return credentialRecord.expirationDate ? { EXPIRATION_DATE: credentialRecord.expirationDate } : null;
-};
 
 // NOTE: FEEL FREE TO ALTER IT TO CONTAIN LOGIC FOR RETRIEVING CREDENTIALS FOR LEARNERS IN YOUR ORG
 // NOTE: HOLDER ID IS GENERATED FROM AN EXTERNAL WALLET, NOT THE ISSUER
@@ -54,7 +47,7 @@ const processCredentialRequestViaOidc = async (issuerId: string, holderId: strin
     throw new Error('Could not retrieve credential for given email');
   }
   if (!credentialRecord) {
-    return Promise.resolve({});
+    return {};
   }
 
   // Populate credential config
@@ -64,7 +57,6 @@ const processCredentialRequestViaOidc = async (issuerId: string, holderId: strin
     CREDENTIAL_NAME: credentialRecord.name,
     CREDENTIAL_DESC: credentialRecord.description,
     ISSUANCE_DATE: credentialRecord.issuanceDate,
-    ...getExpirationDate(credentialRecord),
     ISSUER_NAME: credentialRecord.issuer.name,
     ISSUER_URL: credentialRecord.issuer.url,
     ISSUER_IMAGE: credentialRecord.issuer.image,
@@ -80,7 +72,10 @@ const processCredentialRequestViaOidc = async (issuerId: string, holderId: strin
   // Using credential template and config to generate credential
   const templateHbars = Handlebars.compile(template);
   const credential = JSON.parse(templateHbars(credentialConfig));
-  return Promise.resolve(credential);
+  if (credentialRecord.expirationDate) {
+    credential.expirationDate = credentialRecord.expirationDate;
+  }
+  return credential;
 };
 
 // NOTE: FEEL FREE TO ALTER IT TO CONTAIN LOGIC FOR RETRIEVING CREDENTIALS FOR LEARNERS IN YOUR ORG
@@ -97,7 +92,7 @@ const processCredentialRequestViaVp = async (issuerId: string, holderId: string,
     throw new Error('Could not retrieve credential for given challenge');
   }
   if (!credentialRecord) {
-    return Promise.resolve({});
+    return {};
   }
 
   // Populate credential config
@@ -122,11 +117,10 @@ const processCredentialRequestViaVp = async (issuerId: string, holderId: string,
   // Using credential template and config to generate credential
   const templateHbars = Handlebars.compile(template);
   const credential = JSON.parse(templateHbars(credentialConfig));
-
   if (credentialRecord.expirationDate) {
     credential.expirationDate = credentialRecord.expirationDate;
   }
-  return Promise.resolve(credential);
+  return credential;
 };
 
 export { processCredentialRequestViaOidc, processCredentialRequestViaVp };
