@@ -12,16 +12,13 @@
     "image": "{{ISSUER_IMAGE}}"
   },
   "issuanceDate": "{{ISSUANCE_DATE}}",
-  {{#if EXPIRATION_DATE}}
-  "expirationDate": "{{EXPIRATION_DATE}}",
-  {{/if}}
   "credentialSubject": {
     "id": "{{LEARNER_DID}}",
     "name": "{{LEARNER_NAME}}",
     "hasCredential": {
       "type": ["EducationalOccupationalCredential"],
-      "name": "{{CREDENTIAL_NAME}}",
-      "description": "{{CREDENTIAL_DESC}}"
+      "name": "{{MAJOR}} {{DEGREE}}",
+      "description": "{{DEGREE}} degree in {{MAJOR}} from {{ISSUER_NAME}}"
     }
   }
 }
