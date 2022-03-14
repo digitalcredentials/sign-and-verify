@@ -11,9 +11,8 @@ The REST service implements a subset of the W3C CCG [vc-http-api draft standard]
 Follow these steps to properly configure a `sign-and-verify` service deployment for your organization:
 
 1. Configure the service with the following environment variables:
-
-- `AUTH_TYPE`: the mechanism by which to authorize access to credential (required)
-- `DID_SEED`: a secret seed used to generate DID document for issuer (required)
+- \*`AUTH_TYPE`: the mechanism by which to authorize access to credential (required)
+- \*`DID_SEED`: a secret seed used to generate DID document for issuer (required)
 - `OIDC_ISSUER_URL`: OIDC issuer discovery URL (required)
 - `ISSUER_MEMBERSHIP_REGISTRY_URL`: location of registry used to confirm issuer's membership status in DCC (required)
 - `DID_WEB_URL`: the url used to generate `did:web` document and keys for issuer (optional, default: `undefined`)
@@ -33,6 +32,10 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 4. Modify the content of `./src/issuer-helper.ts` to suit your organization's DBMS/OIDC deployment infrastructure
 
 5. Run `npm run setup` or `yarn setup` and follow output deployment instructions (please use Node version 14 or higher)
+
+NOTE: `AUTH_TYPE` accepts the following values:
+- `OIDC_TOKEN`: retrieves email from `userinfo` endpoint using OIDC token
+- `VP_CHALLENGE`: extracts email from VP challenge
 
 NOTE: the `DID_SEED` included as an example is just for your reference. Do not check in production did seeds, private keys, or the equivalent.
 
