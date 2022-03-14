@@ -34,12 +34,17 @@ const processCredentialRequestViaOidc = async (issuerId: string, holderId: strin
   // Select credential primary key
   const primaryKey = 'credentialSubject.email';
   // Retrieve email from userinfo endpoint using OIDC token
-  const { oidcIssuerUrl } = getConfig();
-  const oidcIssuer = await Issuer.discover(oidcIssuerUrl as string);
-  const userinfoEndpoint = oidcIssuer.metadata.userinfo_endpoint as string;
-  const userinfo = (await axios.get(userinfoEndpoint, { headers: { 'Authorization': `Bearer ${accessToken}` } })).data;
-  const email = userinfo.email;
-  if (!email) {
+  let email;
+  try {
+    const { oidcIssuerUrl } = getConfig();
+    const oidcIssuer = await Issuer.discover(oidcIssuerUrl as string);
+    const userinfoEndpoint = oidcIssuer.metadata.userinfo_endpoint as string;
+    const userinfo = (await axios.get(userinfoEndpoint, { headers: { 'Authorization': `Bearer ${accessToken}` } })).data;
+    email = userinfo.email;
+    if (!email) {
+      throw new Error;
+    }
+  } catch (error) {
     throw new Error('Could not retrieve email from userinfo endpoint using OIDC token');
   }
 
@@ -84,11 +89,16 @@ const processCredentialRequestViaVp = async (issuerId: string, holderId: string,
   // Select credential primary key
   const primaryKey = 'credentialSubject.email';
   // Extract email from VP challenge
-  const metadataBase64 = Buffer.from(metadataEncoded, 'base64');
-  const metadataUtf8 = metadataBase64.toString('utf8');
-  const metadata = JSON.parse(metadataUtf8);
-  const email = metadata.email;
-  if (!email) {
+  let email;
+  try {
+    const metadataBase64 = Buffer.from(metadataEncoded, 'base64');
+    const metadataUtf8 = metadataBase64.toString('utf8');
+    const metadata = JSON.parse(metadataUtf8);
+    email = metadata.email;
+    if (!email) {
+      throw new Error;
+    }
+  } catch (error) {
     throw new Error('Could not extract email from VP challenge');
   }
 
