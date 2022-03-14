@@ -8,6 +8,7 @@ import { X25519KeyAgreementKey2020 } from '@digitalcredentials/x25519-key-agreem
 import { CryptoLD } from 'crypto-ld';
 import * as didWeb from '@interop/did-web-resolver';
 import * as didKey from '@digitalcredentials/did-method-key';
+import { AuthType, processCredentialRequestViaOidc, processCredentialRequestViaVp } from './issuer-helper';
 import { getConfig } from './config';
 import { verifyRequestDigest, verifyRequestSignature } from './hooks';
 import { default as demoCredential } from './demoCredential.json';
@@ -65,7 +66,13 @@ export async function build(opts = {}) {
     return didDocumentClone;
   };
 
-  const { didSeed, didWebUrl, demoIssuerMethod, issuerMembershipRegistryUrl, credentialRequestHandler } = getConfig();
+  const {
+    authType,
+    didSeed,
+    didWebUrl,
+    demoIssuerMethod,
+    issuerMembershipRegistryUrl
+  } = getConfig();
   const didSeedBytes = (new TextEncoder()).encode(didSeed).slice(0, 32);
   const privateDids: DIDDocument[] = [];
   const publicDids: DIDDocument[] = [];
@@ -240,7 +247,14 @@ export async function build(opts = {}) {
       if (verificationResult.verified) {
         let credential;
         try {
-          credential = await credentialRequestHandler(issuerDid, holderDid, accessToken);
+          switch (authType) {
+            case AuthType.OidcToken:
+              credential = await processCredentialRequestViaOidc(issuerDid, holderDid, accessToken);
+              break;
+            case AuthType.VpChallenge:
+              credential = await processCredentialRequestViaVp(issuerDid, holderDid, challenge);
+              break;
+          }
         } catch (error) {
           return reply
             .code(400)
