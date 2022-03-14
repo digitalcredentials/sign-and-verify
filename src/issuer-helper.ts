@@ -25,12 +25,8 @@ const getExpirationDate = (credentialRecord) => {
 
 // NOTE: FEEL FREE TO ALTER IT TO CONTAIN LOGIC FOR RETRIEVING CREDENTIALS FOR LEARNERS IN YOUR ORG
 // NOTE: HOLDER ID IS GENERATED FROM AN EXTERNAL WALLET, NOT THE ISSUER
-// Method for issuer to retrieve credential on behalf of learner
+// Method for issuer to retrieve credential on behalf of learner via OIDC token
 const processCredentialRequestViaOidc = async (issuerId: string, holderId: string, accessToken: string): Promise<any> => {
-  // NOTE: using one credential type for now
-  // Select credential type
-  const credentialType = 'Certificate';
-  // NOTE: CREDENTIAL ID IS THE LEARNER EMAIL IN EARLY DEPLOYMENTS OF THIS CODE
   // Select credential primary key
   const primaryKey = 'credentialSubject.email';
   // Retrieve email from userinfo endpoint using OIDC token
@@ -48,10 +44,15 @@ const processCredentialRequestViaOidc = async (issuerId: string, holderId: strin
     throw new Error('Could not retrieve email from userinfo endpoint using OIDC token');
   }
 
-  const CredentialModel = await dbCredClient.open();
-  const credentialQuery = { [primaryKey]: email };
-  const credentialRecord = await CredentialModel.findOne(credentialQuery);
-  await dbCredClient.close();
+  let credentialRecord;
+  try {
+    const CredentialModel = await dbCredClient.open();
+    const credentialQuery = { [primaryKey]: email };
+    credentialRecord = await CredentialModel.findOne(credentialQuery);
+    await dbCredClient.close();
+  } catch (error) {
+    throw new Error('Could not retrieve credential for given email');
+  }
   if (!credentialRecord) {
     return Promise.resolve({});
   }
@@ -70,9 +71,13 @@ const processCredentialRequestViaOidc = async (issuerId: string, holderId: strin
     LEARNER_NAME: credentialRecord.credentialSubject.name
   };
 
+  // NOTE: using one credential type for now
+  // Select credential type
+  const credentialType = 'Certificate';
   // Select desired credential template
   const templateFileName = path.resolve(__dirname, `./templates/${credentialType}.txt`);
   const template = fs.readFileSync(templateFileName, { encoding:'utf8' });
+  // Using credential template and config to generate credential
   const templateHbars = Handlebars.compile(template);
   const credential = JSON.parse(templateHbars(credentialConfig));
   return Promise.resolve(credential);
@@ -80,32 +85,17 @@ const processCredentialRequestViaOidc = async (issuerId: string, holderId: strin
 
 // NOTE: FEEL FREE TO ALTER IT TO CONTAIN LOGIC FOR RETRIEVING CREDENTIALS FOR LEARNERS IN YOUR ORG
 // NOTE: HOLDER ID IS GENERATED FROM AN EXTERNAL WALLET, NOT THE ISSUER
-// Method for issuer to retrieve credential on behalf of learner
-const processCredentialRequestViaVp = async (issuerId: string, holderId: string, metadataEncoded: string): Promise<any> => {
-  // NOTE: using one credential type for now
-  // Select credential type
-  const credentialType = 'Certificate';
-  // NOTE: CREDENTIAL ID IS THE LEARNER EMAIL IN EARLY DEPLOYMENTS OF THIS CODE
-  // Select credential primary key
-  const primaryKey = 'credentialSubject.email';
-  // Extract email from VP challenge
-  let email;
+// Method for issuer to retrieve credential on behalf of learner via VP challenge
+const processCredentialRequestViaVp = async (issuerId: string, holderId: string, challenge: string): Promise<any> => {
+  let credentialRecord;
   try {
-    const metadataBase64 = Buffer.from(metadataEncoded, 'base64');
-    const metadataUtf8 = metadataBase64.toString('utf8');
-    const metadata = JSON.parse(metadataUtf8);
-    email = metadata.email;
-    if (!email) {
-      throw new Error;
-    }
+    const CredentialModel = await dbCredClient.open();
+    const credentialQuery = { challenge };
+    credentialRecord = await CredentialModel.findOne(credentialQuery);
+    await dbCredClient.close();
   } catch (error) {
-    throw new Error('Could not extract email from VP challenge');
+    throw new Error('Could not retrieve credential for given challenge');
   }
-
-  const CredentialModel = await dbCredClient.open();
-  const credentialQuery = { [primaryKey]: email };
-  const credentialRecord = await CredentialModel.findOne(credentialQuery);
-  await dbCredClient.close();
   if (!credentialRecord) {
     return Promise.resolve({});
   }
@@ -123,9 +113,13 @@ const processCredentialRequestViaVp = async (issuerId: string, holderId: string,
     LEARNER_NAME: credentialRecord.credentialSubject.name
   };
 
+  // NOTE: using one credential type for now
+  // Select credential type
+  const credentialType = 'Certificate';
   // Select desired credential template
   const templateFileName = path.resolve(__dirname, `./templates/${credentialType}.json`);
   const template = fs.readFileSync(templateFileName, { encoding:'utf8' });
+  // Using credential template and config to generate credential
   const templateHbars = Handlebars.compile(template);
   const credential = JSON.parse(templateHbars(credentialConfig));
 
