@@ -408,3 +408,10 @@ If everything works as intended, then you should be able to execute any of the [
 
 ### 9. SSL/TLS-Certificate
 Please check step 6 for an automatic TLS certificate with Let's Encrypt and ACME.
+
+### 10. Apply updates
+The docker-container might not rebuild if the git-repository is updated. To update, follow these commands:
+- `docker-compose down`
+- `git pull`
+- `docker-compose up -d --build`
+
