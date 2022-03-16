@@ -385,7 +385,7 @@ This step might not be needed in the future, but check if the `docker-compose.ym
 - `git checkout docker-tutorial`
 
 Optional: If you want to have a automatically generated TLS-certificate provided by Let's Encrypt, then copy the `.yml` file from the `Docker` folder to your main folder by
-- `cp Docker/docker-compose-acme.yml docker-compose.yml
+- `cp Docker/docker-compose-acme.yml docker-compose.yml`
 
 - Change the `.env` variables to your liking; first, rename the `.env.example` to `.env` by
 `mv .env.example .env`
