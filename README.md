@@ -348,27 +348,7 @@ Prepare your instance by executing following steps:
 (Questions about keeping the old config can be answered with yes; only means that a ssh-login with password is disabled)
 
 ### 4. Docker installation
-In case, any of this fails, please check out the [Docker installation guide for Ubuntu](https://docs.docker.com/engine/install/ubuntu/).
-
-- Delete any old docker version (skip if new instance) by executing 
-`sudo apt-get remove docker docker-engine docker.io containerd runc`
-
-- Install required packages 
-`sudo apt-get install ca-certificates curl gnupg lsb-release`
-
-- Add the official Docker GPG key by 
- `curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg`
-
-- Use the stable repository
-`echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null`
-
-- Install Docker engine and docker-compose
-`sudo apt-get update && sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose -y`
-
-- Verify the correct functionality of Docker by 
- `sudo docker run hello-world`
+Please follow the [Docker installation guide for Ubuntu](https://docs.docker.com/engine/install/ubuntu/).
 
 ### 5. Use a non-root user (optional)
 If you want to work with a non-root user without using `sudo`, log in to your instance with the respective user and execute following commands. [Source](https://askubuntu.com/questions/477551/how-can-i-use-docker-without-sudo)
@@ -380,9 +360,6 @@ If you want to work with a non-root user without using `sudo`, log in to your in
 ### 6. Install `sign-and-verify` repository
 - Clone the  `sign-and-verify` repo with
 `git clone https://github.com/digitalcredentials/sign-and-verify.git`
-
-This step might not be needed in the future, but check if the `docker-compose.yml` is in your folder. If not, switch to the `docker-tutorial` branch by
-- `git checkout docker-tutorial`
 
 Optional: If you want to have a automatically generated TLS-certificate provided by Let's Encrypt, then copy the `.yml` file from the `Docker` folder to your main folder by
 - `cp Docker/docker-compose-acme.yml docker-compose.yml`
