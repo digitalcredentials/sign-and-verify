@@ -404,7 +404,7 @@ Optional: If you want to have a automatically generated TLS-certificate provided
 `docker-compose down`
 
 ### 8. Usage
-If everything works as intended, then you should be able to execute any of the [above-mentioned commands](#api-docs). The `sign-and-verify` service is available at `YOUR_IPADDRESS:5000`.
+If everything works as intended, then you should be able to execute any of the [above-mentioned commands](#api-docs). The `sign-and-verify` service is available at `YOUR_IPADDRESS:5000`. If you use SSL/TLS-certificates, your service will be available at `https://yourdomain.edu` on standard port 443.
 
 ### 9. SSL/TLS-Certificate
 Please check step 6 for an automatic TLS certificate with Let's Encrypt and ACME.
@@ -413,5 +413,6 @@ Please check step 6 for an automatic TLS certificate with Let's Encrypt and ACME
 The docker-container might not rebuild if the git-repository is updated. To update, follow these commands:
 - `docker-compose down`
 - `git pull`
+- Check if your `.env`-file has all the contents required for running, e.g., compare with the `.env.example`-file
 - `docker-compose up -d --build`
 
