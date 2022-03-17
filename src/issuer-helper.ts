@@ -44,7 +44,8 @@ const processCredentialRequestViaOidc = async (issuerId: string, holderId: strin
     credentialRecord = await CredentialModel.findOne(credentialQuery);
     await dbCredClient.close();
   } catch (error) {
-    throw new Error('Could not retrieve credential for given email');
+    console.log(error);
+    throw new Error('Could not retrieve credential for given email: ' + error);
   }
   if (!credentialRecord) {
     return {};
@@ -89,7 +90,8 @@ const processCredentialRequestViaVp = async (issuerId: string, holderId: string,
     credentialRecord = await CredentialModel.findOne(credentialQuery);
     await dbCredClient.close();
   } catch (error) {
-    throw new Error('Could not retrieve credential for given challenge');
+    console.log(error);
+    throw new Error('Could not retrieve credential for given challenge: ' + error);
   }
   if (!credentialRecord) {
     return {};
