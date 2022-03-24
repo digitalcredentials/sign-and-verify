@@ -90,6 +90,7 @@ const processCredentialRequestViaVp = async (issuerId: string, holderId: string,
     credentialRecord = await CredentialModel.findOne(credentialQuery);
     await dbCredClient.close();
   } catch (error) {
+    console.log('Encountered error loading credential.');
     console.log(error);
     throw new Error('Could not retrieve credential for given challenge: ' + error);
   }
