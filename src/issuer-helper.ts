@@ -84,6 +84,7 @@ const processCredentialRequestViaOidc = async (issuerId: string, holderId: strin
 // Method for issuer to retrieve credential on behalf of learner via VP challenge
 const processCredentialRequestViaVp = async (issuerId: string, holderId: string, challenge: string): Promise<any> => {
   let credentialRecord;
+  console.log('Loading credential...');
   try {
     const CredentialModel = await dbCredClient.open();
     const credentialQuery = { challenge };
