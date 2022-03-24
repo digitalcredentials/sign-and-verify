@@ -265,7 +265,7 @@ export async function build(opts = {}) {
         }
 
         if (!credential) {
-            console.log(`Credential not found. ${authType, issuerDid, holderDid, accessToken, challenge}`);
+            console.log(`Credential not found. ${{issuerDid, holderDid, accessToken, challenge}}`);
             return reply.code(404).send({ message: 'Credential not found.' });
         }
 
