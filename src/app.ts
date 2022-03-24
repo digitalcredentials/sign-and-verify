@@ -9,7 +9,7 @@ import { CryptoLD } from 'crypto-ld';
 import * as didWeb from '@interop/did-web-resolver';
 import * as didKey from '@digitalcredentials/did-method-key';
 import { AuthType, processCredentialRequestViaOidc, processCredentialRequestViaVp } from './issuer-helper';
-import { getConfig } from './config';
+import { getConfig, decodeSeed } from './config';
 import { verifyRequestDigest, verifyRequestSignature } from './hooks';
 import { default as demoCredential } from './demoCredential.json';
 import { v4 as uuidv4 } from 'uuid';
@@ -73,7 +73,7 @@ export async function build(opts = {}) {
     demoIssuerMethod,
     issuerMembershipRegistryUrl
   } = getConfig();
-  const didSeedBytes = (new TextEncoder()).encode(didSeed).slice(0, 32);
+  const didSeedBytes = decodeSeed(didSeed);
   const privateDids: DIDDocument[] = [];
   const publicDids: DIDDocument[] = [];
 
