@@ -17,6 +17,7 @@
   "license": "MIT",
   "repository": "git@github.com:digitalcredentials/sign-and-verify.git",
   "dependencies": {
+    "@digitalcredentials/bnid": "^2.1.2",
     "@digitalcredentials/sign-and-verify-core": "^2.0.0",
     "@interop/did-web-resolver": "^2.2.0",
     "axios": "^0.24.0",

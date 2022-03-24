@@ -1,5 +1,6 @@
 import { ConfigurationError } from './errors';
 import { AuthType } from './issuer-helper';
+import { decodeSecretKeySeed } from '@digitalcredentials/bnid';
 
 export type Config = {
   port: number;
@@ -55,4 +56,18 @@ export function getConfig(): Config {
     CONFIG = parseConfig();
   }
   return CONFIG;
+}
+
+export function decodeSeed(secretKeySeed: string): Uint8Array {
+  let secretKeySeedBytes: Uint8Array;
+  if (secretKeySeed.startsWith('z')) {
+    // This is a multibase-decoded key seed, such as that generated via @digitalcredentials/did-cli
+    secretKeySeedBytes = decodeSecretKeySeed({secretKeySeed});
+  } else if (secretKeySeed.length >= 32) {
+      secretKeySeedBytes = (new TextEncoder()).encode(secretKeySeed).slice(0, 32);
+  } else {
+    throw TypeError('"secretKeySeed" must be at least 32 bytes, preferably multibase-encoded.');
+  }
+
+  return secretKeySeedBytes;
 }
