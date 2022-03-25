@@ -222,7 +222,7 @@ describe("api", () => {
         },
         payload: sampleSignedPresentation
       });
-      expect(response.statusCode).to.equal(201);
+      expect(response.statusCode).to.equal(200);
       const payload = JSON.parse(response.payload);
       expect(payload.proof.type).to.equal('Ed25519Signature2020');
       expect(payload.issuer.id).to.equal(issuerId);
@@ -265,11 +265,11 @@ describe("api", () => {
         const response = await server.inject({
             method: "POST",
             url: url,
-            payload: { 
-              "presentationId": "456", 
-              "holder": issuerId, 
-              "verificationMethod": issuerVerificationMethod, 
-              "challenge": "123" 
+            payload: {
+              "presentationId": "456",
+              "holder": issuerId,
+              "verificationMethod": issuerVerificationMethod,
+              "challenge": "123"
             }
         });
         expect(response.statusCode).to.equal(201);
