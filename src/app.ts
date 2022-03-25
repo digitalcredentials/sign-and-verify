@@ -95,7 +95,9 @@ export async function build(opts = {}) {
   const publicDids: DIDDocument[] = [];
 
   if (didWebUrl) {
-    const { didDocument: didWebDocument, methodFor: didWebMethodFor } = await didWebDriver.generate({ url: didWebUrl, seed: didSeedBytes });
+    const {
+      didDocument: didWebDocument, methodFor: didWebMethodFor
+    } = await didWebDriver.generate({ url: didWebUrl, seed: didSeedBytes });
     let publicDidWeb: DIDDocument = JSON.parse(JSON.stringify(didWebDocument));
     const methodToCopy = 'assertionMethod';
     publicDidWeb = copyFromMethod(publicDidWeb, methodToCopy);
@@ -104,8 +106,17 @@ export async function build(opts = {}) {
     publicDids.push(publicDidWeb);
   }
 
-  const { didDocument: didKeyDocument, methodFor: didKeyMethodFor } = await didKeyDriver.generate({ seed: didSeedBytes });
+  const {
+    didDocument: didKeyDocument, methodFor: didKeyMethodFor
+  } = await didKeyDriver.generate({ seed: didSeedBytes });
   const publicDidKey: DIDDocument = JSON.parse(JSON.stringify(didKeyDocument));
+  if (!didWebUrl && didKeyDocument.id !== demoIssuerMethod) {
+    // Issuer is using did:key, and the secret key seed does not match
+    console.error(
+      new Error('The secret DID_SEED does not match DEMO_ISSUER_METHOD.'));
+    process.exit(1);
+  }
+
   const privateDidKey = privatizeDid(didKeyDocument, didKeyMethodFor);
   privateDids.push(privateDidKey);
   publicDids.push(publicDidKey);
