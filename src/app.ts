@@ -214,7 +214,7 @@ export async function build(opts = {}) {
         }
         const result = await sign(credential, options);
         reply
-          .code(201)
+          .code(200)
           .header('Content-Type', 'application/json; charset=utf-8')
           .send(result);
       } else {
