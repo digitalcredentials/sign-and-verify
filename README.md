@@ -25,7 +25,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 - `DB_PASS`: database client password (optional)
 - `DB_HOST`: database client hostname (optional)
 - `DB_NAME`: database name (optional)
-- `DB_TABLE`: database lms table name (optional)
+- `DB_TABLE`: database credentials collection name (optional)
 
 2. Copy `.env.example` to `.env`, which `npm run start` will pick up, to test these values.
 
