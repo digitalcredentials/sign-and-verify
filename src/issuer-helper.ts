@@ -19,7 +19,7 @@ export enum AuthType {
 // NOTE: FEEL FREE TO ALTER IT TO CONTAIN LOGIC FOR RETRIEVING CREDENTIALS FOR LEARNERS IN YOUR ORG
 // NOTE: HOLDER ID IS GENERATED FROM AN EXTERNAL WALLET, NOT THE ISSUER
 // Method for issuer to retrieve credential on behalf of learner via OIDC token
-const processCredentialRequestViaOidc = async (issuerId: string, holderId: string, accessToken: string): Promise<any> => {
+const processCredentialRequestViaOidc = async (issuerId: string, holderId: string, accessToken?: string): Promise<any> => {
   // Select credential primary key
   const primaryKey = 'credentialSubject.email';
   // Retrieve email from userinfo endpoint using OIDC token

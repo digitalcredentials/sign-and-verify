@@ -29,43 +29,60 @@ const didWebDriver = didWeb.driver({ cryptoLd });
 // Tool used to generate did:key from secret seed
 const didKeyDriver = didKey.driver();
 
-export async function build(opts = {}) {
+const VERIFICATION_METHOD_PURPOSES = [
+  'authentication',
+  'assertionMethod',
+  'capabilityDelegation',
+  'capabilityInvocation',
+  'keyAgreement'
+];
 
-  const ensureId = (field) => {
-    if (typeof field === 'object') {
-      return field.id;
-    }
-    return field;
-  };
+export function extractAccessToken(headers): string | undefined {
+  if (!headers.authorization) {
+    return;
+  }
+  const [scheme, token] = headers.authorization.split(' ');
+  if (scheme === 'Bearer') {
+    return token;
+  }
+}
 
-  const VERIFICATION_METHOD_PURPOSES = [
-    'authentication',
-    'assertionMethod',
-    'capabilityDelegation',
-    'capabilityInvocation',
-    'keyAgreement'
-  ];
+const ensureId = (field) => {
+  if (typeof field === 'object') {
+    return field.id;
+  }
+  return field;
+};
 
-  const copyFromMethod = (didDocument, methodToCopy) => {
-    const didDocumentClone = JSON.parse(JSON.stringify(didDocument));
-    const methodForPurpose = didDocument[methodToCopy][0];
+function copyFromMethod (didDocument, methodToCopy) {
+  const didDocumentClone = JSON.parse(JSON.stringify(didDocument));
+  const methodForPurpose = didDocument[methodToCopy][0];
+  const methodForPurposeClone = JSON.parse(JSON.stringify(methodForPurpose));
+  VERIFICATION_METHOD_PURPOSES.forEach((purpose) => {
+    didDocumentClone[purpose] = [methodForPurposeClone];
+  });
+  return didDocumentClone;
+}
+
+function privatizeDid (didDocument, getMethodForPurpose, methodToCopy?) {
+  const didDocumentClone = JSON.parse(JSON.stringify(didDocument));
+  VERIFICATION_METHOD_PURPOSES.forEach((purpose) => {
+    const methodForPurpose = getMethodForPurpose({ purpose: methodToCopy || purpose });
     const methodForPurposeClone = JSON.parse(JSON.stringify(methodForPurpose));
-    VERIFICATION_METHOD_PURPOSES.forEach((purpose) => {
-      didDocumentClone[purpose] = [methodForPurposeClone];
-    });
-    return didDocumentClone;
-  };
+    didDocumentClone[purpose] = [methodForPurposeClone];
+  });
+  return didDocumentClone;
+}
 
-  const privatizeDid = (didDocument, getMethodForPurpose, methodToCopy?) => {
-    const didDocumentClone = JSON.parse(JSON.stringify(didDocument));
-    VERIFICATION_METHOD_PURPOSES.forEach((purpose) => {
-      const methodForPurpose = getMethodForPurpose({ purpose: methodToCopy || purpose });
-      const methodForPurposeClone = JSON.parse(JSON.stringify(methodForPurpose));
-      didDocumentClone[purpose] = [methodForPurposeClone];
-    });
-    return didDocumentClone;
-  };
+function constructDemoCredential(holder: string, id = uuidv4(), issuanceDate = new Date().toISOString()): any {
+  const credential = JSON.parse(JSON.stringify(demoCredential));
+  credential.id = id;
+  credential.credentialSubject.id = holder;
+  credential.issuanceDate = issuanceDate;
+  return credential;
+}
 
+export async function build(opts = {}) {
   const {
     authType,
     didSeed,
@@ -103,14 +120,6 @@ export async function build(opts = {}) {
     logger: true
   });
 
-  function constructDemoCredential(holder: string, id = uuidv4(), issuanceDate = new Date().toISOString()): any {
-    const credential = JSON.parse(JSON.stringify(demoCredential));
-    credential.id = id;
-    credential.credentialSubject.id = holder;
-    credential.issuanceDate = issuanceDate;
-    return credential;
-  }
-
   server.register(require('fastify-cors'), {});
   server.register(require('fastify-swagger'), {
     routePrefix: '/docs',
@@ -145,21 +154,18 @@ export async function build(opts = {}) {
 
   server.post(
     '/request/credential', async (request, reply) => {
+      const { headers, body } = request;
+
+      const accessToken = extractAccessToken(headers);
       // Verify that access token was included in request
-      let accessToken;
-      if (authType === AuthType.OidcToken) {
-        if (request.headers.authorization && request.headers.authorization.split(' ')[0] === 'Bearer') {
-          accessToken = request.headers.authorization.split(' ')[1];
-        } else {
-          return reply
-            .code(401)
-            .send({ message: 'Failed to provide access token in request' });
-        }
+      if (authType === AuthType.OidcToken && !accessToken) {
+        return reply
+          .code(401)
+          .send({ message: 'Failed to provide access token in request' });
       }
-      // verifiable presentation is placed directly in body
-      // TODO: in a future version, we may decide to specify
-      // the structure the request body further
-      const verifiablePresentation: any = request.body;
+
+      // VP is placed directly in body
+      const verifiablePresentation: any = body;
       // provided by issuer via diploma, email, LMS (e.g., Canvas), etc.
       const challenge = verifiablePresentation?.proof?.challenge;
       // holder DID generated by credential wallet
@@ -205,7 +211,6 @@ export async function build(opts = {}) {
           .code(500)
           .send({ message: 'Could not validate request', error: verificationResult });
       }
-
     }
   )
 
