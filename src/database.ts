@@ -6,8 +6,8 @@ const { MongoClient } = require('mongodb');
 const DB_USER = process.env.DB_USER;
 const DB_PASS = process.env.DB_PASS;
 const DB_HOST = process.env.DB_HOST;
-const DB_NAME = process.env.DB_NAME as string;
-const DB_TABLE = process.env.DB_TABLE as string;
+const DB_NAME = process.env.DB_NAME as string || 'sign-and-verify';
+const DB_COLLECTION = process.env.DB_COLLECTION as string || 'credential-recipients';
 const DB_URI = `mongodb+srv://${DB_USER}:${DB_PASS}@${DB_HOST}`;
 
 class DatabaseClient {
@@ -53,4 +53,4 @@ class DatabaseClient {
   }
 }
 
-export const dbCredClient = new DatabaseClient(DB_URI, DB_NAME, DB_TABLE);
+export const dbCredClient = new DatabaseClient(DB_URI, DB_NAME, DB_COLLECTION);
