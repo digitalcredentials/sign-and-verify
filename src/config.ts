@@ -1,5 +1,5 @@
 import { ConfigurationError } from './errors';
-import { AuthType } from './issuer-helper';
+import { AuthType } from './issuer';
 import { decodeSecretKeySeed } from '@digitalcredentials/bnid';
 
 export type Config = {

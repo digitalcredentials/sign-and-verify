@@ -6,9 +6,10 @@ import { FastifyInstance } from 'fastify';
 import { Server, IncomingMessage, ServerResponse } from 'http';
 import LRU from 'lru-cache';
 import { resetConfig } from './config';
-import * as IssuerHelper from './issuer-helper';
+import * as IssuerHelper from './issuer';
+import * as Certificate from './templates/Certificate';
 import demoCredential from './demoCredential.json';
-import { AuthType } from './issuer-helper';
+import { AuthType } from './issuer';
 
 const sandbox = createSandbox();
 const lruStub = sandbox.createStubInstance(LRU) as SinonStubbedInstance<LRU> & LRU;
@@ -210,8 +211,9 @@ describe("api", () => {
   });
 
   describe("/request/credential", () => {
-    sandbox.stub(IssuerHelper, 'processCredentialRequestViaOidc').returns(Promise.resolve(demoCredential));
-    sandbox.stub(IssuerHelper, 'processCredentialRequestViaVp').returns(Promise.resolve(demoCredential));
+    sandbox.stub(IssuerHelper, 'credentialRecordFromOidc').returns(Promise.resolve({}));
+    sandbox.stub(IssuerHelper, 'credentialRecordFromChallenge').returns(Promise.resolve({}));
+    sandbox.stub(Certificate, 'composeCredential').returns(demoCredential);
     const url = "/request/credential";
     it("POST returns 201", async () => {
       const response = await server.inject({
