@@ -3,7 +3,7 @@ import { createSandbox } from 'sinon';
 import 'mocha';
 
 import { parseConfig, getConfig, resetConfig, Config } from './config';
-import { AuthType } from './issuer-helper';
+import { AuthType } from './issuer';
 import { ConfigurationError } from './errors';
 
 const sandbox = createSandbox();

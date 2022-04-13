@@ -31,7 +31,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 
 3. Modify the `DatabaseClient` class in `./src/database.ts` to suit your organization's DBMS deployment infrastructure
 
-4. Modify the content of `./src/issuer-helper.ts` to suit your organization's DBMS/OIDC deployment infrastructure
+4. Modify the content of `./src/issuer.ts` to suit your organization's DBMS/OIDC deployment infrastructure
 
 5. Run `npm run setup` or `yarn setup` and follow output deployment instructions (please use Node version 14 or higher)
 
@@ -394,4 +394,3 @@ The docker-container might not rebuild if the git-repository is updated. To upda
 - `git pull`
 - Check if your `.env`-file has all the contents required for running, e.g., compare with the `.env.example`-file
 - `docker-compose up -d --build`
-

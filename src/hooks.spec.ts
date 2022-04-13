@@ -9,7 +9,7 @@ import 'mocha';
 
 import { verifyRequestSignature, verifyRequestDigest } from "./hooks";
 import { resetConfig } from './config';
-import { AuthType } from './issuer-helper';
+import { AuthType } from './issuer';
 
 const sandbox = createSandbox();
 const validEnv = {
