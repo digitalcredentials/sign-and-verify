@@ -1,15 +1,19 @@
 import { build } from './app';
 import { expect } from 'chai';
-import { createSandbox, SinonStubbedInstance } from 'sinon';
+import { createSandbox, SinonStubbedInstance, SinonSpy } from 'sinon';
 import 'mocha';
 import { FastifyInstance } from 'fastify';
 import { Server, IncomingMessage, ServerResponse } from 'http';
 import LRU from 'lru-cache';
+import { Collection } from 'mongodb';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 import { resetConfig } from './config';
 import * as IssuerHelper from './issuer';
 import * as Certificate from './templates/Certificate';
 import demoCredential from './demoCredential.json';
 import { AuthType } from './issuer';
+import * as Database from './database';
+import { dbCreate, dbConnect, dbDisconnect, Credential } from '../helpers/database';
 
 const sandbox = createSandbox();
 const lruStub = sandbox.createStubInstance(LRU) as SinonStubbedInstance<LRU> & LRU;
@@ -124,27 +128,55 @@ const sampleSignedPresentation = {
   }
 };
 
+const sampleDbCredential1 = {
+  "name": "Sample Course Level 1",
+  "description": "This is an intro course offered by Example Institute of Technology.",
+  "issuer": {
+    "name": "Example Institute of Technology",
+    "url": "https://cs.example.edu",
+    "image": "https://cs.example.edu/logo.png"
+  },
+  "credentialSubject": {
+    "name": "Learner One",
+    "email": "learner-one@example.edu"
+  },
+  "issuanceDate": "2020-08-16T12:00:00.000+00:00",
+  "expirationDate": "2025-08-16T12:00:00.000+00:00",
+  "challenge": challenge
+};
+
+const validateNotEmpty = (received) => {
+  expect(received).not.to.be.null;
+  expect(received).not.to.not.equal(undefined);
+};
+
+const validateObjectEquality = (received, expected) => {
+  for (const key in expected) {
+    expect(received[key]).to.eql(expected[key]);
+  }
+};
+
 describe("api", () => {
-  let server: FastifyInstance<Server, IncomingMessage, ServerResponse>;
+  let apiServer: FastifyInstance<Server, IncomingMessage, ServerResponse>;
 
   before(async () => {
     resetConfig();
     sandbox.stub(process, "env").value(validEnv);
-    server = await build();
-    await server.ready();
+    apiServer = await build();
+    await apiServer.ready();
   });
 
   describe("/status", () => {
     const url = "/status";
     it("GET returns 200", async () => {
-      const response = await server.inject({ method: "GET", url: url });
+      const response = await apiServer.inject({ method: "GET", url: url });
       expect(response.statusCode).to.equal(200);
       const payload: { status: String } = JSON.parse(response.payload);
       expect(payload).to.deep.equal({ status: 'OK' });
     });
 
     it("POST returns 404", async () => {
-      const response = await server.inject({ method: "POST", url: url });
+      const response = await apiServer.inject({ method: "POST", url: url });
       expect(response.statusCode).to.equal(404);
       expect(response.payload).to.deep.equal('{"message":"Route POST:/status not found","error":"Not Found","statusCode":404}');
     });
@@ -153,7 +185,7 @@ describe("api", () => {
   describe("/issue/credentials", () => {
     const url = "/issue/credentials";
     it("POST returns 201 and cred", async () => {
-      const response = await server.inject({
+      const response = await apiServer.inject({
         method: "POST",
         url: url,
         payload: { credential: sampleUnsignedCredential, options: credentialOptions }
@@ -168,7 +200,7 @@ describe("api", () => {
   describe("/prove/presentations", () => {
     const url = "/prove/presentations";
     it("POST returns 201 and presentation", async () => {
-      const response = await server.inject({
+      const response = await apiServer.inject({
         method: "POST",
         url: url,
         payload: { presentation: sampleUnsignedPresentation, options: presentationOptions }
@@ -184,7 +216,7 @@ describe("api", () => {
   describe("/verify/credentials", () => {
     const url = "/verify/credentials";
     it("POST returns 200", async () => {
-      const response = await server.inject({
+      const response = await apiServer.inject({
         method: "POST",
         url: url,
         payload: { verifiableCredential: sampleSignedCredential, options: credentialOptions }
@@ -199,7 +231,7 @@ describe("api", () => {
   describe("/verify/presentations", () => {
     const url = "/verify/presentations";
     it("POST returns 200", async () => {
-      const response = await server.inject({
+      const response = await apiServer.inject({
         method: "POST",
         url: url,
         payload: { verifiablePresentation: sampleSignedPresentation, options: presentationOptions }
@@ -212,11 +244,10 @@ describe("api", () => {
 
   describe("/request/credential", () => {
     sandbox.stub(IssuerHelper, 'credentialRecordFromOidc').returns(Promise.resolve({}));
-    sandbox.stub(IssuerHelper, 'credentialRecordFromChallenge').returns(Promise.resolve({}));
     sandbox.stub(Certificate, 'composeCredential').returns(demoCredential);
     const url = "/request/credential";
     it("POST returns 201", async () => {
-      const response = await server.inject({
+      const response = await apiServer.inject({
         method: "POST",
         url: url,
         headers: {
@@ -234,7 +265,7 @@ describe("api", () => {
   describe("/request/democredential/nodidproof", () => {
     const url = "/request/democredential/nodidproof";
     it("POST returns 500 if demo issuance not supported", async () => {
-      const response = await server.inject({
+      const response = await apiServer.inject({
         method: "POST",
         url: url,
         payload: { "holder": "did:example:me" }
@@ -243,7 +274,7 @@ describe("api", () => {
      }).timeout(6000);
 
     it("GET returns 404", async () => {
-      const response = await server.inject({ method: "GET", url: url });
+      const response = await apiServer.inject({ method: "GET", url: url });
       expect(response.statusCode).to.equal(404);
       expect(response.payload).to.deep.equal('{"message":"Route GET:/request/democredential/nodidproof not found","error":"Not Found","statusCode":404}');
     });
@@ -252,7 +283,7 @@ describe("api", () => {
   describe("/request/democredential", () => {
     const url = "/request/democredential";
     it("POST returns 500 if demo issuance not supported", async () => {
-      const response = await server.inject({
+      const response = await apiServer.inject({
         method: "POST",
         url: url,
         payload: sampleSignedPresentation
@@ -264,25 +295,25 @@ describe("api", () => {
   describe("/generate/controlproof", () => {
     const url = "/generate/controlproof";
     it("POST returns 201 and cred", async () => {
-        const response = await server.inject({
-            method: "POST",
-            url: url,
-            payload: {
-              "presentationId": "456",
-              "holder": issuerId,
-              "verificationMethod": issuerVerificationMethod,
-              "challenge": "123"
-            }
-        });
-        expect(response.statusCode).to.equal(201);
-        const payload = JSON.parse(response.payload);
-        expect(payload.holder).to.equal(issuerId);
+      const response = await apiServer.inject({
+        method: "POST",
+        url: url,
+        payload: {
+          "presentationId": "456",
+          "holder": issuerId,
+          "verificationMethod": issuerVerificationMethod,
+          "challenge": "123"
+        }
+      });
+      expect(response.statusCode).to.equal(201);
+      const payload = JSON.parse(response.payload);
+      expect(payload.holder).to.equal(issuerId);
     }).timeout(6000);
   });
 });
 
 describe("api with demo issuance", () => {
-  let server: FastifyInstance<Server, IncomingMessage, ServerResponse>;
+  let apiServer: FastifyInstance<Server, IncomingMessage, ServerResponse>;
 
   before(async () => {
     resetConfig();
@@ -292,14 +323,14 @@ describe("api with demo issuance", () => {
         DEMO_ISSUER_METHOD: issuerVerificationMethod
       }
     );
-    server = await build();
-    await server.ready();
+    apiServer = await build();
+    await apiServer.ready();
   });
 
   describe("/request/democredential/nodidproof", () => {
     const url = "/request/democredential/nodidproof";
     it("POST returns 201 and credential", async () => {
-      const response = await server.inject({
+      const response = await apiServer.inject({
         method: "POST",
         url: url,
         payload: { "holder": "did:example:me" }
@@ -312,7 +343,7 @@ describe("api with demo issuance", () => {
     }).timeout(6000);
 
     it("GET returns 404", async () => {
-      const response = await server.inject({ method: "GET", url: url });
+      const response = await apiServer.inject({ method: "GET", url: url });
       expect(response.statusCode).to.equal(404);
       expect(response.payload).to.deep.equal('{"message":"Route GET:/request/democredential/nodidproof not found","error":"Not Found","statusCode":404}');
     });
@@ -321,7 +352,7 @@ describe("api with demo issuance", () => {
   describe("/request/democredential", () => {
     const url = "/request/democredential";
     it("POST returns 201 and credential", async () => {
-      const response = await server.inject({
+      const response = await apiServer.inject({
         method: "POST",
         url: url,
         payload: sampleSignedPresentation
@@ -331,5 +362,55 @@ describe("api with demo issuance", () => {
       expect(payload.proof.type).to.equal('Ed25519Signature2020');
       expect(payload.issuer.id).to.equal(issuerId);
     }).timeout(9000);
+  });
+});
+
+describe("api with db inspection", () => {
+  let dbServer: MongoMemoryServer;
+  const dbName = "test";
+  const dbCollection = "credentials";
+  let findOneSpy: SinonSpy;
+
+  before(async () => {
+    dbServer = await dbCreate({ instance: { dbName } });
+    const dbUri = dbServer.getUri();
+    sandbox.stub(Database, "dbCredClient").value(
+      new Database.DatabaseClient(dbUri, dbName, dbCollection)
+    );
+    findOneSpy = sandbox.spy(Collection.prototype, "findOne");
+    await dbConnect(dbUri);
+  });
+
+  after(async () => {
+    await dbDisconnect(dbServer);
+  });
+
+  describe("/request/credential - vp_challenge auth type", () => {
+    let apiServer: FastifyInstance<Server, IncomingMessage, ServerResponse>;
+
+    beforeEach(async () => {
+      resetConfig();
+      const vpChallengeEnv = {
+        ...validEnv,
+        AUTH_TYPE: AuthType.VpChallenge
+      };
+      sandbox.stub(process, "env").value(vpChallengeEnv);
+      apiServer = await build();
+      await apiServer.ready();
+    });
+
+    const url = "/request/credential";
+    it("returns proper credential db record", async () => {
+      const validCredentialRecord = new Credential(sampleDbCredential1);
+      const savedCredentialRecord = await validCredentialRecord.save();
+      validateNotEmpty(savedCredentialRecord);
+      await apiServer.inject({
+        method: "POST",
+        url: url,
+        payload: sampleSignedPresentation
+      });
+      expect(findOneSpy.calledOnceWith({ challenge })).to.be.true;
+      validateObjectEquality(await findOneSpy.firstCall.returnValue, sampleDbCredential1);
+    }).timeout(10000);
   });
 });
