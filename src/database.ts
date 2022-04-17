@@ -10,7 +10,7 @@ const DB_NAME = process.env.DB_NAME as string || 'sign-and-verify';
 const DB_COLLECTION = process.env.DB_COLLECTION as string || 'credential-recipients';
 const DB_URI = `mongodb+srv://${DB_USER}:${DB_PASS}@${DB_HOST}`;
 
-class DatabaseClient {
+export class DatabaseClient {
   private client: any;
   private database: any;
   private dbServerUri: string;
