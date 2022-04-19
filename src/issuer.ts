@@ -31,6 +31,7 @@ export async function credentialRecordFromOidc (accessToken?: string): Promise<a
       throw new Error;
     }
   } catch (error) {
+    console.log(error);
     throw new Error('Could not retrieve email from userinfo endpoint using OIDC token');
   }
 
