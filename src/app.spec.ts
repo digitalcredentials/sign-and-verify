@@ -1,4 +1,4 @@
-import { build } from './app';
+import axios from 'axios';
 import { expect } from 'chai';
 import { createSandbox, SinonStubbedInstance, SinonSpy } from 'sinon';
 import 'mocha';
@@ -7,6 +7,8 @@ import { Server, IncomingMessage, ServerResponse } from 'http';
 import LRU from 'lru-cache';
 import { Collection } from 'mongodb';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import { Issuer } from 'openid-client';
+import { build } from './app';
 import { resetConfig } from './config';
 import * as IssuerHelper from './issuer';
 import * as Certificate from './templates/Certificate';
@@ -128,20 +130,41 @@ const sampleSignedPresentation = {
   }
 };
 
+const issuerUrl1 = "https://cs.example1.edu";
+const email1 = "learner-one@example1.edu";
 const sampleDbCredential1 = {
   "name": "Sample Course Level 1",
   "description": "This is an intro course offered by Example Institute of Technology.",
   "issuer": {
     "name": "Example Institute of Technology",
-    "url": "https://cs.example.edu",
-    "image": "https://cs.example.edu/logo.png"
+    "url": issuerUrl1,
+    "image": `${issuerUrl1}/logo.png`
   },
   "credentialSubject": {
     "name": "Learner One",
-    "email": "learner-one@example.edu"
+    "email": email1
   },
   "issuanceDate": "2020-08-16T12:00:00.000+00:00",
   "expirationDate": "2025-08-16T12:00:00.000+00:00",
+  "challenge": challenge
+};
+
+const issuerUrl2 = "https://cs.example2.edu";
+const email2 = "learner-two@example2.edu";
+const sampleDbCredential2 = {
+  "name": "Sample Course Level 2",
+  "description": "This is an advanced course offered by Example Institute of Technology.",
+  "issuer": {
+    "name": "Example Institute of Technology",
+    "url": issuerUrl2,
+    "image": `${issuerUrl2}/logo.png`
+  },
+  "credentialSubject": {
+    "name": "Learner Two",
+    "email": email2
+  },
+  "issuanceDate": "2017-06-12T12:00:00.000+00:00",
+  "expirationDate": "2022-06-12T12:00:00.000+00:00",
   "challenge": challenge
 };
 
@@ -164,6 +187,10 @@ describe("api", () => {
     sandbox.stub(process, "env").value(validEnv);
     apiServer = await build();
     await apiServer.ready();
+  });
+
+  after(async () => {
+    sandbox.restore();
   });
 
   describe("/status", () => {
@@ -251,7 +278,7 @@ describe("api", () => {
         method: "POST",
         url: url,
         headers: {
-          authorization: 'Bearer @cc3$$t0k3n123'
+          authorization: "Bearer @cc3$$t0k3n123"
         },
         payload: sampleSignedPresentation
       });
@@ -327,6 +354,10 @@ describe("api with demo issuance", () => {
     await apiServer.ready();
   });
 
+  after(async () => {
+    sandbox.restore();
+  });
+
   describe("/request/democredential/nodidproof", () => {
     const url = "/request/democredential/nodidproof";
     it("POST returns 201 and credential", async () => {
@@ -377,7 +408,6 @@ describe("api with db inspection", () => {
     sandbox.stub(Database, "dbCredClient").value(
       new Database.DatabaseClient(dbUri, dbName, dbCollection)
     );
-    findOneSpy = sandbox.spy(Collection.prototype, "findOne");
     await dbConnect(dbUri);
   });
 
@@ -389,6 +419,7 @@ describe("api with db inspection", () => {
     let apiServer: FastifyInstance<Server, IncomingMessage, ServerResponse>;
 
     beforeEach(async () => {
+      findOneSpy = sandbox.spy(Collection.prototype, "findOne");
       resetConfig();
       const vpChallengeEnv = {
         ...validEnv,
@@ -397,6 +428,10 @@ describe("api with db inspection", () => {
       sandbox.stub(process, "env").value(vpChallengeEnv);
       apiServer = await build();
       await apiServer.ready();
+    });
+
+    afterEach(async () => {
+      findOneSpy.restore();
     });
 
     const url = "/request/credential";
@@ -411,6 +446,47 @@ describe("api with db inspection", () => {
       });
       expect(findOneSpy.calledOnceWith({ challenge })).to.be.true;
       validateObjectEquality(await findOneSpy.firstCall.returnValue, sampleDbCredential1);
+    }).timeout(10000);
+  });
+
+  describe("/request/credential - oidc_token auth type", () => {
+    let apiServer: FastifyInstance<Server, IncomingMessage, ServerResponse>;
+
+    beforeEach(async () => {
+      findOneSpy = sandbox.spy(Collection.prototype, "findOne");
+      resetConfig();
+      const oidcTokenEnv = {
+        ...validEnv,
+        AUTH_TYPE: AuthType.OidcToken
+      };
+      sandbox.stub(process, "env").value(oidcTokenEnv);
+      apiServer = await build();
+      await apiServer.ready();
+    });
+
+    afterEach(async () => {
+      findOneSpy.restore();
+    });
+
+    const url = "/request/credential";
+    it("returns proper credential db record", async () => {
+      const userinfoEndpoint = `${issuerUrl2}/userinfo`;
+      const bearerToken = "Bearer @cc3$$t0k3n123";
+      sandbox.stub(Issuer, "discover").resolves(new Issuer({ issuer: issuerUrl2, userinfo_endpoint: userinfoEndpoint }));
+      sandbox.stub(axios, "get").withArgs(userinfoEndpoint).resolves({ data: { email: email2 } });
+      const validCredentialRecord = new Credential(sampleDbCredential2);
+      const savedCredentialRecord = await validCredentialRecord.save();
+      validateNotEmpty(savedCredentialRecord);
+      await apiServer.inject({
+        method: "POST",
+        url: url,
+        headers: {
+          authorization: bearerToken
+        },
+        payload: sampleSignedPresentation
+      });
+      expect(findOneSpy.calledOnceWith({ "credentialSubject.email": email2 })).to.be.true;
+      validateObjectEquality(await findOneSpy.firstCall.returnValue, sampleDbCredential2);
     }).timeout(10000);
   });
 });
