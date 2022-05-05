@@ -7,9 +7,9 @@ import fastifySensible from 'fastify-sensible';
 import fastify, { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 import 'mocha';
 
-import { verifyRequestSignature, verifyRequestDigest } from "./hooks";
-import { resetConfig } from './config';
-import { AuthType } from './issuer';
+import { verifyRequestSignature, verifyRequestDigest } from "../hooks";
+import { resetConfig } from '../config';
+import { AuthType } from '../issuer';
 
 const sandbox = createSandbox();
 const validEnv = {

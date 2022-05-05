@@ -2,9 +2,9 @@ import { expect, assert } from 'chai';
 import { createSandbox } from 'sinon';
 import 'mocha';
 
-import { parseConfig, getConfig, resetConfig, Config } from './config';
-import { AuthType } from './issuer';
-import { ConfigurationError } from './errors';
+import { parseConfig, getConfig, resetConfig, Config } from '../config';
+import { AuthType } from '../issuer';
+import { ConfigurationError } from '../errors';
 
 const sandbox = createSandbox();
 
