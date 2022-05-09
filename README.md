@@ -1,10 +1,35 @@
 # sign-and-verify
 
-A minimal REST service that demonstrates signing and verification functionality. It relies on [sign-and-verify-core](https://github.com/digitalcredentials/sign-and-verify-core)
+Sign-and-verify allows organziations or indviduals to issue digital credentials that support the draft [W3C Verifiable Credentials data model](https://w3c.github.io/vc-data-model/).
 
-The REST service implements a subset of the W3C CCG [vc-http-api draft standard](https://w3c-ccg.github.io/vc-http-api/).
+Sign-and-verify is a minimal REST service that demonstrates signing and verification functionality. It relies on [sign-and-verify-core](https://github.com/digitalcredentials/sign-and-verify-core) and implements a subset of the W3C CCG [vc-http-api draft standard](https://w3c-ccg.github.io/vc-http-api/).
 
-# Getting started
+# Getting started issuing digital credentials
+
+To get started using the Digital Credentials Consortium software to issue digital credentials, you'll need to:
+* Set up the sign-and-verify issuer
+* Configure your Identity Provider and provide access to the [Learner Credential Wallet](https://github.com/digitalcredentials/learner-credential-wallet)
+* Determine who keeps the signing keys. (For example the registrar or IT department may store the private keys for your issuer.)
+
+Note: As of May 2022, the DCC team at MIT may need to provide technical assistance to use sign-and-verify with the Learner Credential Wallet.
+
+## Step 1: Setup Issuer (sign-and-verify)
+* Deploy the sign-and-verify Docker container, and if needed configure the webserver hosting the container with hostname, SSL certificate, etc. (You could use AWS or another host).
+* Configure the container and create a Decentralized Identifier (DID) to sign your credentials. HOW DO THEY DO THIS?
+* Setup MongoDB
+* Link MongoDB and your sign-and-verify server
+* Create a list of students, credential description, etc. We've provided a [sample csv file](https://docs.google.com/spreadsheets/d/184CptmIGQHGjMnlmDEzT9xO-cBkJ5Ykxd-_jrK88qwM/edit#gid=0) with the fields supported (displayed) by the current Learner Credential Wallet. Your VC can include anything within the VC data model, but the wallet may be limited in what it displays.
+* Upload list to MongoDB
+
+## Step 2: Configure your Identity Provider and provide access to the Learner Credential Wallet
+* Register the Learner Credential Wallet as an Open ID Connect (OIDC) app with your Identity Provider. This registration will create a ClientID.
+* Contact the DCC team to register your Issuer and Identity Provider. You'll need to share how to connect to your OIDC provider, typically you'll provide the URI the Wallet will access and a ClientID. (The MIT team will add the OIDC info to issuerAuth.ts in the [Learner Credential Wallet](https://github.com/digitalcredentials/learner-credential-wallet)
+ and issue a new build to the Apple and Google Play app stores.)
+ 
+ ## Step 3: You're ready to issue credentials
+* WHAT DO THEY DO NEXT?
+
+# Setting up sign-and-verify
 
 ## Configuration
 
@@ -194,7 +219,7 @@ Note: VerificationResult from vc-http-api isn't especially helpful at the moment
 
 ## Request a Demo Credential
 
- `<REQUEST_PAYLOAD>` is a Verifiable Presentation proving control of the did. See details below.
+ `<REQUEST_PAYLOAD>` is a Verifiable Presentation proving control of the DID. See details below.
 
 ### Example with DID proof of control
 ```
