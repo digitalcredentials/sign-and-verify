@@ -1,6 +1,7 @@
 import fastify from 'fastify';
 import fastifyRawBody from 'fastify-raw-body';
 import axios from 'axios';
+import fs from 'fs';
 import fastifySensible from 'fastify-sensible';
 import { createIssuer, createVerifier, DIDDocument } from '@digitalcredentials/sign-and-verify-core';
 import { Ed25519VerificationKey2020 } from '@digitalcredentials/ed25519-verification-key-2020';
@@ -15,6 +16,7 @@ import { default as demoCredential } from './demoCredential.json';
 import { v4 as uuidv4 } from 'uuid';
 import LRU from 'lru-cache';
 import { composeCredential } from './templates/Certificate';
+import { composeStatusCredential } from './templates/StatusList2021Credential';
 
 const cryptoLd = new CryptoLD();
 cryptoLd.use(Ed25519VerificationKey2020);
@@ -88,6 +90,7 @@ export async function build(opts = {}) {
     authType,
     didSeed,
     didWebUrl,
+    vcApiIssuerUrl,
     demoIssuerMethod,
     issuerMembershipRegistryUrl
   } = getConfig();
@@ -132,6 +135,35 @@ export async function build(opts = {}) {
     logger: true
   });
 
+  // Setup status credential
+  const statusDir = `${__dirname}/../credentials/status`;
+  if (!fs.existsSync(statusDir)) {
+    // Create status directory
+    fs.mkdirSync(statusDir, { recursive: true });
+    const blockId = Math.random().toString(36).substring(2,12).toUpperCase();
+
+    // Create and persist status config
+    const statusCredentialConfig = {
+      credentialsIssued: 0,
+      latestBlock: blockId
+    };
+    const statusCredentialConfigFile = `${statusDir}/config.json`;
+    const statusCredentialConfigString = JSON.stringify(statusCredentialConfig, null, 2);
+    fs.writeFileSync(statusCredentialConfigFile, statusCredentialConfigString);
+
+    // Create and sign status credential
+    const issuerDid = publicDids[0].id;
+    const statusCredentialId = `${vcApiIssuerUrl}/credentials/status/${blockId}`;
+    const statusCredentialDataUnsigned = await composeStatusCredential(issuerDid, statusCredentialId);
+    const verificationMethod = ensureId(publicDids[0].assertionMethod[0]);
+    const statusCredentialData = await sign(statusCredentialDataUnsigned, {verificationMethod});
+
+    // Create and persist status data
+    const statusCredentialDataFile = `${statusDir}/${blockId}.json`;
+    const statusCredentialDataString = JSON.stringify(statusCredentialData, null, 2);
+    fs.writeFileSync(statusCredentialDataFile, statusCredentialDataString);
+  }
+
   server.register(require('fastify-cors'), {});
   server.register(require('fastify-swagger'), {
     routePrefix: '/docs',
@@ -162,6 +194,16 @@ export async function build(opts = {}) {
       .code(200)
       .header('Content-Type', 'application/json; charset=utf-8')
       .send({ status: 'OK' });
+  });
+
+  server.get('/credentials/status/:blockId', async (request, reply) => {
+    const statusCredentialDataFile = `${statusDir}/${(request.params as any).blockId}.json`;
+    const statusCredentialData = JSON.parse(fs.readFileSync(statusCredentialDataFile, 'utf8'));
+    const statusCredentialDataString = JSON.stringify(statusCredentialData, null, 2);
+    reply
+      .code(200)
+      .header('Content-Type', 'application/json; charset=utf-8')
+      .send(statusCredentialDataString);
   });
 
   server.post(

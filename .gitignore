@@ -123,3 +123,6 @@ build
 
 # dotenv
 .env
+
+# Credential status
+credentials/status/

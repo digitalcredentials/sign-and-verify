@@ -7,6 +7,7 @@ export type Config = {
   authType: AuthType;
   didSeed: string;
   didWebUrl: string | undefined;
+  vcApiIssuerUrl: string;
   oidcIssuerUrl: string | undefined;
   issuerMembershipRegistryUrl: string;
   hmacSecret: string | null;
@@ -25,6 +26,9 @@ export function parseConfig(): Config {
   if (!process.env.DID_SEED) {
     throw new ConfigurationError("Environment variable 'DID_SEED' is not set");
   }
+  if (!process.env.URL) {
+    throw new ConfigurationError("Environment variable 'URL' is not set");
+  }
   if (!process.env.OIDC_ISSUER_URL) {
     throw new ConfigurationError("Environment variable 'OIDC_ISSUER_URL' is not set");
   }
@@ -33,6 +37,7 @@ export function parseConfig(): Config {
     authType: process.env.AUTH_TYPE as AuthType,
     didSeed: process.env.DID_SEED,
     didWebUrl: process.env.DID_WEB_URL,
+    vcApiIssuerUrl: process.env.URL,
     oidcIssuerUrl: process.env.OIDC_ISSUER_URL,
     issuerMembershipRegistryUrl: process.env.ISSUER_MEMBERSHIP_REGISTRY_URL || 'https://digitalcredentials.github.io/issuer-registry/registry.json',
     hmacSecret: process.env.HMAC_SECRET || null,

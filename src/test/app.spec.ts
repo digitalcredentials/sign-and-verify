@@ -36,12 +36,14 @@ lruStub.set.returns(true);
 const authType = AuthType.OidcToken;
 const didSeed = "DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2";
 const didWebUrl = "https://vc-issuer.example.com";
+const vcApiIssuerUrl = "https://vc-issuer.example.com";
 const oidcIssuerUrl = "https://oidc-issuer.example.com";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
 const validEnv = {
   AUTH_TYPE: authType,
   DID_SEED: didSeed,
   DID_WEB_URL: didWebUrl,
+  URL: vcApiIssuerUrl,
   OIDC_ISSUER_URL: oidcIssuerUrl,
   ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl
 };
