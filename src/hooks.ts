@@ -5,7 +5,7 @@ import { getConfig } from './config';
 import { createHash } from 'crypto';
 
 
-export function verifyRequestDigest(request: FastifyRequest, reply: FastifyReply, done: HookHandlerDoneFunction): void {
+export function verifyRequestDigest(request: FastifyRequest, reply: any, done: HookHandlerDoneFunction): void {
   const { digestCheck, digestAlorithms } = getConfig();
 
   if (!digestCheck) {
@@ -38,7 +38,7 @@ export function verifyRequestDigest(request: FastifyRequest, reply: FastifyReply
   done();
 }
 
-export function verifyRequestSignature(request: FastifyRequest, reply: FastifyReply, done: HookHandlerDoneFunction): void {
+export function verifyRequestSignature(request: FastifyRequest, reply: any, done: HookHandlerDoneFunction): void {
   const { hmacSecret, hmacRequiredHeaders } = getConfig();
   if (!hmacSecret) {
     request.log.debug("Skipped HMAC validation");
