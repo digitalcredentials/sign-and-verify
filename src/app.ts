@@ -16,7 +16,7 @@ import { default as demoCredential } from './demoCredential.json';
 import { v4 as uuidv4 } from 'uuid';
 import LRU from 'lru-cache';
 import { composeCredential } from './templates/Certificate';
-import { composeStatusCredential } from './templates/StatusList2021Credential';
+import { composeStatusCredential, embedCredentialStatus } from './credential-status';
 
 const cryptoLd = new CryptoLD();
 cryptoLd.use(Ed25519VerificationKey2020);
@@ -291,7 +291,23 @@ export async function build(opts = {}) {
     },
     async (request, reply) => {
       const req: any = request.body;
-      const credential = req.credential;
+      const { credential, newBlock } = embedCredentialStatus(req.credential);
+
+      // Create new status credential only if a new block was created
+      if (newBlock) {
+        // Create and sign status credential
+        const issuerDid = publicDids[0].id;
+        const statusCredentialId = `${vcApiIssuerUrl}/credentials/status/${newBlock}`;
+        const statusCredentialDataUnsigned = await composeStatusCredential(issuerDid, statusCredentialId);
+        const verificationMethod = ensureId(publicDids[0].assertionMethod[0]);
+        const statusCredentialData = await sign(statusCredentialDataUnsigned, {verificationMethod});
+
+        // Create and persist status data
+        const statusCredentialDataFile = `${statusDir}/${newBlock}.json`;
+        const statusCredentialDataString = JSON.stringify(statusCredentialData, null, 2);
+        fs.writeFileSync(statusCredentialDataFile, statusCredentialDataString);
+      }
+
       const options = req.options;
 
       const result = await sign(credential, options);
