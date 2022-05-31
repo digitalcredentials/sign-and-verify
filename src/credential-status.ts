@@ -5,10 +5,12 @@ import fs from 'fs';
 const CREDENTIAL_STATUS_BLOCK_SIZE = 130000;
 
 // Compose StatusList2021Credential
-export const composeStatusCredential = async (issuerDid: string, credentialId: string): Promise<any> => {
-  const credentialList = await createList({length: 100000});
+export const composeStatusCredential = async (issuerDid: string, credentialId: string, statusList?: any): Promise<any> => {
+  if (!statusList) {
+    statusList = await createList({length: 100000});
+  }
   const issuanceDate = (new Date()).toISOString();
-  let credential = await createCredential({ id: credentialId, list: credentialList });
+  let credential = await createCredential({ id: credentialId, list: statusList });
   credential = {
     ...credential,
     issuer: issuerDid,
@@ -22,7 +24,7 @@ export const embedCredentialStatus = (credential: any): any => {
   // Retrieve status config
   const statusDir = `${__dirname}/../credentials/status`;
   const statusCredentialConfigFile = `${statusDir}/config.json`;
-  const statusCredentialConfig = JSON.parse(fs.readFileSync(statusCredentialConfigFile, 'utf8'));
+  const statusCredentialConfig = JSON.parse(fs.readFileSync(statusCredentialConfigFile, { encoding: 'utf8' }));
 
   let credentialsIssued = statusCredentialConfig.credentialsIssued;
   let latestBlock = statusCredentialConfig.latestBlock;

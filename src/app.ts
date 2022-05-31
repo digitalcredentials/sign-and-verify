@@ -9,6 +9,7 @@ import { X25519KeyAgreementKey2020 } from '@digitalcredentials/x25519-key-agreem
 import { CryptoLD } from 'crypto-ld';
 import * as didWeb from '@interop/did-web-resolver';
 import * as didKey from '@digitalcredentials/did-method-key';
+const { decodeList } = require('@digitalbazaar/vc-status-list');
 import { AuthType, credentialRecordFromOidc, credentialRecordFromChallenge } from './issuer';
 import { getConfig, decodeSeed } from './config';
 import { verifyRequestDigest, verifyRequestSignature } from './hooks';
@@ -198,7 +199,7 @@ export async function build(opts = {}) {
 
   server.get('/credentials/status/:blockId', async (request, reply) => {
     const statusCredentialDataFile = `${statusDir}/${(request.params as any).blockId}.json`;
-    const statusCredentialData = JSON.parse(fs.readFileSync(statusCredentialDataFile, 'utf8'));
+    const statusCredentialData = JSON.parse(fs.readFileSync(statusCredentialDataFile, { encoding:'utf8' }));
     const statusCredentialDataString = JSON.stringify(statusCredentialData, null, 2);
     reply
       .code(200)
@@ -317,6 +318,53 @@ export async function build(opts = {}) {
         .send(result);
     }
   )
+
+  server.post(
+    '/revoke/credential',
+    {
+      config: {
+        rawBody: true,
+      },
+      preValidation: [
+        verifyRequestDigest,
+        verifyRequestSignature
+      ]
+    },
+    async (request, reply) => {
+      const req: any = request.body;
+      const blockId = req.blockId;
+      const index = req.index;
+
+      try {
+        // Retrieve status list
+        const statusCredentialDataFile = `${statusDir}/${blockId}.json`;
+        const statusCredentialDataStringBefore = fs.readFileSync(statusCredentialDataFile, { encoding:'utf8' });
+        const statusCredentialDataBefore = JSON.parse(statusCredentialDataStringBefore);
+        const statusCredentialListEncodedBefore = statusCredentialDataBefore.credentialSubject.encodedList;
+
+        // Update credential status
+        const statusCredentialListDecoded = await decodeList({ encodedList: statusCredentialListEncodedBefore });
+        statusCredentialListDecoded.setStatus(index, true);
+        const issuerDid = publicDids[0].id;
+        const statusCredentialId = `${vcApiIssuerUrl}/credentials/status/${blockId}`;
+        const statusCredentialDataUnsigned = await composeStatusCredential(issuerDid, statusCredentialId, statusCredentialListDecoded);
+
+        // Resign and persist status data
+        const verificationMethod = ensureId(publicDids[0].assertionMethod[0]);
+        const statusCredentialDataAfter = await sign(statusCredentialDataUnsigned, {verificationMethod});
+        const statusCredentialDataStringAfter = JSON.stringify(statusCredentialDataAfter, null, 2);
+        fs.writeFileSync(statusCredentialDataFile, statusCredentialDataStringAfter);
+        reply
+          .code(200)
+          .header('Content-Type', 'application/json; charset=utf-8')
+          .send(statusCredentialDataAfter);
+      } catch (error) {
+        reply
+          .code(400)
+          .send({ message: error.message });
+      }
+    }
+  );
 
   server.post(
     '/prove/presentations', async (request, reply) => {
