@@ -10,14 +10,14 @@ export function composeCredential (issuerDid: string, holderDid: string, credent
       type: 'Profile',
       id: issuerDid,
       name: credentialRecord.issuer.name,
-      url: credentialRecord.issuer.url,
-      image: credentialRecord.issuer.image
+      // url: credentialRecord.issuer.url,
+      // image: credentialRecord.issuer.image
     },
     issuanceDate: credentialRecord.issuanceDate,
     credentialSubject: {
       type: 'AchievementSubject',
       id: holderDid,
-      name: credentialRecord.credentialSubject.name,
+      // name: credentialRecord.credentialSubject.name,
       achievement: {
         type: 'Achievement',
         name: credentialRecord.name,
@@ -26,6 +26,7 @@ export function composeCredential (issuerDid: string, holderDid: string, credent
           type: 'Criteria',
           narrative: 'The first cohort of the JFF Plugfest 1 in May/June of 2022 collaborated to push interoperability of VCs in education forward.'
         },
+        image: 'https://w3c-ccg.github.io/vc-ed/plugfest-1-2022/images/plugfest-1-badge-image.png'
       }
     }
   }
