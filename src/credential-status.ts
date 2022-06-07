@@ -1,13 +1,21 @@
 const { createList, createCredential } = require('@digitalbazaar/vc-status-list');
 import { CONTEXT_URL_V1 } from '@digitalbazaar/vc-status-list-context';
 import fs from 'fs';
+import { getConfig } from './config';
 
-const CREDENTIAL_STATUS_BLOCK_SIZE = 130000;
+// Number of credentials tracked in a block
+const CREDENTIAL_STATUS_BLOCK_SIZE = 100000;
+
+// Actions applied to credentials and tracked in status log
+export enum CredentialAction {
+  Issued = 'issued',
+  Revoked = 'revoked'
+}
 
 // Compose StatusList2021Credential
 export const composeStatusCredential = async (issuerDid: string, credentialId: string, statusList?: any): Promise<any> => {
   if (!statusList) {
-    statusList = await createList({length: 100000});
+    statusList = await createList({ length: CREDENTIAL_STATUS_BLOCK_SIZE });
   }
   const issuanceDate = (new Date()).toISOString();
   let credential = await createCredential({ id: credentialId, list: statusList });
@@ -20,7 +28,7 @@ export const composeStatusCredential = async (issuerDid: string, credentialId: s
 }
 
 // Embed status into credential
-export const embedCredentialStatus = (credential: any): any => {
+export const embedCredentialStatus = (credential: any, apiUrl: string): any => {
   // Retrieve status config
   const statusDir = `${__dirname}/../credentials/status`;
   const statusCredentialConfigFile = `${statusDir}/config.json`;
@@ -45,7 +53,7 @@ export const embedCredentialStatus = (credential: any): any => {
 
   // Attach credential status
   const statusListIndex = credentialsIssued;
-  const statusListCredential = `https://example.com/credentials/status/${latestBlock}`;
+  const statusListCredential = `${apiUrl}/credentials/status/${latestBlock}`;
   const statusListId = `${statusListCredential}#${statusListIndex}`;
   const statusListType = 'StatusList2021Entry';
   const credentialStatus = {
