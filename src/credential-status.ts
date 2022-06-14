@@ -12,8 +12,21 @@ export enum CredentialAction {
   Revoked = 'revoked'
 }
 
+interface ComposeStatusCredentialParameters {
+  issuerDid: string;
+  credentialId: string;
+  statusList?: any;
+  statusPurpose?: string;
+}
+
+interface EmbedCredentialStatusParameters {
+  credential: any;
+  apiUrl: string;
+  statusPurpose?: string;
+}
+
 // Compose StatusList2021Credential
-export const composeStatusCredential = async (issuerDid: string, credentialId: string, statusList?: any): Promise<any> => {
+export const composeStatusCredential = async ({ issuerDid, credentialId, statusList, statusPurpose = 'revocation' }: ComposeStatusCredentialParameters): Promise<any> => {
   if (!statusList) {
     statusList = await createList({ length: CREDENTIAL_STATUS_LIST_SIZE });
   }
@@ -21,6 +34,7 @@ export const composeStatusCredential = async (issuerDid: string, credentialId: s
   let credential = await createCredential({ id: credentialId, list: statusList });
   credential = {
     ...credential,
+    credentialSubject: { ...credential.credentialSubject, statusPurpose },
     issuer: issuerDid,
     issuanceDate
   };
@@ -28,7 +42,7 @@ export const composeStatusCredential = async (issuerDid: string, credentialId: s
 }
 
 // Embed status into credential
-export const embedCredentialStatus = (credential: any, apiUrl: string): any => {
+export const embedCredentialStatus = ({ credential, apiUrl, statusPurpose = 'revocation' }: EmbedCredentialStatusParameters): any => {
   // Retrieve status config
   const statusDir = `${__dirname}/../credentials/status`;
   const statusCredentialConfigFile = `${statusDir}/config.json`;
@@ -59,6 +73,7 @@ export const embedCredentialStatus = (credential: any, apiUrl: string): any => {
   const credentialStatus = {
     id: statusListId,
     type: statusListType,
+    statusPurpose,
     statusListIndex,
     statusListCredential
   };

@@ -160,7 +160,7 @@ export async function build(opts = {}) {
     // Create and sign status credential
     const issuerDid = publicDids[0].id;
     const statusCredentialId = `${vcApiIssuerUrl}/credentials/status/${listId}`;
-    const statusCredentialDataUnsigned = await composeStatusCredential(issuerDid, statusCredentialId);
+    const statusCredentialDataUnsigned = await composeStatusCredential({ issuerDid, credentialId: statusCredentialId });
     const verificationMethod = ensureId(publicDids[0].assertionMethod[0]);
     const statusCredentialData = await sign(statusCredentialDataUnsigned, { verificationMethod });
 
@@ -269,7 +269,7 @@ export async function build(opts = {}) {
 
       try {
         // Attach status to credential
-        const { credential, newList } = embedCredentialStatus(credentialBase, vcApiIssuerUrl);
+        const { credential, newList } = embedCredentialStatus({ credential: credentialBase, apiUrl: vcApiIssuerUrl });
 
         // Setup data necessary for composing signed status credential
         // NOTE: these values are retrieved from the issuer DID document;
@@ -284,7 +284,7 @@ export async function build(opts = {}) {
         if (newList) {
           // Create and sign status credential
           const statusCredentialId = `${vcApiIssuerUrl}/credentials/status/${newList}`;
-          const statusCredentialDataUnsigned = await composeStatusCredential(issuerDid, statusCredentialId);
+          const statusCredentialDataUnsigned = await composeStatusCredential({ issuerDid, credentialId: statusCredentialId });
           const statusCredentialData = await sign(statusCredentialDataUnsigned, { verificationMethod });
 
           // Create and persist status data
@@ -344,7 +344,7 @@ export async function build(opts = {}) {
 
       try {
         // Attach status to credential
-        const { credential, newList } = embedCredentialStatus(req.credential, vcApiIssuerUrl);
+        const { credential, newList } = embedCredentialStatus({ credential: req.credential, apiUrl: vcApiIssuerUrl });
 
         // Setup data necessary for composing signed status credential
         const issuerDid = publicDids[0].id;
@@ -354,7 +354,7 @@ export async function build(opts = {}) {
         if (newList) {
           // Create and sign status credential
           const statusCredentialId = `${vcApiIssuerUrl}/credentials/status/${newList}`;
-          const statusCredentialDataUnsigned = await composeStatusCredential(issuerDid, statusCredentialId);
+          const statusCredentialDataUnsigned = await composeStatusCredential({ issuerDid, credentialId: statusCredentialId });
           const statusCredentialData = await sign(statusCredentialDataUnsigned, { verificationMethod });
 
           // Create and persist status data
@@ -427,7 +427,7 @@ export async function build(opts = {}) {
         const statusCredentialListDecoded = await decodeList({ encodedList: statusCredentialListEncodedBefore });
         statusCredentialListDecoded.setStatus(listIndex, true);
         const statusCredentialId = `${vcApiIssuerUrl}/credentials/status/${listId}`;
-        const statusCredentialDataUnsigned = await composeStatusCredential(issuerDid, statusCredentialId, statusCredentialListDecoded);
+        const statusCredentialDataUnsigned = await composeStatusCredential({ issuerDid, credentialId: statusCredentialId, statusList: statusCredentialListDecoded });
 
         // Resign and persist status data
         const statusCredentialDataAfter = await sign(statusCredentialDataUnsigned, { verificationMethod });
