@@ -11,14 +11,30 @@ export enum CredentialAction {
   Revoked = 'revoked'
 }
 
-interface ComposeStatusCredentialParameters {
+export type CredentialStatusConfig = {
+  credentialsIssued: number;
+  latestList: string;
+}
+
+export type CredentialStatusLogEntry = {
+  timestamp: string;
+  credentialId?: string;
+  credentialSubject?: string;
+  credentialAction: CredentialAction;
+  issuerDid: string;
+  verificationMethod: string;
+  statusListCredential: string;
+  statusListIndex: number;
+}
+
+type ComposeStatusCredentialParameters = {
   issuerDid: string;
   credentialId: string;
   statusList?: any;
   statusPurpose?: string;
 }
 
-interface EmbedCredentialStatusParameters {
+type EmbedCredentialStatusParameters = {
   credential: any;
   apiUrl: string;
   statusPurpose?: string;

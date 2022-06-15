@@ -17,7 +17,7 @@ import { default as demoCredential } from './demoCredential.json';
 import { v4 as uuidv4 } from 'uuid';
 import LRU from 'lru-cache';
 import { composeCredential } from './templates/Certificate';
-import { composeStatusCredential, CredentialAction, embedCredentialStatus } from './credential-status';
+import { composeStatusCredential, CredentialAction, CredentialStatusConfig, CredentialStatusLogEntry, embedCredentialStatus } from './credential-status';
 
 const cryptoLd = new CryptoLD();
 cryptoLd.use(Ed25519VerificationKey2020);
@@ -144,7 +144,7 @@ export async function build(opts = {}) {
     const listId = Math.random().toString(36).substring(2,12).toUpperCase();
 
     // Create and persist status config
-    const statusCredentialConfig = {
+    const statusCredentialConfig: CredentialStatusConfig = {
       credentialsIssued: 0,
       latestList: listId
     };
@@ -300,7 +300,7 @@ export async function build(opts = {}) {
         const result = await sign(credential, options);
 
         // Add new entry to status log
-        const statusLogEntry = {
+        const statusLogEntry: CredentialStatusLogEntry = {
           timestamp: (new Date()).toISOString(),
           credentialId: credential.id,
           credentialSubject: credential.credentialSubject?.id,
@@ -365,7 +365,7 @@ export async function build(opts = {}) {
         const result = await sign(credential, options);
 
         // Add new entry to status log
-        const statusLogEntry = {
+        const statusLogEntry: CredentialStatusLogEntry = {
           timestamp: (new Date()).toISOString(),
           credentialId: credential.id,
           credentialSubject: credential.credentialSubject?.id,
@@ -422,7 +422,7 @@ export async function build(opts = {}) {
         fs.writeFileSync(statusCredentialDataFile, statusCredentialDataStringAfter);
 
         // Add new entry to status log
-        const statusLogEntry = {
+        const statusLogEntry: CredentialStatusLogEntry = {
           timestamp: (new Date()).toISOString(),
           credentialAction: CredentialAction.Revoked,
           issuerDid,

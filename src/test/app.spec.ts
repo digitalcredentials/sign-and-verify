@@ -19,7 +19,7 @@ import demoCredential from '../demoCredential.json';
 import { AuthType } from '../issuer';
 import * as Database from '../database';
 import { dbCreate, dbConnect, dbDisconnect, Credential } from './database';
-import { CredentialAction } from '../credential-status';
+import { CredentialAction, CredentialStatusConfig, CredentialStatusLogEntry } from '../credential-status';
 
 const sandbox = createSandbox();
 const lruStub = sandbox.createStubInstance(LRU) as SinonStubbedInstance<LRU> & LRU;
@@ -165,11 +165,11 @@ const statusList = {
     "proofValue": "zwuEZQephVMi7V5t85fCRjMYxCWUbH1YPdzdm42XTGxr8KTjZNoQMNst5m5JouKJkakL2KvsspcsJJTcuguVyFQS"
   }
 };
-const statusConfig = {
+const statusConfig: CredentialStatusConfig = {
   "credentialsIssued": 0,
   "latestList": statusListId
 };
-const statusLog = [];
+const statusLog: CredentialStatusLogEntry[] = [];
 const statusConfigFile = `${__dirname}/../../credentials/status/config.json`;
 const statusLogFile = `${__dirname}/../../credentials/status/log.json`;
 const statusListFile = `${__dirname}/../../credentials/status/${statusListId}.json`;
