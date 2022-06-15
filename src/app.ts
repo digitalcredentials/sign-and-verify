@@ -331,9 +331,6 @@ export async function build(opts = {}) {
   server.post(
     '/issue/credentials',
     {
-      config: {
-        rawBody: true,
-      },
       preValidation: [
         verifyRequestDigest,
         verifyRequestSignature
