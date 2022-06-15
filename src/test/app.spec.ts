@@ -273,16 +273,32 @@ describe("api", () => {
         }
       }, { createCwd: true, createTmp: true });
 
+      const statusConfigBefore = JSON.parse(fs.readFileSync(statusConfigFile, { encoding: 'utf8' }));
+      const statusLogBefore = JSON.parse(fs.readFileSync(statusLogFile, { encoding: 'utf8' }));
+
+      expect(statusConfigBefore.credentialsIssued).to.equal(0);
+      validateArrayEmpty(statusLogBefore);
+
       const response = await apiServer.inject({
         method: "POST",
         url: url,
         payload: { credential: sampleUnsignedCredential, options: credentialOptions }
       });
 
-      expect(response.statusCode).to.equal(201);
+      const statusConfigAfter = JSON.parse(fs.readFileSync(statusConfigFile, { encoding: 'utf8' }));
+      const statusLogAfter = JSON.parse(fs.readFileSync(statusLogFile, { encoding: 'utf8' }));
+
       const payload = JSON.parse(response.payload);
+      expect(response.statusCode).to.equal(201);
       expect(payload.proof.type).to.equal('Ed25519Signature2020');
       expect(payload.issuer).to.equal(issuerId);
+
+      expect(statusConfigAfter.credentialsIssued).to.equal(1);
+      validateArrayNotEmpty(statusLogAfter);
+      expect(statusLogAfter.length).to.equal(1);
+      const statusLogAfterEntry = statusLogAfter[0];
+      expect(statusLogAfterEntry.credentialAction).to.equal(CredentialAction.Issued);
+      expect(statusLogAfterEntry.statusListCredential.endsWith(statusListId)).to.be.true;
 
       mockfs.restore();
     }).timeout(6000);
