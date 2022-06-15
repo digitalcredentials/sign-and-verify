@@ -1,7 +1,6 @@
 const { createList, createCredential } = require('@digitalbazaar/vc-status-list');
 import { CONTEXT_URL_V1 } from '@digitalbazaar/vc-status-list-context';
 import fs from 'fs';
-import { getConfig } from './config';
 
 // Number of credentials tracked in a list
 const CREDENTIAL_STATUS_LIST_SIZE = 100000;

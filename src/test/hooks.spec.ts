@@ -46,7 +46,7 @@ describe('hooks', () => {
       });
       server.post("/my/url", {
         preValidation: verifyRequestDigest
-      }, (_request: FastifyRequest, reply:FastifyReply) => {
+      }, (_request: FastifyRequest, reply: FastifyReply) => {
         reply
           .code(200)
           .send({

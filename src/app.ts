@@ -397,17 +397,7 @@ export async function build(opts = {}) {
   )
 
   server.post(
-    '/revoke/credential',
-    {
-      config: {
-        rawBody: true,
-      },
-      preValidation: [
-        verifyRequestDigest,
-        verifyRequestSignature
-      ]
-    },
-    async (request, reply) => {
+    '/revoke/credential', async (request, reply) => {
       const req: any = request.body;
       const listId = req.listId;
       const listIndex = req.listIndex;

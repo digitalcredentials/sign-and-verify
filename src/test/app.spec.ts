@@ -1,13 +1,16 @@
 import axios from 'axios';
+import fs from 'fs';
+import mockfs from 'mock-fs';
 import { expect } from 'chai';
 import { createSandbox, SinonStubbedInstance, SinonSpy } from 'sinon';
 import 'mocha';
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { Server, IncomingMessage, ServerResponse } from 'http';
 import LRU from 'lru-cache';
 import { Collection } from 'mongodb';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { Issuer } from 'openid-client';
+const { decodeList } = require('@digitalbazaar/vc-status-list');
 import { build } from '../app';
 import { resetConfig } from '../config';
 import * as IssuerHelper from '../issuer';
@@ -16,6 +19,7 @@ import demoCredential from '../demoCredential.json';
 import { AuthType } from '../issuer';
 import * as Database from '../database';
 import { dbCreate, dbConnect, dbDisconnect, Credential } from './database';
+import { CredentialAction } from '../credential-status';
 
 const sandbox = createSandbox();
 const lruStub = sandbox.createStubInstance(LRU) as SinonStubbedInstance<LRU> & LRU;
@@ -132,6 +136,44 @@ const sampleSignedPresentation = {
   }
 };
 
+const statusListId = "1FGWC816B7";
+const statusListIndex = 3;
+const statusList = {
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://w3id.org/vc/status-list/v1",
+    "https://w3id.org/security/suites/ed25519-2020/v1"
+  ],
+  "id": `http://localhost:5000/credentials/status/${statusListId}`,
+  "type": [
+    "VerifiableCredential",
+    "StatusList2021Credential"
+  ],
+  "credentialSubject": {
+    "id": `http://localhost:5000/credentials/status/${statusListId}#list`,
+    "type": "StatusList2021",
+    "encodedList": "H4sIAAAAAAAAA-3BMQEAAADCoPVPbQsvoAAAAAAAAAAAAAAAAP4GcwM92tQwAAA",
+    "statusPurpose": "revocation"
+  },
+  "issuer": "did:web:ezike.io",
+  "issuanceDate": "2022-06-13T22:50:38.975Z",
+  "proof": {
+    "type": "Ed25519Signature2020",
+    "created": "2022-06-13T22:50:38Z",
+    "verificationMethod": "did:web:ezike.io#z6Mkpw72M9suPCBv48X2Xj4YKZJH9W7wzEK1aS6JioKSo89C",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "zwuEZQephVMi7V5t85fCRjMYxCWUbH1YPdzdm42XTGxr8KTjZNoQMNst5m5JouKJkakL2KvsspcsJJTcuguVyFQS"
+  }
+};
+const statusConfig = {
+  "credentialsIssued": 0,
+  "latestList": statusListId
+};
+const statusLog = [];
+const statusConfigFile = `${__dirname}/../../credentials/status/config.json`;
+const statusLogFile = `${__dirname}/../../credentials/status/log.json`;
+const statusListFile = `${__dirname}/../../credentials/status/${statusListId}.json`;
+
 const issuerUrl1 = "https://cs.example1.edu";
 const email1 = "learner-one@example1.edu";
 const sampleDbCredential1 = {
@@ -170,9 +212,17 @@ const sampleDbCredential2 = {
   "challenge": challenge
 };
 
+const validateArrayEmpty = (received) => {
+  expect(received).to.be.empty;
+};
+
+const validateArrayNotEmpty = (received) => {
+  expect(received).not.to.be.empty;
+};
+
 const validateNotEmpty = (received) => {
   expect(received).not.to.be.null;
-  expect(received).not.to.not.equal(undefined);
+  expect(received).not.to.equal(undefined);
 };
 
 const validateObjectEquality = (received, expected) => {
@@ -187,6 +237,7 @@ describe("api", () => {
   before(async () => {
     resetConfig();
     sandbox.stub(process, "env").value(validEnv);
+    sandbox.stub(fs, 'existsSync').returns(true);
     apiServer = await build();
     await apiServer.ready();
   });
@@ -214,15 +265,83 @@ describe("api", () => {
   describe("/issue/credentials", () => {
     const url = "/issue/credentials";
     it("POST returns 201 and cred", async () => {
+      mockfs({
+        [`${__dirname}/../../credentials/status`]: {
+          'config.json': JSON.stringify(statusConfig, null, 2),
+          'log.json': JSON.stringify(statusLog, null, 2),
+          [`${statusListId}.json`]: JSON.stringify(statusList, null, 2)
+        }
+      }, { createCwd: true, createTmp: true });
+
       const response = await apiServer.inject({
         method: "POST",
         url: url,
         payload: { credential: sampleUnsignedCredential, options: credentialOptions }
       });
+
       expect(response.statusCode).to.equal(201);
       const payload = JSON.parse(response.payload);
       expect(payload.proof.type).to.equal('Ed25519Signature2020');
       expect(payload.issuer).to.equal(issuerId);
+
+      mockfs.restore();
+    }).timeout(6000);
+  });
+
+  describe("/revoke/credential", () => {
+    const url = "/revoke/credential";
+    it("POST returns 200 and status cred", async () => {
+      mockfs({
+        [`${__dirname}/../../credentials/status`]: {
+          'config.json': JSON.stringify(statusConfig, null, 2),
+          'log.json': JSON.stringify(statusLog, null, 2),
+          [`${statusListId}.json`]: JSON.stringify(statusList, null, 2)
+        }
+      }, { createCwd: true, createTmp: true });
+
+      const statusConfigBefore = JSON.parse(fs.readFileSync(statusConfigFile, { encoding: 'utf8' }));
+      const statusLogBefore = JSON.parse(fs.readFileSync(statusLogFile, { encoding: 'utf8' }));
+      const statusListBefore = JSON.parse(fs.readFileSync(statusListFile, { encoding: 'utf8' }));
+
+      const statusListBeforeDecoded = await decodeList({ encodedList: statusListBefore.credentialSubject.encodedList });
+      expect(statusListBeforeDecoded.getStatus(statusListIndex)).to.be.false;
+      validateArrayEmpty(statusLogBefore);
+
+      const response = await apiServer.inject({
+        method: "POST",
+        url: url,
+        payload: { listId: statusListId, listIndex: statusListIndex }
+      });
+
+      const statusConfigAfter = JSON.parse(fs.readFileSync(statusConfigFile, { encoding: 'utf8' }));
+      const statusLogAfter = JSON.parse(fs.readFileSync(statusLogFile, { encoding: 'utf8' }));
+      const statusListAfter = JSON.parse(fs.readFileSync(statusListFile, { encoding: 'utf8' }));
+
+      const payload = JSON.parse(response.payload);
+      expect(response.statusCode).to.equal(200);
+
+      validateObjectEquality(payload, statusListAfter);
+      validateObjectEquality(statusConfigAfter, statusConfigBefore);
+      validateArrayNotEmpty(statusLogAfter);
+      expect(statusLogAfter.length).to.equal(1);
+      const statusLogAfterEntry = statusLogAfter[0];
+      expect(statusLogAfterEntry.credentialAction).to.equal(CredentialAction.Revoked);
+      expect(statusLogAfterEntry.statusListCredential.endsWith(statusListId)).to.be.true;
+      expect(statusLogAfterEntry.statusListIndex).to.equal(statusListIndex);
+      expect(statusListAfter.credentialSubject.type).to.equal(statusListBefore.credentialSubject.type);
+      expect(statusListAfter.credentialSubject.type).to.equal('StatusList2021');
+      expect(statusListAfter.credentialSubject.statusPurpose).to.equal(statusListBefore.credentialSubject.statusPurpose);
+      expect(statusListAfter.credentialSubject.statusPurpose).to.equal('revocation');
+      expect(statusListAfter.credentialSubject.encodedList).not.to.equal(statusListBefore.credentialSubject.encodedList);
+      const statusListAfterDecoded = await decodeList({ encodedList: statusListAfter.credentialSubject.encodedList });
+      expect(statusListAfterDecoded.getStatus(statusListIndex)).to.be.true;
+      expect(new Date(statusListAfter.issuanceDate)).to.greaterThan(new Date(statusListBefore.issuanceDate));
+      expect(new Date(statusListAfter.proof.created)).to.greaterThan(new Date(statusListBefore.proof.created));
+      expect(statusListAfter.proof.type).to.equal(statusListBefore.proof.type);
+      expect(statusListAfter.proof.type).to.equal('Ed25519Signature2020');
+      expect(statusListAfter.proof.proofValue).not.to.equal(statusListBefore.proof.proofValue);
+
+      mockfs.restore();
     }).timeout(6000);
   });
 
@@ -276,6 +395,20 @@ describe("api", () => {
     sandbox.stub(Certificate, 'composeCredential').returns(demoCredential);
     const url = "/request/credential";
     it("POST returns 201", async () => {
+      mockfs({
+        [`${__dirname}/../../credentials/status`]: {
+          'config.json': JSON.stringify(statusConfig, null, 2),
+          'log.json': JSON.stringify(statusLog, null, 2),
+          [`${statusListId}.json`]: JSON.stringify(statusList, null, 2)
+        }
+      }, { createCwd: true, createTmp: true });
+
+      const statusConfigBefore = JSON.parse(fs.readFileSync(statusConfigFile, { encoding: 'utf8' }));
+      const statusLogBefore = JSON.parse(fs.readFileSync(statusLogFile, { encoding: 'utf8' }));
+
+      expect(statusConfigBefore.credentialsIssued).to.equal(0);
+      validateArrayEmpty(statusLogBefore);
+
       const response = await apiServer.inject({
         method: "POST",
         url: url,
@@ -284,10 +417,23 @@ describe("api", () => {
         },
         payload: sampleSignedPresentation
       });
-      expect(response.statusCode).to.equal(200);
+
+      const statusConfigAfter = JSON.parse(fs.readFileSync(statusConfigFile, { encoding: 'utf8' }));
+      const statusLogAfter = JSON.parse(fs.readFileSync(statusLogFile, { encoding: 'utf8' }));
+
       const payload = JSON.parse(response.payload);
+      expect(response.statusCode).to.equal(200);
       expect(payload.proof.type).to.equal('Ed25519Signature2020');
       expect(payload.issuer.id).to.equal(issuerId);
+
+      expect(statusConfigAfter.credentialsIssued).to.equal(1);
+      validateArrayNotEmpty(statusLogAfter);
+      expect(statusLogAfter.length).to.equal(1);
+      const statusLogAfterEntry = statusLogAfter[0];
+      expect(statusLogAfterEntry.credentialAction).to.equal(CredentialAction.Issued);
+      expect(statusLogAfterEntry.statusListCredential.endsWith(statusListId)).to.be.true;
+
+      mockfs.restore();
     }).timeout(9000);
   });
 
@@ -346,6 +492,7 @@ describe("api with demo issuance", () => {
 
   before(async () => {
     resetConfig();
+    sandbox.stub(fs, 'existsSync').returns(true);
     sandbox.stub(process, "env").value(
       {
         ...validEnv,
@@ -405,6 +552,7 @@ describe("api with db inspection", () => {
   let findOneSpy: SinonSpy;
 
   before(async () => {
+    sandbox.stub(fs, 'existsSync').returns(true);
     dbServer = await dbCreate({ instance: { dbName } });
     const dbUri = dbServer.getUri();
     sandbox.stub(Database, "dbCredClient").value(
