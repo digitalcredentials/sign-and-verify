@@ -14,7 +14,7 @@ export enum CredentialAction {
 export type CredentialStatusConfig = {
   credentialsIssued: number;
   latestList: string;
-}
+};
 
 export type CredentialStatusLogEntry = {
   timestamp: string;
@@ -25,20 +25,20 @@ export type CredentialStatusLogEntry = {
   verificationMethod: string;
   statusListCredential: string;
   statusListIndex: number;
-}
+};
 
 type ComposeStatusCredentialParameters = {
   issuerDid: string;
   credentialId: string;
   statusList?: any;
   statusPurpose?: string;
-}
+};
 
 type EmbedCredentialStatusParameters = {
   credential: any;
   apiUrl: string;
   statusPurpose?: string;
-}
+};
 
 // Compose StatusList2021Credential
 export const composeStatusCredential = async ({ issuerDid, credentialId, statusList, statusPurpose = 'revocation' }: ComposeStatusCredentialParameters): Promise<any> => {
