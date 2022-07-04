@@ -1,6 +1,6 @@
+import { decodeSecretKeySeed } from '@digitalcredentials/bnid';
 import { ConfigurationError } from './errors';
 import { AuthType } from './issuer';
-import { decodeSecretKeySeed } from '@digitalcredentials/bnid';
 
 export type Config = {
   port: number;

@@ -19,7 +19,14 @@ import demoCredential from '../demoCredential.json';
 import { AuthType } from '../issuer';
 import * as Database from '../database';
 import { dbCreate, dbConnect, dbDisconnect, Credential } from './database';
-import { CredentialAction, CredentialStatusConfig, CredentialStatusLogEntry } from '../credential-status';
+import {
+  CredentialAction,
+  CredentialStatusConfig,
+  CredentialStatusLogEntry,
+  CREDENTIAL_STATUS_CONFIG_FILE,
+  CREDENTIAL_STATUS_FOLDER,
+  CREDENTIAL_STATUS_LOG_FILE,
+} from '../credential-status';
 
 const sandbox = createSandbox();
 const lruStub = sandbox.createStubInstance(LRU) as SinonStubbedInstance<LRU> & LRU;
@@ -144,13 +151,13 @@ const statusList = {
     "https://w3id.org/vc/status-list/v1",
     "https://w3id.org/security/suites/ed25519-2020/v1"
   ],
-  "id": `http://localhost:5000/credentials/status/${statusListId}`,
+  "id": `http://localhost:5000/${CREDENTIAL_STATUS_FOLDER}/${statusListId}`,
   "type": [
     "VerifiableCredential",
     "StatusList2021Credential"
   ],
   "credentialSubject": {
-    "id": `http://localhost:5000/credentials/status/${statusListId}#list`,
+    "id": `http://localhost:5000/${CREDENTIAL_STATUS_FOLDER}/${statusListId}#list`,
     "type": "StatusList2021",
     "encodedList": "H4sIAAAAAAAAA-3BMQEAAADCoPVPbQsvoAAAAAAAAAAAAAAAAP4GcwM92tQwAAA",
     "statusPurpose": "revocation"
@@ -170,9 +177,9 @@ const statusConfig: CredentialStatusConfig = {
   "latestList": statusListId
 };
 const statusLog: CredentialStatusLogEntry[] = [];
-const statusConfigFile = `${__dirname}/../../credentials/status/config.json`;
-const statusLogFile = `${__dirname}/../../credentials/status/log.json`;
-const statusListFile = `${__dirname}/../../credentials/status/${statusListId}.json`;
+const statusConfigFile = `${__dirname}/../../${CREDENTIAL_STATUS_FOLDER}/${CREDENTIAL_STATUS_CONFIG_FILE}`;
+const statusLogFile = `${__dirname}/../../${CREDENTIAL_STATUS_FOLDER}/${CREDENTIAL_STATUS_LOG_FILE}`;
+const statusListFile = `${__dirname}/../../${CREDENTIAL_STATUS_FOLDER}/${statusListId}.json`;
 
 const issuerUrl1 = "https://cs.example1.edu";
 const email1 = "learner-one@example1.edu";
@@ -266,9 +273,9 @@ describe("api", () => {
     const url = "/issue/credentials";
     it("POST returns 201 and cred", async () => {
       mockfs({
-        [`${__dirname}/../../credentials/status`]: {
-          'config.json': JSON.stringify(statusConfig, null, 2),
-          'log.json': JSON.stringify(statusLog, null, 2),
+        [`${__dirname}/../../${CREDENTIAL_STATUS_FOLDER}`]: {
+          [CREDENTIAL_STATUS_CONFIG_FILE]: JSON.stringify(statusConfig, null, 2),
+          [CREDENTIAL_STATUS_LOG_FILE]: JSON.stringify(statusLog, null, 2),
           [`${statusListId}.json`]: JSON.stringify(statusList, null, 2)
         }
       }, { createCwd: true, createTmp: true });
@@ -308,9 +315,9 @@ describe("api", () => {
     const url = "/revoke/credential";
     it("POST returns 200 and status cred", async () => {
       mockfs({
-        [`${__dirname}/../../credentials/status`]: {
-          'config.json': JSON.stringify(statusConfig, null, 2),
-          'log.json': JSON.stringify(statusLog, null, 2),
+        [`${__dirname}/../../${CREDENTIAL_STATUS_FOLDER}`]: {
+          [CREDENTIAL_STATUS_CONFIG_FILE]: JSON.stringify(statusConfig, null, 2),
+          [CREDENTIAL_STATUS_LOG_FILE]: JSON.stringify(statusLog, null, 2),
           [`${statusListId}.json`]: JSON.stringify(statusList, null, 2)
         }
       }, { createCwd: true, createTmp: true });
@@ -412,9 +419,9 @@ describe("api", () => {
     const url = "/request/credential";
     it("POST returns 201", async () => {
       mockfs({
-        [`${__dirname}/../../credentials/status`]: {
-          'config.json': JSON.stringify(statusConfig, null, 2),
-          'log.json': JSON.stringify(statusLog, null, 2),
+        [`${__dirname}/../../${CREDENTIAL_STATUS_FOLDER}`]: {
+          [CREDENTIAL_STATUS_CONFIG_FILE]: JSON.stringify(statusConfig, null, 2),
+          [CREDENTIAL_STATUS_LOG_FILE]: JSON.stringify(statusLog, null, 2),
           [`${statusListId}.json`]: JSON.stringify(statusList, null, 2)
         }
       }, { createCwd: true, createTmp: true });

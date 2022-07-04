@@ -4,6 +4,9 @@ import fs from 'fs';
 
 // Number of credentials tracked in a list
 const CREDENTIAL_STATUS_LIST_SIZE = 100000;
+export const CREDENTIAL_STATUS_FOLDER = 'credentials/status';
+export const CREDENTIAL_STATUS_CONFIG_FILE = 'config.json';
+export const CREDENTIAL_STATUS_LOG_FILE = 'log.json';
 
 // Actions applied to credentials and tracked in status log
 export enum CredentialAction {
@@ -59,8 +62,8 @@ export const composeStatusCredential = async ({ issuerDid, credentialId, statusL
 // Embed status into credential
 export const embedCredentialStatus = ({ credential, apiUrl, statusPurpose = 'revocation' }: EmbedCredentialStatusParameters): any => {
   // Retrieve status config
-  const statusDir = `${__dirname}/../credentials/status`;
-  const statusCredentialConfigFile = `${statusDir}/config.json`;
+  const statusDir = `${__dirname}/../${CREDENTIAL_STATUS_FOLDER}`;
+  const statusCredentialConfigFile = `${statusDir}/${CREDENTIAL_STATUS_CONFIG_FILE}`;
   const statusCredentialConfig = JSON.parse(fs.readFileSync(statusCredentialConfigFile, { encoding: 'utf8' }));
 
   let credentialsIssued = statusCredentialConfig.credentialsIssued;
@@ -82,7 +85,7 @@ export const embedCredentialStatus = ({ credential, apiUrl, statusPurpose = 'rev
 
   // Attach credential status
   const statusListIndex = credentialsIssued;
-  const statusListCredential = `${apiUrl}/credentials/status/${latestList}`;
+  const statusListCredential = `${apiUrl}/${CREDENTIAL_STATUS_FOLDER}/${latestList}`;
   const statusListId = `${statusListCredential}#${statusListIndex}`;
   const statusListType = 'StatusList2021Entry';
   const credentialStatus = {
