@@ -26,6 +26,7 @@
     "@digitalcredentials/vc": "^1.1.2",
     "@digitalcredentials/x25519-key-agreement-key-2020": "^2.0.2",
     "@interop/did-web-resolver": "^2.2.0",
+    "@octokit/rest": "^18.12.0",
     "axios": "^0.24.0",
     "crypto-ld": "^6.0.0",
     "dotenv": "^8.2.0",

@@ -10,6 +10,9 @@ export type Config = {
   vcApiIssuerUrl: string;
   oidcIssuerUrl: string | undefined;
   issuerMembershipRegistryUrl: string;
+  githubOauthToken: string | undefined;
+  githubOrg: string | undefined;
+  githubCredStatusRepo: string | undefined;
   hmacSecret: string | null;
   hmacRequiredHeaders: Array<string>;
   digestCheck: boolean;
@@ -40,6 +43,9 @@ export function parseConfig(): Config {
     vcApiIssuerUrl: process.env.URL,
     oidcIssuerUrl: process.env.OIDC_ISSUER_URL,
     issuerMembershipRegistryUrl: process.env.ISSUER_MEMBERSHIP_REGISTRY_URL || 'https://digitalcredentials.github.io/issuer-registry/registry.json',
+    githubOauthToken: process.env.GITHUB_OAUTH_TOKEN,
+    githubOrg: process.env.GITHUB_ORG,
+    githubCredStatusRepo: process.env.GITHUB_CRED_STATUS_REPO,
     hmacSecret: process.env.HMAC_SECRET || null,
     hmacRequiredHeaders: (
       process.env.HMAC_REQUIRED_HEADERS || "date,digest"

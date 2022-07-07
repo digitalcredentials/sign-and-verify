@@ -1,7 +1,6 @@
 import fastify from 'fastify';
 import fastifyRawBody from 'fastify-raw-body';
 import axios from 'axios';
-import fs from 'fs';
 import fastifySensible from 'fastify-sensible';
 import { createIssuer, createVerifier, DIDDocument } from '@digitalcredentials/sign-and-verify-core';
 import { Ed25519VerificationKey2020 } from '@digitalcredentials/ed25519-verification-key-2020';
@@ -12,20 +11,27 @@ import * as didKey from '@digitalcredentials/did-method-key';
 const { decodeList } = require('@digitalbazaar/vc-status-list');
 import { AuthType, credentialRecordFromOidc, credentialRecordFromChallenge } from './issuer';
 import { getConfig, decodeSeed } from './config';
-import { verifyRequestDigest, verifyRequestSignature } from './hooks';
 import { default as demoCredential } from './demoCredential.json';
 import { v4 as uuidv4 } from 'uuid';
 import LRU from 'lru-cache';
 import { composeCredential } from './templates/Certificate';
 import {
+  getCredentialStatusUrl,
   composeStatusCredential,
   embedCredentialStatus,
+  createStatusRepo,
+  statusRepoExists,
+  createConfigData,
+  createLogData,
+  createStatusData,
+  readLogData,
+  readStatusData,
+  updateLogData,
+  updateStatusData,
   CredentialAction,
   CredentialStatusConfig,
   CredentialStatusLogEntry,
-  CREDENTIAL_STATUS_CONFIG_FILE,
   CREDENTIAL_STATUS_FOLDER,
-  CREDENTIAL_STATUS_LOG_FILE,
 } from './credential-status';
 
 const cryptoLd = new CryptoLD();
@@ -100,7 +106,6 @@ export async function build(opts = {}) {
     authType,
     didSeed,
     didWebUrl,
-    vcApiIssuerUrl,
     demoIssuerMethod,
     issuerMembershipRegistryUrl,
   } = getConfig();
@@ -146,37 +151,33 @@ export async function build(opts = {}) {
   });
 
   // Setup status credential
-  const statusDir = `${__dirname}/../${CREDENTIAL_STATUS_FOLDER}`;
-  if (!fs.existsSync(statusDir)) {
+  const credentialStatusUrl = getCredentialStatusUrl();
+  const repoExists = await statusRepoExists();
+  if (!repoExists) {
     // Create status directory
-    fs.mkdirSync(statusDir, { recursive: true });
-    const listId = Math.random().toString(36).substring(2,12).toUpperCase();
+    await createStatusRepo();
 
     // Create and persist status config
-    const statusCredentialConfig: CredentialStatusConfig = {
+    const listId = Math.random().toString(36).substring(2,12).toUpperCase();
+    const configData: CredentialStatusConfig = {
       credentialsIssued: 0,
       latestList: listId
     };
-    const statusCredentialConfigFile = `${statusDir}/${CREDENTIAL_STATUS_CONFIG_FILE}`;
-    const statusCredentialConfigString = JSON.stringify(statusCredentialConfig, null, 2);
-    fs.writeFileSync(statusCredentialConfigFile, statusCredentialConfigString);
+    await createConfigData(configData);
 
     // Create and persist status log
-    const statusLogFile = `${statusDir}/${CREDENTIAL_STATUS_LOG_FILE}`;
-    const statusLogString = '[]';
-    fs.writeFileSync(statusLogFile, statusLogString);
+    const logData = [];
+    await createLogData(logData);
 
     // Create and sign status credential
     const issuerDid = publicDids[0].id;
-    const statusCredentialId = `${vcApiIssuerUrl}/${CREDENTIAL_STATUS_FOLDER}/${listId}`;
-    const statusCredentialDataUnsigned = await composeStatusCredential({ issuerDid, credentialId: statusCredentialId });
+    const credentialId = `${credentialStatusUrl}/${listId}`;
+    const statusCredentialDataUnsigned = await composeStatusCredential({ issuerDid, credentialId });
     const verificationMethod = ensureId(publicDids[0].assertionMethod[0]);
     const statusCredentialData = await sign(statusCredentialDataUnsigned, { verificationMethod });
 
     // Create and persist status data
-    const statusCredentialDataFile = `${statusDir}/${listId}.json`;
-    const statusCredentialDataString = JSON.stringify(statusCredentialData, null, 2);
-    fs.writeFileSync(statusCredentialDataFile, statusCredentialDataString);
+    await createStatusData(statusCredentialData);
   }
 
   server.register(require('fastify-cors'), {});
@@ -212,8 +213,7 @@ export async function build(opts = {}) {
   });
 
   server.get(`/${CREDENTIAL_STATUS_FOLDER}/:listId`, async (request, reply) => {
-    const statusCredentialDataFile = `${statusDir}/${(request.params as any).listId}.json`;
-    const statusCredentialData = JSON.parse(fs.readFileSync(statusCredentialDataFile, { encoding:'utf8' }));
+    const statusCredentialData = await readStatusData();
     const statusCredentialDataString = JSON.stringify(statusCredentialData, null, 2);
     reply
       .code(200)
@@ -278,7 +278,7 @@ export async function build(opts = {}) {
 
       try {
         // Attach status to credential
-        const { credential, newList } = embedCredentialStatus({ credential: credentialBase, apiUrl: vcApiIssuerUrl });
+        const { credential, newList } = await embedCredentialStatus({ credential: credentialBase, statusUrl: credentialStatusUrl });
 
         // Setup data necessary for composing signed status credential
         // NOTE: these values are retrieved from the issuer DID document;
@@ -292,20 +292,16 @@ export async function build(opts = {}) {
         // Create new status credential only if a new list was created
         if (newList) {
           // Create and sign status credential
-          const statusCredentialId = `${vcApiIssuerUrl}/${CREDENTIAL_STATUS_FOLDER}/${newList}`;
+          const statusCredentialId = `${credentialStatusUrl}/${newList}`;
           const statusCredentialDataUnsigned = await composeStatusCredential({ issuerDid, credentialId: statusCredentialId });
           const statusCredentialData = await sign(statusCredentialDataUnsigned, { verificationMethod });
 
           // Create and persist status data
-          const statusCredentialDataFile = `${statusDir}/${newList}.json`;
-          const statusCredentialDataString = JSON.stringify(statusCredentialData, null, 2);
-          fs.writeFileSync(statusCredentialDataFile, statusCredentialDataString);
+          await updateStatusData(statusCredentialData);
         }
 
         // Sign credential
-        const options = {
-          "verificationMethod": verificationMethod,
-        };
+        const options = { verificationMethod };
         const result = await sign(credential, options);
 
         // Add new entry to status log
@@ -319,11 +315,9 @@ export async function build(opts = {}) {
           statusListCredential: credential.credentialStatus.statusListCredential,
           statusListIndex: credential.credentialStatus.statusListIndex
         };
-        const statusLogFile = `${statusDir}/${CREDENTIAL_STATUS_LOG_FILE}`;
-        const statusLog = JSON.parse(fs.readFileSync(statusLogFile, { encoding: 'utf8' }));
-        statusLog.push(statusLogEntry);
-        const statusLogString = JSON.stringify(statusLog, null, 2);
-        fs.writeFileSync(statusLogFile, statusLogString);
+        const statusLogData = await readLogData();
+        statusLogData.push(statusLogEntry);
+        await updateLogData(statusLogData);
 
         reply
           .code(200)
@@ -338,19 +332,12 @@ export async function build(opts = {}) {
   )
 
   server.post(
-    '/issue/credentials',
-    {
-      preValidation: [
-        verifyRequestDigest,
-        verifyRequestSignature
-      ]
-    },
-    async (request, reply) => {
+    '/issue/credentials', async (request, reply) => {
       const req: any = request.body;
 
       try {
         // Attach status to credential
-        const { credential, newList } = embedCredentialStatus({ credential: req.credential, apiUrl: vcApiIssuerUrl });
+        const { credential, newList } = await embedCredentialStatus({ credential: req.credential, statusUrl: credentialStatusUrl });
 
         // Setup data necessary for composing signed status credential
         const issuerDid = publicDids[0].id;
@@ -359,14 +346,12 @@ export async function build(opts = {}) {
         // Create new status credential only if a new list was created
         if (newList) {
           // Create and sign status credential
-          const statusCredentialId = `${vcApiIssuerUrl}/${CREDENTIAL_STATUS_FOLDER}/${newList}`;
+          const statusCredentialId = `${credentialStatusUrl}/${newList}`;
           const statusCredentialDataUnsigned = await composeStatusCredential({ issuerDid, credentialId: statusCredentialId });
           const statusCredentialData = await sign(statusCredentialDataUnsigned, { verificationMethod });
 
           // Create and persist status data
-          const statusCredentialDataFile = `${statusDir}/${newList}.json`;
-          const statusCredentialDataString = JSON.stringify(statusCredentialData, null, 2);
-          fs.writeFileSync(statusCredentialDataFile, statusCredentialDataString);
+          await updateStatusData(statusCredentialData);
         }
 
         // Sign credential
@@ -384,11 +369,9 @@ export async function build(opts = {}) {
           statusListCredential: credential.credentialStatus.statusListCredential,
           statusListIndex: credential.credentialStatus.statusListIndex
         };
-        const statusLogFile = `${statusDir}/${CREDENTIAL_STATUS_LOG_FILE}`;
-        const statusLog = JSON.parse(fs.readFileSync(statusLogFile, { encoding: 'utf8' }));
-        statusLog.push(statusLogEntry);
-        const statusLogString = JSON.stringify(statusLog, null, 2);
-        fs.writeFileSync(statusLogFile, statusLogString);
+        const statusLogData = await readLogData();
+        statusLogData.push(statusLogEntry);
+        await updateLogData(statusLogData);
 
         reply
           .code(201)
@@ -414,21 +397,18 @@ export async function build(opts = {}) {
         const verificationMethod = ensureId(publicDids[0].assertionMethod[0]);
 
         // Retrieve status list
-        const statusCredentialDataFile = `${statusDir}/${listId}.json`;
-        const statusCredentialDataStringBefore = fs.readFileSync(statusCredentialDataFile, { encoding:'utf8' });
-        const statusCredentialDataBefore = JSON.parse(statusCredentialDataStringBefore);
+        const statusCredentialDataBefore = await readStatusData();
         const statusCredentialListEncodedBefore = statusCredentialDataBefore.credentialSubject.encodedList;
 
         // Update credential status
         const statusCredentialListDecoded = await decodeList({ encodedList: statusCredentialListEncodedBefore });
         statusCredentialListDecoded.setStatus(listIndex, true);
-        const statusCredentialId = `${vcApiIssuerUrl}/${CREDENTIAL_STATUS_FOLDER}/${listId}`;
+        const statusCredentialId = `${credentialStatusUrl}/${listId}`;
         const statusCredentialDataUnsigned = await composeStatusCredential({ issuerDid, credentialId: statusCredentialId, statusList: statusCredentialListDecoded });
 
         // Resign and persist status data
         const statusCredentialDataAfter = await sign(statusCredentialDataUnsigned, { verificationMethod });
-        const statusCredentialDataStringAfter = JSON.stringify(statusCredentialDataAfter, null, 2);
-        fs.writeFileSync(statusCredentialDataFile, statusCredentialDataStringAfter);
+        await updateStatusData(statusCredentialDataAfter);
 
         // Add new entry to status log
         const statusLogEntry: CredentialStatusLogEntry = {
@@ -439,11 +419,9 @@ export async function build(opts = {}) {
           statusListCredential: statusCredentialId,
           statusListIndex: listIndex
         };
-        const statusLogFile = `${statusDir}/${CREDENTIAL_STATUS_LOG_FILE}`;
-        const statusLog = JSON.parse(fs.readFileSync(statusLogFile, { encoding: 'utf8' }));
-        statusLog.push(statusLogEntry);
-        const statusLogString = JSON.stringify(statusLog, null, 2);
-        fs.writeFileSync(statusLogFile, statusLogString);
+        const statusLogData = await readLogData();
+        statusLogData.push(statusLogEntry);
+        await updateLogData(statusLogData);
 
         reply
           .code(200)
