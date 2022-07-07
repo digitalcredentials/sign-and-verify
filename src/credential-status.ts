@@ -61,13 +61,12 @@ type ComposeStatusCredentialParameters = {
 
 type EmbedCredentialStatusParameters = {
   credential: any;
-  statusUrl: string;
   statusPurpose?: string;
 };
 
 // Get credential status url
 export const getCredentialStatusUrl = () => {
-  return `https://${githubOrg}.github.io/${githubCredStatusRepo}`
+  return `https://${githubOrg}.github.io/${githubCredStatusRepo}`;
 };
 
 // Compose StatusList2021Credential
@@ -87,7 +86,7 @@ export const composeStatusCredential = async ({ issuerDid, credentialId, statusL
 }
 
 // Embed status into credential
-export const embedCredentialStatus = async ({ credential, statusUrl, statusPurpose = 'revocation' }: EmbedCredentialStatusParameters): Promise<any> => {
+export const embedCredentialStatus = async ({ credential, statusPurpose = 'revocation' }: EmbedCredentialStatusParameters): Promise<any> => {
   // Retrieve status config
   const configData = await readConfigData();
 
@@ -107,8 +106,9 @@ export const embedCredentialStatus = async ({ credential, statusUrl, statusPurpo
   await updateConfigData(configData);
 
   // Attach credential status
-  const statusListIndex = credentialsIssued;
+  const statusUrl = getCredentialStatusUrl();
   const statusListCredential = `${statusUrl}/${CREDENTIAL_STATUS_FOLDER}/${latestList}`;
+  const statusListIndex = credentialsIssued;
   const statusListId = `${statusListCredential}#${statusListIndex}`;
   const credentialStatus = {
     id: statusListId,

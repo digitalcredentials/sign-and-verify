@@ -278,7 +278,7 @@ export async function build(opts = {}) {
 
       try {
         // Attach status to credential
-        const { credential, newList } = await embedCredentialStatus({ credential: credentialBase, statusUrl: credentialStatusUrl });
+        const { credential, newList } = await embedCredentialStatus({ credential: credentialBase });
 
         // Setup data necessary for composing signed status credential
         // NOTE: these values are retrieved from the issuer DID document;
@@ -337,7 +337,7 @@ export async function build(opts = {}) {
 
       try {
         // Attach status to credential
-        const { credential, newList } = await embedCredentialStatus({ credential: req.credential, statusUrl: credentialStatusUrl });
+        const { credential, newList } = await embedCredentialStatus({ credential: req.credential });
 
         // Setup data necessary for composing signed status credential
         const issuerDid = publicDids[0].id;
