@@ -17,21 +17,11 @@ import LRU from 'lru-cache';
 import { composeCredential } from './templates/Certificate';
 import {
   generateStatusListId,
-  getCredentialStatusUrl,
   composeStatusCredential,
-  embedCredentialStatus,
-  createStatusRepo,
-  statusRepoExists,
-  createConfigData,
-  createLogData,
-  createStatusData,
-  readLogData,
-  readStatusData,
-  updateLogData,
-  updateStatusData,
   CredentialAction,
   CredentialStatusConfig,
   CredentialStatusLogEntry,
+  GitHubCredStatusClient,
   CREDENTIAL_STATUS_FOLDER,
 } from './credential-status';
 
@@ -109,6 +99,9 @@ export async function build(opts = {}) {
     didWebUrl,
     demoIssuerMethod,
     issuerMembershipRegistryUrl,
+    githubOauthToken,
+    githubOrg,
+    githubCredStatusRepo,
   } = getConfig();
   const didSeedBytes = decodeSeed(didSeed);
   const privateDids: DIDDocument[] = [];
@@ -151,12 +144,18 @@ export async function build(opts = {}) {
     logger: true
   });
 
+  // Setup the credential status client
+  const githubOauthTokenString = githubOauthToken as string;
+  const githubOrgString = githubOrg as string;
+  const githubCredStatusRepoString = githubCredStatusRepo as string;
+  const credStatusClient = new GitHubCredStatusClient(githubOauthTokenString, githubOrgString, githubCredStatusRepoString);
+
   // Setup status credential
-  const credentialStatusUrl = getCredentialStatusUrl();
-  const repoExists = await statusRepoExists();
+  const credentialStatusUrl = credStatusClient.getCredentialStatusUrl();
+  const repoExists = await credStatusClient.statusRepoExists();
   if (!repoExists) {
     // Create status directory
-    await createStatusRepo();
+    await credStatusClient.createStatusRepo();
 
     // Create and persist status config
     const listId = generateStatusListId();
@@ -164,11 +163,11 @@ export async function build(opts = {}) {
       credentialsIssued: 0,
       latestList: listId
     };
-    await createConfigData(configData);
+    await credStatusClient.createConfigData(configData);
 
     // Create and persist status log
     const logData = [];
-    await createLogData(logData);
+    await credStatusClient.createLogData(logData);
 
     // Create and sign status credential
     const issuerDid = publicDids[0].id;
@@ -178,7 +177,7 @@ export async function build(opts = {}) {
     const statusCredentialData = await sign(statusCredentialDataUnsigned, { verificationMethod });
 
     // Create and persist status data
-    await createStatusData(statusCredentialData);
+    await credStatusClient.createStatusData(statusCredentialData);
   }
 
   server.register(require('fastify-cors'), {});
@@ -214,7 +213,7 @@ export async function build(opts = {}) {
   });
 
   server.get(`/${CREDENTIAL_STATUS_FOLDER}/:listId`, async (request, reply) => {
-    const statusCredentialData = await readStatusData();
+    const statusCredentialData = await credStatusClient.readStatusData();
     const statusCredentialDataString = JSON.stringify(statusCredentialData, null, 2);
     reply
       .code(200)
@@ -279,7 +278,7 @@ export async function build(opts = {}) {
 
       try {
         // Attach status to credential
-        const { credential, newList } = await embedCredentialStatus({ credential: credentialBase });
+        const { credential, newList } = await credStatusClient.embedCredentialStatus({ credential: credentialBase });
 
         // Setup data necessary for composing signed status credential
         // NOTE: these values are retrieved from the issuer DID document;
@@ -298,7 +297,7 @@ export async function build(opts = {}) {
           const statusCredentialData = await sign(statusCredentialDataUnsigned, { verificationMethod });
 
           // Create and persist status data
-          await createStatusData(statusCredentialData);
+          await credStatusClient.createStatusData(statusCredentialData);
         }
 
         // Sign credential
@@ -316,9 +315,9 @@ export async function build(opts = {}) {
           statusListCredential: credential.credentialStatus.statusListCredential,
           statusListIndex: credential.credentialStatus.statusListIndex
         };
-        const statusLogData = await readLogData();
+        const statusLogData = await credStatusClient.readLogData();
         statusLogData.push(statusLogEntry);
-        await updateLogData(statusLogData);
+        await credStatusClient.updateLogData(statusLogData);
 
         reply
           .code(200)
@@ -338,7 +337,7 @@ export async function build(opts = {}) {
 
       try {
         // Attach status to credential
-        const { credential, newList } = await embedCredentialStatus({ credential: req.credential });
+        const { credential, newList } = await credStatusClient.embedCredentialStatus({ credential: req.credential });
 
         // Setup data necessary for composing signed status credential
         const issuerDid = publicDids[0].id;
@@ -352,7 +351,7 @@ export async function build(opts = {}) {
           const statusCredentialData = await sign(statusCredentialDataUnsigned, { verificationMethod });
 
           // Create and persist status data
-          await createStatusData(statusCredentialData);
+          await credStatusClient.createStatusData(statusCredentialData);
         }
 
         // Sign credential
@@ -370,9 +369,9 @@ export async function build(opts = {}) {
           statusListCredential: credential.credentialStatus.statusListCredential,
           statusListIndex: credential.credentialStatus.statusListIndex
         };
-        const statusLogData = await readLogData();
+        const statusLogData = await credStatusClient.readLogData();
         statusLogData.push(statusLogEntry);
-        await updateLogData(statusLogData);
+        await credStatusClient.updateLogData(statusLogData);
 
         reply
           .code(201)
@@ -398,7 +397,7 @@ export async function build(opts = {}) {
         const verificationMethod = ensureId(publicDids[0].assertionMethod[0]);
 
         // Retrieve status list
-        const statusCredentialDataBefore = await readStatusData();
+        const statusCredentialDataBefore = await credStatusClient.readStatusData();
         const statusCredentialListEncodedBefore = statusCredentialDataBefore.credentialSubject.encodedList;
 
         // Update credential status
@@ -409,7 +408,7 @@ export async function build(opts = {}) {
 
         // Resign and persist status data
         const statusCredentialDataAfter = await sign(statusCredentialDataUnsigned, { verificationMethod });
-        await updateStatusData(statusCredentialDataAfter);
+        await credStatusClient.updateStatusData(statusCredentialDataAfter);
 
         // Add new entry to status log
         const statusLogEntry: CredentialStatusLogEntry = {
@@ -420,9 +419,9 @@ export async function build(opts = {}) {
           statusListCredential: statusCredentialId,
           statusListIndex: listIndex
         };
-        const statusLogData = await readLogData();
+        const statusLogData = await credStatusClient.readLogData();
         statusLogData.push(statusLogEntry);
-        await updateLogData(statusLogData);
+        await credStatusClient.updateLogData(statusLogData);
 
         reply
           .code(200)

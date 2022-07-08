@@ -4,7 +4,7 @@ import mockfs from 'mock-fs';
 import { expect } from 'chai';
 import { createSandbox, SinonStubbedInstance, SinonSpy } from 'sinon';
 import 'mocha';
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyInstance } from 'fastify';
 import { Server, IncomingMessage, ServerResponse } from 'http';
 import LRU from 'lru-cache';
 import { Collection } from 'mongodb';

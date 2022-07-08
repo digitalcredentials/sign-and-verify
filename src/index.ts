@@ -1,5 +1,5 @@
-import { build } from './app'
-import { getConfig } from "./config";
+import { build } from './app';
+import { getConfig } from './config';
 
 const { port } = getConfig();
 
