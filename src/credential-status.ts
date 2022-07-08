@@ -64,6 +64,11 @@ type EmbedCredentialStatusParameters = {
   statusPurpose?: string;
 };
 
+// Generate new status list ID
+export const generateStatusListId = () => {
+  return Math.random().toString(36).substring(2,12).toUpperCase();
+};
+
 // Get credential status url
 export const getCredentialStatusUrl = () => {
   return `https://${githubOrg}.github.io/${githubCredStatusRepo}`;
@@ -94,7 +99,7 @@ export const embedCredentialStatus = async ({ credential, statusPurpose = 'revoc
   let newList = undefined;
   if (credentialsIssued >= CREDENTIAL_STATUS_LIST_SIZE) {
     // Update status config data
-    latestList = Math.random().toString(36).substring(2,12).toUpperCase();
+    latestList = generateStatusListId();
     newList = latestList;
     credentialsIssued = 0;
   }
@@ -107,7 +112,7 @@ export const embedCredentialStatus = async ({ credential, statusPurpose = 'revoc
 
   // Attach credential status
   const statusUrl = getCredentialStatusUrl();
-  const statusListCredential = `${statusUrl}/${CREDENTIAL_STATUS_FOLDER}/${latestList}`;
+  const statusListCredential = `${statusUrl}/${latestList}`;
   const statusListIndex = credentialsIssued;
   const statusListId = `${statusListCredential}#${statusListIndex}`;
   const credentialStatus = {
@@ -237,14 +242,13 @@ export const updateLogData = async (data: any) => {
 export const createStatusData = async (data: any) => {
   const configData = await readConfigData();
   const { latestList } = configData;
-  const statusDataFile = `${latestList}.json`;
   const timestamp = (new Date()).toISOString();
   const message = `[${timestamp}]: updated status credential`;
   const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
   await octokit.rest.repos.createOrUpdateFileContents({
     owner: githubOrgString,
     repo: githubCredStatusRepoString,
-    path: statusDataFile,
+    path: latestList,
     message,
     content
   });
@@ -254,11 +258,10 @@ export const createStatusData = async (data: any) => {
 const readStatusResponse = async (): Promise<any> => {
   const configData = await readConfigData();
   const { latestList } = configData;
-  const statusDataPath = `${latestList}.json`;
   const statusResponse = await octokit.rest.repos.getContent({
     owner: githubOrgString,
     repo: githubCredStatusRepoString,
-    path: statusDataPath
+    path: latestList
   });
   return statusResponse.data as any;
 };
@@ -273,7 +276,6 @@ export const readStatusData = async (): Promise<any> => {
 export const updateStatusData = async (data: any) => {
   const configData = await readConfigData();
   const { latestList } = configData;
-  const statusDataFile = `${latestList}.json`;
   const statusResponse = await readStatusResponse();
   const { sha } = statusResponse;
   const timestamp = (new Date()).toISOString();
@@ -282,7 +284,7 @@ export const updateStatusData = async (data: any) => {
   await octokit.rest.repos.createOrUpdateFileContents({
     owner: githubOrgString,
     repo: githubCredStatusRepoString,
-    path: statusDataFile,
+    path: latestList,
     message,
     content,
     sha

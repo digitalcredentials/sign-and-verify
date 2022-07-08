@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 import LRU from 'lru-cache';
 import { composeCredential } from './templates/Certificate';
 import {
+  generateStatusListId,
   getCredentialStatusUrl,
   composeStatusCredential,
   embedCredentialStatus,
@@ -158,7 +159,7 @@ export async function build(opts = {}) {
     await createStatusRepo();
 
     // Create and persist status config
-    const listId = Math.random().toString(36).substring(2,12).toUpperCase();
+    const listId = generateStatusListId();
     const configData: CredentialStatusConfig = {
       credentialsIssued: 0,
       latestList: listId
@@ -270,7 +271,7 @@ export async function build(opts = {}) {
       if (!credentialRecord) {
         return reply
           .code(404)
-          .send({ message: `Learner record not found for holder.` });
+          .send({ message: 'Learner record not found for holder' });
       }
 
       // Currently using only templates/Certificate.ts
@@ -297,7 +298,7 @@ export async function build(opts = {}) {
           const statusCredentialData = await sign(statusCredentialDataUnsigned, { verificationMethod });
 
           // Create and persist status data
-          await updateStatusData(statusCredentialData);
+          await createStatusData(statusCredentialData);
         }
 
         // Sign credential
@@ -351,7 +352,7 @@ export async function build(opts = {}) {
           const statusCredentialData = await sign(statusCredentialDataUnsigned, { verificationMethod });
 
           // Create and persist status data
-          await updateStatusData(statusCredentialData);
+          await createStatusData(statusCredentialData);
         }
 
         // Sign credential
