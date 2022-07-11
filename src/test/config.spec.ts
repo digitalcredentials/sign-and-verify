@@ -14,6 +14,9 @@ const didWebUrl = "https://vc-issuer.example.com";
 const vcApiIssuerUrl = "https://vc-issuer.example.com";
 const oidcIssuerUrl = "https://oidc-issuer.example.com";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
+const githubOauthToken = "abc";
+const githubOrg = "university-xyz";
+const githubCredStatusRepo = "credential-status";
 const expectedConfig: Config = {
   port: 5000,
   authType,
@@ -22,6 +25,9 @@ const expectedConfig: Config = {
   vcApiIssuerUrl,
   oidcIssuerUrl,
   issuerMembershipRegistryUrl,
+  githubOauthToken,
+  githubOrg,
+  githubCredStatusRepo,
   hmacSecret: null,
   hmacRequiredHeaders: ["date", "digest"],
   digestCheck: false,
@@ -34,7 +40,10 @@ const validEnv = {
   DID_WEB_URL: didWebUrl,
   URL: vcApiIssuerUrl,
   OIDC_ISSUER_URL: oidcIssuerUrl,
-  ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl
+  ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl,
+  GITHUB_OAUTH_TOKEN: githubOauthToken,
+  GITHUB_ORG: githubOrg,
+  GITHUB_CRED_STATUS_REPO: githubCredStatusRepo
 };
 
 describe("config", () => {

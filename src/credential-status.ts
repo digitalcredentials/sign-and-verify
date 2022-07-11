@@ -50,7 +50,12 @@ type EmbedCredentialStatusParameters = {
   statusPurpose?: string;
 };
 
-export class GitHubCredStatusClient {
+type EmbedCredentialStatusResult = {
+  credential: any;
+  newList: string | undefined;
+};
+
+export class GithubCredStatusClient {
   private githubOrg: string;
   private githubCredStatusRepo: string;
   private client: Octokit;
@@ -67,12 +72,12 @@ export class GitHubCredStatusClient {
   }
 
   // Embed status into credential
-  async embedCredentialStatus({ credential, statusPurpose = 'revocation' }: EmbedCredentialStatusParameters): Promise<any> {
+  async embedCredentialStatus({ credential, statusPurpose = 'revocation' }: EmbedCredentialStatusParameters): Promise<EmbedCredentialStatusResult> {
     // Retrieve status config
     const configData = await this.readConfigData();
 
     let { credentialsIssued, latestList } = configData;
-    let newList = undefined;
+    let newList;
     if (credentialsIssued >= CREDENTIAL_STATUS_LIST_SIZE) {
       // Update status config data
       latestList = generateStatusListId();

@@ -21,7 +21,7 @@ import {
   CredentialAction,
   CredentialStatusConfig,
   CredentialStatusLogEntry,
-  GitHubCredStatusClient,
+  GithubCredStatusClient,
   CREDENTIAL_STATUS_FOLDER,
 } from './credential-status';
 
@@ -148,7 +148,7 @@ export async function build(opts = {}) {
   const githubOauthTokenString = githubOauthToken as string;
   const githubOrgString = githubOrg as string;
   const githubCredStatusRepoString = githubCredStatusRepo as string;
-  const credStatusClient = new GitHubCredStatusClient(githubOauthTokenString, githubOrgString, githubCredStatusRepoString);
+  const credStatusClient = new GithubCredStatusClient(githubOauthTokenString, githubOrgString, githubCredStatusRepoString);
 
   // Setup status credential
   const credentialStatusUrl = credStatusClient.getCredentialStatusUrl();
