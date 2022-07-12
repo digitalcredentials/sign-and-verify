@@ -1,4 +1,5 @@
-const { createList, createCredential } = require('@digitalbazaar/vc-status-list');
+// @ts-ignore
+import { createList, createCredential } from '@digitalbazaar/vc-status-list';
 import { CONTEXT_URL_V1 } from '@digitalbazaar/vc-status-list-context';
 import { Octokit } from '@octokit/rest';
 
