@@ -396,17 +396,17 @@ export async function build(opts = {}) {
         const issuerDid = publicDids[0].id;
         const verificationMethod = ensureId(publicDids[0].assertionMethod[0]);
 
-        // Retrieve status list
+        // Retrieve status credential
         const statusCredentialDataBefore = await credStatusClient.readStatusData();
         const statusCredentialListEncodedBefore = statusCredentialDataBefore.credentialSubject.encodedList;
 
-        // Update credential status
+        // Update status credential
         const statusCredentialListDecoded = await decodeList({ encodedList: statusCredentialListEncodedBefore });
         statusCredentialListDecoded.setStatus(listIndex, true);
         const statusCredentialId = `${credentialStatusUrl}/${listId}`;
         const statusCredentialDataUnsigned = await composeStatusCredential({ issuerDid, credentialId: statusCredentialId, statusList: statusCredentialListDecoded });
 
-        // Resign and persist status data
+        // Resign and persist status credential
         const statusCredentialDataAfter = await sign(statusCredentialDataUnsigned, { verificationMethod });
         await credStatusClient.updateStatusData(statusCredentialDataAfter);
 

@@ -291,10 +291,9 @@ export const composeStatusCredential = async ({ issuerDid, credentialId, statusL
     statusList = await createList({ length: CREDENTIAL_STATUS_LIST_SIZE });
   }
   const issuanceDate = (new Date()).toISOString();
-  let credential = await createCredential({ id: credentialId, list: statusList });
+  let credential = await createCredential({ id: credentialId, list: statusList, statusPurpose });
   credential = {
     ...credential,
-    credentialSubject: { ...credential.credentialSubject, statusPurpose },
     issuer: issuerDid,
     issuanceDate
   };
