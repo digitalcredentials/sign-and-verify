@@ -261,7 +261,7 @@ export async function build(opts = {}) {
             credentialRecord = await credentialRecordFromChallenge(challenge);
             break;
         }
-      } catch (error) {
+      } catch (error: any) {
         return reply
           .code(400)
           .send({ message: error.message });
@@ -323,7 +323,7 @@ export async function build(opts = {}) {
           .code(200)
           .header('Content-Type', 'application/json; charset=utf-8')
           .send(result);
-      } catch (error) {
+      } catch (error: any) {
         reply
           .code(400)
           .send({ message: error.message });
@@ -377,7 +377,7 @@ export async function build(opts = {}) {
           .code(201)
           .header('Content-Type', 'application/json; charset=utf-8')
           .send(result);
-      } catch (error) {
+      } catch (error: any) {
         reply
           .code(400)
           .send({ message: error.message });
@@ -427,7 +427,7 @@ export async function build(opts = {}) {
           .code(200)
           .header('Content-Type', 'application/json; charset=utf-8')
           .send(statusCredentialDataAfter);
-      } catch (error) {
+      } catch (error: any) {
         reply
           .code(400)
           .send({ message: error.message });

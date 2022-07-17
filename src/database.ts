@@ -2,7 +2,7 @@
 // You may modify the methods for DatabaseClient in order to
 // suit your organization's DBMS deployment infrastructure
 
-const { MongoClient } = require('mongodb');
+import { MongoClient } from 'mongodb';
 const DB_USER = process.env.DB_USER;
 const DB_PASS = process.env.DB_PASS;
 const DB_HOST = process.env.DB_HOST;
@@ -36,11 +36,7 @@ export class DatabaseClient {
   }
 
   async connectServer(dbServerUri: string) {
-    const connectionOpts = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    };
-    this.client = new MongoClient(dbServerUri, connectionOpts);
+    this.client = new MongoClient(dbServerUri);
     await this.client.connect();
   }
 

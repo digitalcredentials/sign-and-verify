@@ -14,25 +14,29 @@ export function verifyRequestDigest(request: FastifyRequest, reply: FastifyReply
 
   const header = request.headers["digest"];
   if (typeof header !== "string") {
-    return reply.badRequest("Exactly one 'Digest' header is required");
+    reply.status(400).send("Exactly one 'Digest' header is required");
+    return;
   }
 
   const splitIdx = header.indexOf("=");
   if (splitIdx === -1) {
-    return reply.badRequest("Invalid 'Digest' header format");
+    reply.status(400).send("Invalid 'Digest' header format");
+    return;
   }
 
   const algorithm = header.substring(0, splitIdx);
   const value = header.substring(splitIdx + 1);
 
   if (!digestAlorithms.includes(algorithm)) {
-    return reply.badRequest(`Digest header algorithm ${algorithm} not supported`);
+    reply.status(400).send(`Digest header algorithm ${algorithm} not supported`);
+    return;
   }
 
   const digest = Buffer.from(value, "base64");
   const computed = createHash(algorithm).update(request.rawBody).digest();
   if (!digest.equals(computed)) {
-    return reply.badRequest(`Digest header does not match ${algorithm} hash of request body`);
+    reply.status(400).send(`Digest header does not match ${algorithm} hash of request body`);
+    return;
   }
 
   done();
@@ -50,20 +54,23 @@ export function verifyRequestSignature(request: FastifyRequest, reply: FastifyRe
     parsed = httpSignature.parseRequest(request, {
       headers: hmacRequiredHeaders
     });
-  } catch(error) {
+  } catch(error: any) {
     if (error instanceof HttpSignatureError) {
       request.log.debug(error);
-      return reply.badRequest(error.message);
+      reply.status(400).send(error.message);
+      return;
     } else {
       request.log.error(error);
-      return reply.internalServerError(error.message);
+      reply.status(500).send(error.message);
+      return;
     }
   }
 
   if (!httpSignature.verifyHMAC(parsed, hmacSecret)) {
     // if the HMAC signal is invalid
     request.log.debug("HMAC signature is invalid");
-    return reply.badRequest("Invalid request signature");
+    reply.status(400).send("Invalid request signature");
+    return;
   }
   request.log.debug("HMAC signature is valid");
   done();
