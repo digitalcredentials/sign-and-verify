@@ -17,7 +17,7 @@
   "license": "MIT",
   "repository": "git@github.com:digitalcredentials/sign-and-verify.git",
   "dependencies": {
-    "@digitalbazaar/vc-status-list": "^5.0.0",
+    "@digitalbazaar/vc-status-list": "^4.0.0",
     "@digitalbazaar/vc-status-list-context": "^3.0.1",
     "@digitalcredentials/bnid": "^2.1.2",
     "@digitalcredentials/did-method-key": "^2.0.3",
