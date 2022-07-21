@@ -62,7 +62,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 - Select the *Settings* tab in the credential status repo
 - Select the *Pages* tab from the left navigation bar
 - Select the *main* branch in the **Source** section (keep the default *root* folder)
-- Click *Save*
+- Click *Save* (Note: 1. issuers should wait a couple of minutes after this step before issuing credentials leveraging the hosted status list 2. verifiers should accept that a credential that was revoked within the last couple of minutes may register as verified due to caching)
 
 ## Install
 
