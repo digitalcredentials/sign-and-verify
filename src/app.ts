@@ -8,7 +8,7 @@ import { X25519KeyAgreementKey2020 } from '@digitalcredentials/x25519-key-agreem
 import { CryptoLD } from 'crypto-ld';
 import * as didWeb from '@interop/did-web-resolver';
 import * as didKey from '@digitalcredentials/did-method-key';
-const { decodeList } = require('@digitalbazaar/vc-status-list');
+import { decodeList } from '@digitalbazaar/vc-status-list';
 import { AuthType, credentialRecordFromOidc, credentialRecordFromChallenge } from './issuer';
 import { getConfig, decodeSeed } from './config';
 import { default as demoCredential } from './demoCredential.json';
