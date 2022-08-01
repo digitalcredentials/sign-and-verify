@@ -113,11 +113,8 @@ describe('hooks', () => {
       });
 
       expect(response.statusCode).to.be.equal(400);
-      expect(JSON.parse(response.body)).to.be.deep.equal({
-        error: "Bad Request",
-        statusCode: 400,
-        message: "Digest header algorithm INVALIDALG not supported"
-      });
+      expect(response.statusMessage).to.be.equal("Bad Request");
+      expect(response.body).to.be.equal("Digest header algorithm INVALIDALG not supported");
     });
 
     it("should deny the request if the digest is an invalid format", async () => {
@@ -135,11 +132,8 @@ describe('hooks', () => {
       });
 
       expect(response.statusCode).to.be.equal(400);
-      expect(JSON.parse(response.body)).to.be.deep.equal({
-        error: "Bad Request",
-        statusCode: 400,
-        message: "Invalid 'Digest' header format"
-      });
+      expect(response.statusMessage).to.be.equal("Bad Request");
+      expect(response.body).to.be.equal("Invalid 'Digest' header format");
     });
 
     it("should deny the request if the digest header is missing", async () => {
@@ -156,11 +150,8 @@ describe('hooks', () => {
       });
 
       expect(response.statusCode).to.be.equal(400);
-      expect(JSON.parse(response.body)).to.be.deep.equal({
-        error: "Bad Request",
-        statusCode: 400,
-        message: "Exactly one 'Digest' header is required"
-      });
+      expect(response.statusMessage).to.be.equal("Bad Request");
+      expect(response.body).to.be.equal("Exactly one 'Digest' header is required");
     });
 
     it("should deny the request if the digest doesn't match", async () => {
@@ -179,11 +170,8 @@ describe('hooks', () => {
       });
 
       expect(response.statusCode).to.be.equal(400);
-      expect(JSON.parse(response.body)).to.be.deep.equal({
-        error: "Bad Request",
-        statusCode: 400,
-        message: "Digest header does not match SHA256 hash of request body"
-      });
+      expect(response.statusMessage).to.be.equal("Bad Request");
+      expect(response.body).to.be.equal("Digest header does not match SHA256 hash of request body");
     });
   });
 
@@ -260,11 +248,8 @@ describe('hooks', () => {
       });
 
       expect(response.statusCode).to.be.equal(400);
-      expect(JSON.parse(response.body)).to.be.deep.equal({
-        error: "Bad Request",
-        statusCode: 400,
-        message:"no authorization or signature header present in the request"
-      });
+      expect(response.statusMessage).to.be.equal("Bad Request");
+      expect(response.body).to.be.equal("no authorization or signature header present in the request");
     });
 
     it("should fail a request with headers that are part of the signature missing", async () => {
@@ -277,11 +262,8 @@ describe('hooks', () => {
       });
 
       expect(response.statusCode).to.be.equal(400);
-      expect(JSON.parse(response.body)).to.be.deep.equal({
-        error: "Bad Request",
-        statusCode: 400,
-        message: "date was not in the request"
-      });
+      expect(response.statusMessage).to.be.equal("Bad Request");
+      expect(response.body).to.be.equal("date was not in the request");
     });
 
     it("should return a server 500 if there was an unexpected parsing error", async () => {
@@ -293,11 +275,8 @@ describe('hooks', () => {
       });
 
       expect(response.statusCode).to.be.equal(500);
-      expect(JSON.parse(response.body)).to.be.deep.equal({
-        message: "error message",
-        error: "Internal Server Error",
-        statusCode: 500
-      });
+      expect(response.statusMessage).to.be.equal("Internal Server Error");
+      expect(response.body).to.be.equal("error message");
     });
 
     it("should fail a request with an invalid signature header", async () => {
@@ -312,11 +291,8 @@ describe('hooks', () => {
       });
 
       expect(response.statusCode).to.be.equal(400);
-      expect(JSON.parse(response.body)).to.be.deep.equal({
-        error: "Bad Request",
-        statusCode: 400,
-        message: "Invalid request signature"
-      });
+      expect(response.statusMessage).to.be.equal("Bad Request");
+      expect(response.body).to.be.equal("Invalid request signature");
     });
   });
 });
