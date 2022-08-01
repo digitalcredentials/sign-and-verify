@@ -1,4 +1,5 @@
 import { decodeSecretKeySeed } from '@digitalcredentials/bnid';
+import { VisibilityLevel } from './credential-status';
 import { ConfigurationError } from './errors';
 import { AuthType } from './issuer';
 
@@ -10,9 +11,10 @@ export type Config = {
   vcApiIssuerUrl: string;
   oidcIssuerUrl: string | undefined;
   issuerMembershipRegistryUrl: string;
+  credStatusRepoName: string | undefined;
+  credStatusRepoOwner: string | undefined;
+  credStatusRepoVisibility: VisibilityLevel;
   githubOauthToken: string | undefined;
-  githubOrg: string | undefined;
-  githubCredStatusRepo: string | undefined;
   hmacSecret: string | null;
   hmacRequiredHeaders: Array<string>;
   digestCheck: boolean;
@@ -43,9 +45,10 @@ export function parseConfig(): Config {
     vcApiIssuerUrl: process.env.URL,
     oidcIssuerUrl: process.env.OIDC_ISSUER_URL,
     issuerMembershipRegistryUrl: process.env.ISSUER_MEMBERSHIP_REGISTRY_URL || 'https://digitalcredentials.github.io/issuer-registry/registry.json',
+    credStatusRepoName: process.env.CRED_STATUS_REPO_NAME,
+    credStatusRepoOwner: process.env.CRED_STATUS_REPO_OWNER,
+    credStatusRepoVisibility: process.env.CRED_STATUS_REPO_VISIBILITY as VisibilityLevel || VisibilityLevel.Public,
     githubOauthToken: process.env.GITHUB_OAUTH_TOKEN,
-    githubOrg: process.env.GITHUB_ORG,
-    githubCredStatusRepo: process.env.GITHUB_CRED_STATUS_REPO,
     hmacSecret: process.env.HMAC_SECRET || null,
     hmacRequiredHeaders: (
       process.env.HMAC_REQUIRED_HEADERS || "date,digest"

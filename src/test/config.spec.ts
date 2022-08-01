@@ -3,8 +3,9 @@ import { createSandbox } from 'sinon';
 import 'mocha';
 
 import { parseConfig, getConfig, resetConfig, Config } from '../config';
-import { AuthType } from '../issuer';
+import { VisibilityLevel } from '../credential-status';
 import { ConfigurationError } from '../errors';
+import { AuthType } from '../issuer';
 
 const sandbox = createSandbox();
 
@@ -14,9 +15,10 @@ const didWebUrl = "https://vc-issuer.example.com";
 const vcApiIssuerUrl = "https://vc-issuer.example.com";
 const oidcIssuerUrl = "https://oidc-issuer.example.com";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
+const credStatusRepoName = "credential-status";
+const credStatusRepoOwner = "university-xyz";
+const credStatusRepoVisibility = VisibilityLevel.Public;
 const githubOauthToken = "abc";
-const githubOrg = "university-xyz";
-const githubCredStatusRepo = "credential-status";
 const expectedConfig: Config = {
   port: 5000,
   authType,
@@ -25,9 +27,10 @@ const expectedConfig: Config = {
   vcApiIssuerUrl,
   oidcIssuerUrl,
   issuerMembershipRegistryUrl,
+  credStatusRepoName,
+  credStatusRepoOwner,
+  credStatusRepoVisibility,
   githubOauthToken,
-  githubOrg,
-  githubCredStatusRepo,
   hmacSecret: null,
   hmacRequiredHeaders: ["date", "digest"],
   digestCheck: false,
@@ -41,9 +44,10 @@ const validEnv = {
   URL: vcApiIssuerUrl,
   OIDC_ISSUER_URL: oidcIssuerUrl,
   ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl,
-  GITHUB_OAUTH_TOKEN: githubOauthToken,
-  GITHUB_ORG: githubOrg,
-  GITHUB_CRED_STATUS_REPO: githubCredStatusRepo
+  CRED_STATUS_REPO_NAME: credStatusRepoName,
+  CRED_STATUS_REPO_OWNER: credStatusRepoOwner,
+  CRED_STATUS_REPO_VISIBILITY: credStatusRepoVisibility,
+  GITHUB_OAUTH_TOKEN: githubOauthToken
 };
 
 describe("config", () => {

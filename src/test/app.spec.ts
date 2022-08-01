@@ -11,11 +11,11 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import { Issuer } from 'openid-client';
 import { build } from '../app';
 import { resetConfig } from '../config';
+import { VisibilityLevel } from '../credential-status';
+import * as Database from '../database';
+import demoCredential from '../demoCredential.json';
 import * as IssuerHelper from '../issuer';
 import * as Certificate from '../templates/Certificate';
-import demoCredential from '../demoCredential.json';
-import { AuthType } from '../issuer';
-import * as Database from '../database';
 import { dbCreate, dbConnect, dbDisconnect, Credential } from './database';
 
 const sandbox = createSandbox();
@@ -34,15 +34,16 @@ const sampleIssuerMembershipRegistry = {
 lruStub.get.returns(sampleIssuerMembershipRegistry);
 lruStub.set.returns(true);
 
-const authType = AuthType.OidcToken;
+const authType = IssuerHelper.AuthType.OidcToken;
 const didSeed = "DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2";
 const didWebUrl = "https://vc-issuer.example.com";
 const vcApiIssuerUrl = "https://vc-issuer.example.com";
 const oidcIssuerUrl = "https://oidc-issuer.example.com";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
+const credStatusRepoName = "credential-status";
+const credStatusRepoOwner = "university-xyz";
+const credStatusRepoVisibility = VisibilityLevel.Public;
 const githubOauthToken = "abc";
-const githubOrg = "university-xyz";
-const githubCredStatusRepo = "credential-status";
 const validEnv = {
   AUTH_TYPE: authType,
   DID_SEED: didSeed,
@@ -50,9 +51,10 @@ const validEnv = {
   URL: vcApiIssuerUrl,
   OIDC_ISSUER_URL: oidcIssuerUrl,
   ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl,
-  GITHUB_OAUTH_TOKEN: githubOauthToken,
-  GITHUB_ORG: githubOrg,
-  GITHUB_CRED_STATUS_REPO: githubCredStatusRepo
+  CRED_STATUS_REPO_NAME: credStatusRepoName,
+  CRED_STATUS_REPO_OWNER: credStatusRepoOwner,
+  CRED_STATUS_REPO_VISIBILITY: credStatusRepoVisibility,
+  GITHUB_OAUTH_TOKEN: githubOauthToken
 };
 
 const issuerKey = 'z6MkhVTX9BF3NGYX6cc7jWpbNnR7cAjH8LUffabZP8Qu4ysC';
@@ -437,7 +439,7 @@ describe("api with db inspection", () => {
       resetConfig();
       const vpChallengeEnv = {
         ...validEnv,
-        AUTH_TYPE: AuthType.VpChallenge
+        AUTH_TYPE: IssuerHelper.AuthType.VpChallenge
       };
       sandbox.stub(process, "env").value(vpChallengeEnv);
       apiServer = await build();
@@ -471,7 +473,7 @@ describe("api with db inspection", () => {
       resetConfig();
       const oidcTokenEnv = {
         ...validEnv,
-        AUTH_TYPE: AuthType.OidcToken
+        AUTH_TYPE: IssuerHelper.AuthType.OidcToken
       };
       sandbox.stub(process, "env").value(oidcTokenEnv);
       apiServer = await build();
