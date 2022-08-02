@@ -8,10 +8,11 @@ import { Server, IncomingMessage, ServerResponse } from 'http';
 import LRU from 'lru-cache';
 import { Collection } from 'mongodb';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import * as OctokitClient from '@octokit/rest';
 import { Issuer } from 'openid-client';
 import { build } from '../app';
 import { resetConfig } from '../config';
-import { VisibilityLevel } from '../credential-status';
+import * as CredentialStatus from '../credential-status';
 import * as Database from '../database';
 import demoCredential from '../demoCredential.json';
 import * as IssuerHelper from '../issuer';
@@ -42,7 +43,7 @@ const oidcIssuerUrl = "https://oidc-issuer.example.com";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
 const credStatusRepoName = "credential-status";
 const credStatusRepoOwner = "university-xyz";
-const credStatusRepoVisibility = VisibilityLevel.Public;
+const credStatusRepoVisibility = CredentialStatus.VisibilityLevel.Public;
 const githubOauthToken = "abc";
 const validEnv = {
   AUTH_TYPE: authType,
@@ -190,16 +191,94 @@ const validateObjectEquality = (received, expected) => {
   }
 };
 
+class MockGithubCredStatusClient extends CredentialStatus.GithubCredStatusClient {
+  private statusList: any;
+  private statusConfig: CredentialStatus.CredentialStatusConfig;
+  private statusLog: CredentialStatus.CredentialStatusLogEntry[];
+  private statusRepoName: string;
+  private statusRepoOwner: string;
+  private statusRepoVisibility: CredentialStatus.VisibilityLevel;
+
+  constructor(statusRepoName: string, statusRepoOwner: string, statusRepoVisibility: CredentialStatus.VisibilityLevel, githubOauthToken: string) {
+    super(statusRepoName, statusRepoOwner, statusRepoVisibility, githubOauthToken);
+    this.statusList = {};
+    this.statusConfig = {} as CredentialStatus.CredentialStatusConfig;
+    this.statusLog = [];
+    this.statusRepoName = statusRepoName;
+    this.statusRepoOwner = statusRepoOwner;
+    this.statusRepoVisibility = statusRepoVisibility;
+  }
+
+  // Check if status repo exists
+  async statusRepoExists(): Promise<boolean> {
+    return false;
+  }
+
+  // Create status repo
+  async createStatusRepo() {
+    return;
+  }
+
+  // Create data in config file
+  async createConfigData(data: any) {
+    this.statusConfig = data;
+  }
+
+  // Retrieve data from config file
+  async readConfigData(): Promise<any> {
+    return this.statusConfig;
+  }
+
+  // Update data in config file
+  async updateConfigData(data: any) {
+    this.statusConfig = data;
+  }
+
+  // Create data in log file
+  async createLogData(data: any) {
+    this.statusLog = data;
+  }
+
+  // Retrieve data from log file
+  async readLogData(): Promise<any> {
+    return this.statusLog;
+  }
+
+  // Update data in log file
+  async updateLogData(data: any) {
+    this.statusLog = data;
+  }
+
+  // Create data in status file
+  async createStatusData(data: any) {
+    this.statusList = data;
+  }
+
+  // Retrieve data from status file
+  async readStatusData(): Promise<any> {
+    return this.statusList;
+  }
+
+  // Update data in status file
+  async updateStatusData(data: any) {
+    this.statusList = data;
+  }
+}
+
 describe("api", () => {
   let apiServer: FastifyInstance<Server, IncomingMessage, ServerResponse>;
 
   before(async () => {
     resetConfig();
+    sandbox.stub(process, "env").value(validEnv);
+    sandbox.stub(OctokitClient.Octokit.prototype, 'constructor').returns(null);
+    sandbox.stub(CredentialStatus, 'generateStatusListId').returns("V27UAUYPNR");
+    sandbox.stub(CredentialStatus, 'GithubCredStatusClient').value(MockGithubCredStatusClient);
     apiServer = await build();
     await apiServer.ready();
   });
 
-  after(async () => {
+  after(() => {
     sandbox.restore();
   });
 
@@ -286,7 +365,7 @@ describe("api", () => {
     sandbox.stub(IssuerHelper, 'credentialRecordFromOidc').returns(Promise.resolve({}));
     sandbox.stub(Certificate, 'composeCredential').returns(demoCredential);
     const url = "/request/credential";
-    it("POST returns 201", async () => {
+    it("POST returns 200", async () => {
       const response = await apiServer.inject({
         method: "POST",
         url: url,
@@ -366,11 +445,14 @@ describe("api with demo issuance", () => {
         DEMO_ISSUER_METHOD: issuerVerificationMethod
       }
     );
+    sandbox.stub(OctokitClient.Octokit.prototype, 'constructor').returns(null);
+    sandbox.stub(CredentialStatus, 'generateStatusListId').returns("V27UAUYPNR");
+    sandbox.stub(CredentialStatus, 'GithubCredStatusClient').value(MockGithubCredStatusClient);
     apiServer = await build();
     await apiServer.ready();
   });
 
-  after(async () => {
+  after(() => {
     sandbox.restore();
   });
 
@@ -424,6 +506,9 @@ describe("api with db inspection", () => {
     sandbox.stub(Database, "dbCredClient").value(
       new Database.DatabaseClient(dbUri, dbName, dbCollection)
     );
+    sandbox.stub(OctokitClient.Octokit.prototype, 'constructor').returns(null);
+    sandbox.stub(CredentialStatus, 'generateStatusListId').returns("V27UAUYPNR");
+    sandbox.stub(CredentialStatus, 'GithubCredStatusClient').value(MockGithubCredStatusClient);
     await dbConnect(dbUri);
   });
 
@@ -446,7 +531,7 @@ describe("api with db inspection", () => {
       await apiServer.ready();
     });
 
-    afterEach(async () => {
+    afterEach(() => {
       findOneSpy.restore();
     });
 
@@ -480,7 +565,7 @@ describe("api with db inspection", () => {
       await apiServer.ready();
     });
 
-    afterEach(async () => {
+    afterEach(() => {
       findOneSpy.restore();
     });
 
