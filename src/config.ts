@@ -1,5 +1,5 @@
 import { decodeSecretKeySeed } from '@digitalcredentials/bnid';
-import { VisibilityLevel } from './credential-status';
+import { CredentialStatusClient, VisibilityLevel } from './credential-status';
 import { ConfigurationError } from './errors';
 import { AuthType } from './issuer';
 
@@ -11,6 +11,7 @@ export type Config = {
   vcApiIssuerUrl: string;
   oidcIssuerUrl: string | undefined;
   issuerMembershipRegistryUrl: string;
+  credStatusClient: CredentialStatusClient;
   credStatusRepoName: string;
   credStatusRepoOwner: string;
   credStatusRepoVisibility: VisibilityLevel;
@@ -37,6 +38,11 @@ export function parseConfig(): Config {
   if (!process.env.OIDC_ISSUER_URL) {
     throw new ConfigurationError("Environment variable 'OIDC_ISSUER_URL' is not set");
   }
+  switch(process.env.credStatusClient as CredentialStatusClient) {
+    case CredentialStatusClient.Github:
+      assureGithubClientConfigured();
+  }
+
   return Object.freeze({
     port: process.env.PORT ? Number(process.env.PORT) : 5000,
     authType: process.env.AUTH_TYPE as AuthType,
@@ -45,6 +51,7 @@ export function parseConfig(): Config {
     vcApiIssuerUrl: process.env.URL,
     oidcIssuerUrl: process.env.OIDC_ISSUER_URL,
     issuerMembershipRegistryUrl: process.env.ISSUER_MEMBERSHIP_REGISTRY_URL || 'https://digitalcredentials.github.io/issuer-registry/registry.json',
+    credStatusClient: process.env.CRED_STATUS_CLIENT as CredentialStatusClient || CredentialStatusClient.Github,
     credStatusRepoName: process.env.CRED_STATUS_REPO_NAME || '',
     credStatusRepoOwner: process.env.CRED_STATUS_REPO_OWNER || '',
     credStatusRepoVisibility: process.env.CRED_STATUS_REPO_VISIBILITY as VisibilityLevel || VisibilityLevel.Public,
@@ -84,4 +91,14 @@ export function decodeSeed(secretKeySeed: string): Uint8Array {
   }
 
   return secretKeySeedBytes;
+}
+
+function assureGithubClientConfigured() {
+  const githubVariables = ['GITHUB_API_ACCESS_TOKEN'];
+  const isGithubClientProperlyConfigured = githubVariables.every((variable) => {
+    return !!process.env[variable];
+  });
+  if (!isGithubClientProperlyConfigured) {
+    throw new ConfigurationError(`The following environment variables must be set for the GitHub credential status client: ${githubVariables.join(', ')}`);
+  }
 }

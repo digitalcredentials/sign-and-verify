@@ -3,7 +3,7 @@ import { createSandbox } from 'sinon';
 import 'mocha';
 
 import { parseConfig, getConfig, resetConfig, Config } from '../config';
-import { VisibilityLevel } from '../credential-status';
+import { CredentialStatusClient, VisibilityLevel } from '../credential-status';
 import { ConfigurationError } from '../errors';
 import { AuthType } from '../issuer';
 
@@ -15,6 +15,7 @@ const didWebUrl = "https://vc-issuer.example.com";
 const vcApiIssuerUrl = "https://vc-issuer.example.com";
 const oidcIssuerUrl = "https://oidc-issuer.example.com";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
+const credStatusClient = CredentialStatusClient.Github;
 const credStatusRepoName = "credential-status";
 const credStatusRepoOwner = "university-xyz";
 const credStatusRepoVisibility = VisibilityLevel.Public;
@@ -27,6 +28,7 @@ const expectedConfig: Config = {
   vcApiIssuerUrl,
   oidcIssuerUrl,
   issuerMembershipRegistryUrl,
+  credStatusClient,
   credStatusRepoName,
   credStatusRepoOwner,
   credStatusRepoVisibility,
@@ -44,6 +46,7 @@ const validEnv = {
   URL: vcApiIssuerUrl,
   OIDC_ISSUER_URL: oidcIssuerUrl,
   ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl,
+  CRED_STATUS_CLIENT: credStatusClient,
   CRED_STATUS_REPO_NAME: credStatusRepoName,
   CRED_STATUS_REPO_OWNER: credStatusRepoOwner,
   CRED_STATUS_REPO_VISIBILITY: credStatusRepoVisibility,

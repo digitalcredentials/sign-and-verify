@@ -42,6 +42,7 @@ const didWebUrl = "https://vc-issuer.example.com";
 const vcApiIssuerUrl = "https://vc-issuer.example.com";
 const oidcIssuerUrl = "https://oidc-issuer.example.com";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
+const credStatusClient = CredentialStatus.CredentialStatusClient.Github;
 const credStatusRepoName = "credential-status";
 const credStatusRepoOwner = "university-xyz";
 const credStatusRepoVisibility = CredentialStatus.VisibilityLevel.Public;
@@ -53,6 +54,7 @@ const validEnv = {
   URL: vcApiIssuerUrl,
   OIDC_ISSUER_URL: oidcIssuerUrl,
   ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl,
+  CRED_STATUS_CLIENT: credStatusClient,
   CRED_STATUS_REPO_NAME: credStatusRepoName,
   CRED_STATUS_REPO_OWNER: credStatusRepoOwner,
   CRED_STATUS_REPO_VISIBILITY: credStatusRepoVisibility,
