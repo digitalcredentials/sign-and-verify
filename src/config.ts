@@ -12,10 +12,10 @@ export type Config = {
   oidcIssuerUrl: string | undefined;
   issuerMembershipRegistryUrl: string;
   credStatusClient: CredentialStatusClient;
+  credStatusClientAccessToken: string;
   credStatusRepoName: string;
-  credStatusRepoOwner: string;
+  credStatusRepoOrgName: string;
   credStatusRepoVisibility: VisibilityLevel;
-  githubApiAccessToken: string;
   hmacSecret: string | null;
   hmacRequiredHeaders: Array<string>;
   digestCheck: boolean;
@@ -52,10 +52,10 @@ export function parseConfig(): Config {
     oidcIssuerUrl: process.env.OIDC_ISSUER_URL,
     issuerMembershipRegistryUrl: process.env.ISSUER_MEMBERSHIP_REGISTRY_URL || 'https://digitalcredentials.github.io/issuer-registry/registry.json',
     credStatusClient: process.env.CRED_STATUS_CLIENT as CredentialStatusClient || CredentialStatusClient.Github,
+    credStatusClientAccessToken: process.env.CRED_STATUS_CLIENT_ACCESS_TOKEN || '',
     credStatusRepoName: process.env.CRED_STATUS_REPO_NAME || '',
-    credStatusRepoOwner: process.env.CRED_STATUS_REPO_OWNER || '',
+    credStatusRepoOrgName: process.env.CRED_STATUS_REPO_ORG_NAME || '',
     credStatusRepoVisibility: process.env.CRED_STATUS_REPO_VISIBILITY as VisibilityLevel || VisibilityLevel.Public,
-    githubApiAccessToken: process.env.GITHUB_API_ACCESS_TOKEN || '',
     hmacSecret: process.env.HMAC_SECRET || null,
     hmacRequiredHeaders: (
       process.env.HMAC_REQUIRED_HEADERS || "date,digest"
@@ -94,7 +94,7 @@ export function decodeSeed(secretKeySeed: string): Uint8Array {
 }
 
 function assureGithubClientConfigured() {
-  const githubVariables = ['GITHUB_API_ACCESS_TOKEN'];
+  const githubVariables = ['CRED_STATUS_CLIENT_ACCESS_TOKEN'];
   const isGithubClientProperlyConfigured = githubVariables.every((variable) => {
     return !!process.env[variable];
   });

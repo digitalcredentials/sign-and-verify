@@ -43,10 +43,10 @@ const vcApiIssuerUrl = "https://vc-issuer.example.com";
 const oidcIssuerUrl = "https://oidc-issuer.example.com";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
 const credStatusClient = CredentialStatus.CredentialStatusClient.Github;
+const credStatusClientAccessToken = "abc";
 const credStatusRepoName = "credential-status";
-const credStatusRepoOwner = "university-xyz";
+const credStatusRepoOrgName = "university-xyz";
 const credStatusRepoVisibility = CredentialStatus.VisibilityLevel.Public;
-const githubApiAccessToken = "abc";
 const validEnv = {
   AUTH_TYPE: authType,
   DID_SEED: didSeed,
@@ -55,10 +55,10 @@ const validEnv = {
   OIDC_ISSUER_URL: oidcIssuerUrl,
   ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl,
   CRED_STATUS_CLIENT: credStatusClient,
+  CRED_STATUS_CLIENT_ACCESS_TOKEN: credStatusClientAccessToken,
   CRED_STATUS_REPO_NAME: credStatusRepoName,
-  CRED_STATUS_REPO_OWNER: credStatusRepoOwner,
+  CRED_STATUS_REPO_ORG_NAME: credStatusRepoOrgName,
   CRED_STATUS_REPO_VISIBILITY: credStatusRepoVisibility,
-  GITHUB_API_ACCESS_TOKEN: githubApiAccessToken
 };
 
 const issuerKey = 'z6MkhVTX9BF3NGYX6cc7jWpbNnR7cAjH8LUffabZP8Qu4ysC';
@@ -210,16 +210,16 @@ class MockGithubCredentialStatusClient extends GithubCredentialStatus.GithubCred
   private statusConfig: CredentialStatus.CredentialStatusConfig;
   private statusLog: CredentialStatus.CredentialStatusLogEntry[];
   private statusRepoName: string;
-  private statusRepoOwner: string;
+  private statusRepoOrgName: string;
   private statusRepoVisibility: CredentialStatus.VisibilityLevel;
 
   constructor(config: GithubCredentialStatus.GithubCredentialStatusClientParameters) {
-    super({ credStatusRepoName, credStatusRepoOwner, credStatusRepoVisibility, githubApiAccessToken });
+    super({ credStatusRepoName, credStatusRepoOrgName, credStatusRepoVisibility, credStatusClientAccessToken });
     this.statusList = {};
     this.statusConfig = {} as CredentialStatus.CredentialStatusConfig;
     this.statusLog = [];
     this.statusRepoName = credStatusRepoName;
-    this.statusRepoOwner = credStatusRepoOwner;
+    this.statusRepoOrgName = credStatusRepoOrgName;
     this.statusRepoVisibility = credStatusRepoVisibility;
   }
 
@@ -450,7 +450,7 @@ describe("api", () => {
 
 const beforeEachCredStatusMgmt = async () => {
   resetConfig();
-  const credStatusClient = new MockGithubCredentialStatusClient({ credStatusRepoName, credStatusRepoOwner, credStatusRepoVisibility, githubApiAccessToken });
+  const credStatusClient = new MockGithubCredentialStatusClient({ credStatusRepoName, credStatusRepoOrgName, credStatusRepoVisibility, credStatusClientAccessToken });
   sandbox.stub(process, "env").value(validEnv);
   sandbox.stub(OctokitClient.Octokit.prototype, 'constructor').returns(null);
   sandbox.stub(GithubCredentialStatus, 'GithubCredentialStatusClient').returns(credStatusClient);

@@ -16,10 +16,10 @@ const vcApiIssuerUrl = "https://vc-issuer.example.com";
 const oidcIssuerUrl = "https://oidc-issuer.example.com";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
 const credStatusClient = CredentialStatusClient.Github;
+const credStatusClientAccessToken = "abc";
 const credStatusRepoName = "credential-status";
-const credStatusRepoOwner = "university-xyz";
+const credStatusRepoOrgName = "university-xyz";
 const credStatusRepoVisibility = VisibilityLevel.Public;
-const githubApiAccessToken = "abc";
 const expectedConfig: Config = {
   port: 5000,
   authType,
@@ -29,10 +29,10 @@ const expectedConfig: Config = {
   oidcIssuerUrl,
   issuerMembershipRegistryUrl,
   credStatusClient,
+  credStatusClientAccessToken,
   credStatusRepoName,
-  credStatusRepoOwner,
+  credStatusRepoOrgName,
   credStatusRepoVisibility,
-  githubApiAccessToken,
   hmacSecret: null,
   hmacRequiredHeaders: ["date", "digest"],
   digestCheck: false,
@@ -47,10 +47,10 @@ const validEnv = {
   OIDC_ISSUER_URL: oidcIssuerUrl,
   ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl,
   CRED_STATUS_CLIENT: credStatusClient,
+  CRED_STATUS_CLIENT_ACCESS_TOKEN: credStatusClientAccessToken,
   CRED_STATUS_REPO_NAME: credStatusRepoName,
-  CRED_STATUS_REPO_OWNER: credStatusRepoOwner,
-  CRED_STATUS_REPO_VISIBILITY: credStatusRepoVisibility,
-  GITHUB_API_ACCESS_TOKEN: githubApiAccessToken
+  CRED_STATUS_REPO_ORG_NAME: credStatusRepoOrgName,
+  CRED_STATUS_REPO_VISIBILITY: credStatusRepoVisibility
 };
 
 describe("config", () => {

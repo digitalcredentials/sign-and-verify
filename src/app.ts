@@ -99,9 +99,9 @@ export async function build(opts = {}) {
     demoIssuerMethod,
     issuerMembershipRegistryUrl,
     credStatusRepoName,
-    credStatusRepoOwner,
+    credStatusRepoOrgName,
     credStatusRepoVisibility,
-    githubApiAccessToken,
+    credStatusClientAccessToken,
   } = getConfig();
   const didSeedBytes = decodeSeed(didSeed);
   const privateDids: DIDDocument[] = [];
@@ -145,7 +145,7 @@ export async function build(opts = {}) {
   });
 
   // Setup the credential status client
-  const credStatusClient = new GithubCredentialStatusClient({ credStatusRepoName, credStatusRepoOwner, credStatusRepoVisibility, githubApiAccessToken });
+  const credStatusClient = new GithubCredentialStatusClient({ credStatusRepoName, credStatusRepoOrgName, credStatusRepoVisibility, credStatusClientAccessToken });
 
   // Setup status credential
   const credentialStatusUrl = credStatusClient.getCredentialStatusUrl();

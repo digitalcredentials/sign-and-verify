@@ -10,28 +10,28 @@ import {
 
 export type GithubCredentialStatusClientParameters = {
   credStatusRepoName: string;
-  credStatusRepoOwner: string;
+  credStatusRepoOrgName: string;
   credStatusRepoVisibility: VisibilityLevel;
-  githubApiAccessToken: string;
+  credStatusClientAccessToken: string;
 };
 
 export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   private credStatusRepoName: string;
-  private credStatusRepoOwner: string;
+  private credStatusRepoOrgName: string;
   private credStatusRepoVisibility: VisibilityLevel;
   private client: Octokit;
 
   constructor(config: GithubCredentialStatusClientParameters) {
     super();
     this.credStatusRepoName = config.credStatusRepoName;
-    this.credStatusRepoOwner = config.credStatusRepoOwner;
+    this.credStatusRepoOrgName = config.credStatusRepoOrgName;
     this.credStatusRepoVisibility = config.credStatusRepoVisibility;
-    this.client = new Octokit({ auth: config.githubApiAccessToken });
+    this.client = new Octokit({ auth: config.credStatusClientAccessToken });
   }
 
   // Get credential status url
   getCredentialStatusUrl(): string {
-    return `https://${this.credStatusRepoOwner}.github.io/${this.credStatusRepoName}`;
+    return `https://${this.credStatusRepoOrgName}.github.io/${this.credStatusRepoName}`;
   }
 
   // Check if status repo exists
@@ -46,7 +46,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   // Create status repo
   async createStatusRepo(): Promise<void> {
     await this.client.repos.createInOrg({
-      org: this.credStatusRepoOwner,
+      org: this.credStatusRepoOrgName,
       name: this.credStatusRepoName,
       visibility: this.credStatusRepoVisibility,
       description: 'Manages credential status for instance of VC-API'
@@ -59,7 +59,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
     const message = `[${timestamp}]: updated status credential config`;
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
     await this.client.repos.createOrUpdateFileContents({
-      owner: this.credStatusRepoOwner,
+      owner: this.credStatusRepoOrgName,
       repo: this.credStatusRepoName,
       path: CREDENTIAL_STATUS_CONFIG_FILE,
       message,
@@ -70,7 +70,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   // Retrieve response from fetching config file
   async readConfigResponse(): Promise<any> {
     const configResponse = await this.client.repos.getContent({
-      owner: this.credStatusRepoOwner,
+      owner: this.credStatusRepoOrgName,
       repo: this.credStatusRepoName,
       path: CREDENTIAL_STATUS_CONFIG_FILE
     });
@@ -91,7 +91,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
     const message = `[${timestamp}]: updated status credential config`;
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
     await this.client.repos.createOrUpdateFileContents({
-      owner: this.credStatusRepoOwner,
+      owner: this.credStatusRepoOrgName,
       repo: this.credStatusRepoName,
       path: CREDENTIAL_STATUS_CONFIG_FILE,
       message,
@@ -106,7 +106,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
     const message = `[${timestamp}]: updated status log`;
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
     await this.client.repos.createOrUpdateFileContents({
-      owner: this.credStatusRepoOwner,
+      owner: this.credStatusRepoOrgName,
       repo: this.credStatusRepoName,
       path: CREDENTIAL_STATUS_LOG_FILE,
       message,
@@ -117,7 +117,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   // Retrieve response from fetching log file
   async readLogResponse(): Promise<any> {
     const logResponse = await this.client.repos.getContent({
-      owner: this.credStatusRepoOwner,
+      owner: this.credStatusRepoOrgName,
       repo: this.credStatusRepoName,
       path: CREDENTIAL_STATUS_LOG_FILE
     });
@@ -138,7 +138,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
     const message = `[${timestamp}]: updated status log`;
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
     await this.client.repos.createOrUpdateFileContents({
-      owner: this.credStatusRepoOwner,
+      owner: this.credStatusRepoOrgName,
       repo: this.credStatusRepoName,
       path: CREDENTIAL_STATUS_LOG_FILE,
       message,
@@ -155,7 +155,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
     const message = `[${timestamp}]: updated status credential`;
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
     await this.client.repos.createOrUpdateFileContents({
-      owner: this.credStatusRepoOwner,
+      owner: this.credStatusRepoOrgName,
       repo: this.credStatusRepoName,
       path: latestList,
       message,
@@ -168,7 +168,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
     const configData = await this.readConfigData();
     const { latestList } = configData;
     const statusResponse = await this.client.repos.getContent({
-      owner: this.credStatusRepoOwner,
+      owner: this.credStatusRepoOrgName,
       repo: this.credStatusRepoName,
       path: latestList
     });
@@ -191,7 +191,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
     const message = `[${timestamp}]: updated status credential`;
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
     await this.client.repos.createOrUpdateFileContents({
-      owner: this.credStatusRepoOwner,
+      owner: this.credStatusRepoOrgName,
       repo: this.credStatusRepoName,
       path: latestList,
       message,
