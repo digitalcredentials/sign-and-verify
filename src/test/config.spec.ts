@@ -18,7 +18,7 @@ const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer
 const credStatusRepoName = "credential-status";
 const credStatusRepoOwner = "university-xyz";
 const credStatusRepoVisibility = VisibilityLevel.Public;
-const githubOauthToken = "abc";
+const githubApiAccessToken = "abc";
 const expectedConfig: Config = {
   port: 5000,
   authType,
@@ -30,7 +30,7 @@ const expectedConfig: Config = {
   credStatusRepoName,
   credStatusRepoOwner,
   credStatusRepoVisibility,
-  githubOauthToken,
+  githubApiAccessToken,
   hmacSecret: null,
   hmacRequiredHeaders: ["date", "digest"],
   digestCheck: false,
@@ -47,7 +47,7 @@ const validEnv = {
   CRED_STATUS_REPO_NAME: credStatusRepoName,
   CRED_STATUS_REPO_OWNER: credStatusRepoOwner,
   CRED_STATUS_REPO_VISIBILITY: credStatusRepoVisibility,
-  GITHUB_OAUTH_TOKEN: githubOauthToken
+  GITHUB_API_ACCESS_TOKEN: githubApiAccessToken
 };
 
 describe("config", () => {

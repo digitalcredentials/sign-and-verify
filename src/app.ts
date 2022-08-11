@@ -16,14 +16,13 @@ import { v4 as uuidv4 } from 'uuid';
 import LRU from 'lru-cache';
 import { composeCredential } from './templates/Certificate';
 import {
-  generateStatusListId,
   composeStatusCredential,
   CredentialAction,
   CredentialStatusConfig,
   CredentialStatusLogEntry,
-  GithubCredStatusClient,
   CREDENTIAL_STATUS_FOLDER,
 } from './credential-status';
+import { GithubCredentialStatusClient } from './credential-status-github';
 
 const cryptoLd = new CryptoLD();
 cryptoLd.use(Ed25519VerificationKey2020);
@@ -102,7 +101,7 @@ export async function build(opts = {}) {
     credStatusRepoName,
     credStatusRepoOwner,
     credStatusRepoVisibility,
-    githubOauthToken
+    githubApiAccessToken,
   } = getConfig();
   const didSeedBytes = decodeSeed(didSeed);
   const privateDids: DIDDocument[] = [];
@@ -146,10 +145,7 @@ export async function build(opts = {}) {
   });
 
   // Setup the credential status client
-  const credStatusRepoNameString = credStatusRepoName as string;
-  const credStatusRepoOwnerString = credStatusRepoOwner as string;
-  const githubOauthTokenString = githubOauthToken as string;
-  const credStatusClient = new GithubCredStatusClient(credStatusRepoNameString, credStatusRepoOwnerString, credStatusRepoVisibility, githubOauthTokenString);
+  const credStatusClient = new GithubCredentialStatusClient({ credStatusRepoName, credStatusRepoOwner, credStatusRepoVisibility, githubApiAccessToken });
 
   // Setup status credential
   const credentialStatusUrl = credStatusClient.getCredentialStatusUrl();
@@ -159,7 +155,7 @@ export async function build(opts = {}) {
     await credStatusClient.createStatusRepo();
 
     // Create and persist status config
-    const listId = generateStatusListId();
+    const listId = credStatusClient.generateStatusListId();
     const configData: CredentialStatusConfig = {
       credentialsIssued: 0,
       latestList: listId

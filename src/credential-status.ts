@@ -1,7 +1,5 @@
-// @ts-ignore
 import { createList, createCredential } from '@digitalbazaar/vc-status-list';
 import { CONTEXT_URL_V1 } from '@digitalbazaar/vc-status-list-context';
-import { Octokit } from '@octokit/rest';
 
 // Number of credentials tracked in a list
 const CREDENTIAL_STATUS_LIST_SIZE = 100000;
@@ -62,22 +60,10 @@ type EmbedCredentialStatusResult = {
   newList: string | undefined;
 };
 
-export class GithubCredStatusClient {
-  private credStatusRepoName: string;
-  private credStatusRepoOwner: string;
-  private credStatusRepoVisibility: VisibilityLevel;
-  private client: Octokit;
-
-  constructor(credStatusRepoName: string, credStatusRepoOwner: string, credStatusRepoVisibility: VisibilityLevel, githubOauthToken: string) {
-    this.credStatusRepoName = credStatusRepoName;
-    this.credStatusRepoOwner = credStatusRepoOwner;
-    this.credStatusRepoVisibility = credStatusRepoVisibility;
-    this.client = new Octokit({ auth: githubOauthToken });
-  }
-
-  // Get credential status url
-  getCredentialStatusUrl() {
-    return `https://${this.credStatusRepoOwner}.github.io/${this.credStatusRepoName}`;
+export abstract class BaseCredentialStatusClient {
+  // Generate new status list ID
+  generateStatusListId(): string {
+    return Math.random().toString(36).substring(2,12).toUpperCase();
   }
 
   // Embed status into credential
@@ -89,7 +75,7 @@ export class GithubCredStatusClient {
     let newList;
     if (credentialsIssued >= CREDENTIAL_STATUS_LIST_SIZE) {
       // Update status config data
-      latestList = generateStatusListId();
+      latestList = this.generateStatusListId();
       newList = latestList;
       credentialsIssued = 0;
     }
@@ -122,177 +108,42 @@ export class GithubCredStatusClient {
     };
   }
 
+  // Get credential status url
+  abstract getCredentialStatusUrl(): string;
+
   // Check if status repo exists
-  async statusRepoExists(): Promise<boolean> {
-    const repos = await this.client.repos.listForAuthenticatedUser();
-    const credStatusRepoExists = repos.data.some((repo) => {
-      return repo.name === this.credStatusRepoName;
-    });
-    return credStatusRepoExists;
-  }
+  abstract statusRepoExists(): Promise<boolean>;
 
   // Create status repo
-  async createStatusRepo() {
-    await this.client.repos.createInOrg({
-      org: this.credStatusRepoOwner,
-      name: this.credStatusRepoName,
-      visibility: this.credStatusRepoVisibility,
-      description: 'Manages credential status for instance of VC-API'
-    });
-  }
+  abstract createStatusRepo(): Promise<void>;
 
   // Create data in config file
-  async createConfigData(data: any) {
-    const timestamp = (new Date()).toISOString();
-    const message = `[${timestamp}]: updated status credential config`;
-    const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
-    await this.client.repos.createOrUpdateFileContents({
-      owner: this.credStatusRepoOwner,
-      repo: this.credStatusRepoName,
-      path: CREDENTIAL_STATUS_CONFIG_FILE,
-      message,
-      content
-    });
-  }
-
-  // Retrieve response from fetching config file
-  async readConfigResponse(): Promise<any> {
-    const configResponse = await this.client.repos.getContent({
-      owner: this.credStatusRepoOwner,
-      repo: this.credStatusRepoName,
-      path: CREDENTIAL_STATUS_CONFIG_FILE
-    });
-    return configResponse.data as any;
-  }
+  abstract createConfigData(data: any): Promise<void>;
 
   // Retrieve data from config file
-  async readConfigData(): Promise<any> {
-    const configResponse = await this.readConfigResponse();
-    return decodeSystemData(configResponse.content);
-  }
+  abstract readConfigData(): Promise<any>;
 
   // Update data in config file
-  async updateConfigData(data: any) {
-    const configResponse = await this.readConfigResponse();
-    const { sha } = configResponse;
-    const timestamp = (new Date()).toISOString();
-    const message = `[${timestamp}]: updated status credential config`;
-    const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
-    await this.client.repos.createOrUpdateFileContents({
-      owner: this.credStatusRepoOwner,
-      repo: this.credStatusRepoName,
-      path: CREDENTIAL_STATUS_CONFIG_FILE,
-      message,
-      content,
-      sha
-    });
-  }
+  abstract updateConfigData(data: any): Promise<void>;
 
   // Create data in log file
-  async createLogData(data: any) {
-    const timestamp = (new Date()).toISOString();
-    const message = `[${timestamp}]: updated status log`;
-    const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
-    await this.client.repos.createOrUpdateFileContents({
-      owner: this.credStatusRepoOwner,
-      repo: this.credStatusRepoName,
-      path: CREDENTIAL_STATUS_LOG_FILE,
-      message,
-      content
-    });
-  }
-
-  // Retrieve response from fetching log file
-  async readLogResponse(): Promise<any> {
-    const logResponse = await this.client.repos.getContent({
-      owner: this.credStatusRepoOwner,
-      repo: this.credStatusRepoName,
-      path: CREDENTIAL_STATUS_LOG_FILE
-    });
-    return logResponse.data as any;
-  }
+  abstract createLogData(data: any): Promise<void>;
 
   // Retrieve data from log file
-  async readLogData(): Promise<any> {
-    const logResponse = await this.readLogResponse();
-    return decodeSystemData(logResponse.content);
-  }
+  abstract readLogData(): Promise<any>;
 
   // Update data in log file
-  async updateLogData(data: any) {
-    const logResponse = await this.readLogResponse();
-    const { sha } = logResponse;
-    const timestamp = (new Date()).toISOString();
-    const message = `[${timestamp}]: updated status log`;
-    const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
-    await this.client.repos.createOrUpdateFileContents({
-      owner: this.credStatusRepoOwner,
-      repo: this.credStatusRepoName,
-      path: CREDENTIAL_STATUS_LOG_FILE,
-      message,
-      content,
-      sha
-    });
-  }
+  abstract updateLogData(data: any): Promise<void>;
 
   // Create data in status file
-  async createStatusData(data: any) {
-    const configData = await this.readConfigData();
-    const { latestList } = configData;
-    const timestamp = (new Date()).toISOString();
-    const message = `[${timestamp}]: updated status credential`;
-    const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
-    await this.client.repos.createOrUpdateFileContents({
-      owner: this.credStatusRepoOwner,
-      repo: this.credStatusRepoName,
-      path: latestList,
-      message,
-      content
-    });
-  }
-
-  // Retrieve response from fetching status file
-  async readStatusResponse(): Promise<any> {
-    const configData = await this.readConfigData();
-    const { latestList } = configData;
-    const statusResponse = await this.client.repos.getContent({
-      owner: this.credStatusRepoOwner,
-      repo: this.credStatusRepoName,
-      path: latestList
-    });
-    return statusResponse.data as any;
-  }
+  abstract createStatusData(data: any): Promise<void>;
 
   // Retrieve data from status file
-  async readStatusData(): Promise<any> {
-    const statusResponse = await this.readStatusResponse();
-    return decodeSystemData(statusResponse.content);
-  }
+  abstract readStatusData(): Promise<any>;
 
   // Update data in status file
-  async updateStatusData(data: any) {
-    const configData = await this.readConfigData();
-    const { latestList } = configData;
-    const statusResponse = await this.readStatusResponse();
-    const { sha } = statusResponse;
-    const timestamp = (new Date()).toISOString();
-    const message = `[${timestamp}]: updated status credential`;
-    const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
-    await this.client.repos.createOrUpdateFileContents({
-      owner: this.credStatusRepoOwner,
-      repo: this.credStatusRepoName,
-      path: latestList,
-      message,
-      content,
-      sha
-    });
-  }
+  abstract updateStatusData(data: any): Promise<void>;
 }
-
-// Generate new status list ID
-export const generateStatusListId = () => {
-  return Math.random().toString(36).substring(2,12).toUpperCase();
-};
 
 // Compose StatusList2021Credential
 export const composeStatusCredential = async ({ issuerDid, credentialId, statusList, statusPurpose = 'revocation' }: ComposeStatusCredentialParameters): Promise<any> => {
@@ -309,14 +160,14 @@ export const composeStatusCredential = async ({ issuerDid, credentialId, statusL
   return credential;
 }
 
-const encodeAsciiAsBase64 = (text: string): string => {
+export const decodeSystemData = (text: string): any => {
+  return JSON.parse(decodeBase64AsAscii(text));
+};
+
+export const encodeAsciiAsBase64 = (text: string): string => {
   return Buffer.from(text).toString('base64');
 };
 
 const decodeBase64AsAscii = (text: string): string => {
   return Buffer.from(text, 'base64').toString('ascii');
-};
-
-const decodeSystemData = (text: string): any => {
-  return JSON.parse(decodeBase64AsAscii(text));
 };

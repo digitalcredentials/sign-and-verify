@@ -13,6 +13,7 @@ import { Issuer } from 'openid-client';
 import { build } from '../app';
 import { resetConfig } from '../config';
 import * as CredentialStatus from '../credential-status';
+import * as GithubCredentialStatus from '../credential-status-github';
 import * as Database from '../database';
 import demoCredential from '../demoCredential.json';
 import * as IssuerHelper from '../issuer';
@@ -44,7 +45,7 @@ const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer
 const credStatusRepoName = "credential-status";
 const credStatusRepoOwner = "university-xyz";
 const credStatusRepoVisibility = CredentialStatus.VisibilityLevel.Public;
-const githubOauthToken = "abc";
+const githubApiAccessToken = "abc";
 const validEnv = {
   AUTH_TYPE: authType,
   DID_SEED: didSeed,
@@ -55,7 +56,7 @@ const validEnv = {
   CRED_STATUS_REPO_NAME: credStatusRepoName,
   CRED_STATUS_REPO_OWNER: credStatusRepoOwner,
   CRED_STATUS_REPO_VISIBILITY: credStatusRepoVisibility,
-  GITHUB_OAUTH_TOKEN: githubOauthToken
+  GITHUB_API_ACCESS_TOKEN: githubApiAccessToken
 };
 
 const issuerKey = 'z6MkhVTX9BF3NGYX6cc7jWpbNnR7cAjH8LUffabZP8Qu4ysC';
@@ -202,7 +203,7 @@ const validateObjectEquality = (received, expected) => {
 const statusListId = "V27UAUYPNR";
 const statusListIndex = 3;
 
-class MockGithubCredStatusClient extends CredentialStatus.GithubCredStatusClient {
+class MockGithubCredentialStatusClient extends GithubCredentialStatus.GithubCredentialStatusClient {
   private statusList: any;
   private statusConfig: CredentialStatus.CredentialStatusConfig;
   private statusLog: CredentialStatus.CredentialStatusLogEntry[];
@@ -210,14 +211,19 @@ class MockGithubCredStatusClient extends CredentialStatus.GithubCredStatusClient
   private statusRepoOwner: string;
   private statusRepoVisibility: CredentialStatus.VisibilityLevel;
 
-  constructor(statusRepoName: string, statusRepoOwner: string, statusRepoVisibility: CredentialStatus.VisibilityLevel, githubOauthToken: string) {
-    super(statusRepoName, statusRepoOwner, statusRepoVisibility, githubOauthToken);
+  constructor(config: GithubCredentialStatus.GithubCredentialStatusClientParameters) {
+    super({ credStatusRepoName, credStatusRepoOwner, credStatusRepoVisibility, githubApiAccessToken });
     this.statusList = {};
     this.statusConfig = {} as CredentialStatus.CredentialStatusConfig;
     this.statusLog = [];
-    this.statusRepoName = statusRepoName;
-    this.statusRepoOwner = statusRepoOwner;
-    this.statusRepoVisibility = statusRepoVisibility;
+    this.statusRepoName = credStatusRepoName;
+    this.statusRepoOwner = credStatusRepoOwner;
+    this.statusRepoVisibility = credStatusRepoVisibility;
+  }
+
+  // Generate new status list ID
+  generateStatusListId(): string {
+    return statusListId;
   }
 
   // Check if status repo exists
@@ -283,8 +289,7 @@ describe("api", () => {
     resetConfig();
     sandbox.stub(process, "env").value(validEnv);
     sandbox.stub(OctokitClient.Octokit.prototype, 'constructor').returns(null);
-    sandbox.stub(CredentialStatus, 'generateStatusListId').returns(statusListId);
-    sandbox.stub(CredentialStatus, 'GithubCredStatusClient').value(MockGithubCredStatusClient);
+    sandbox.stub(GithubCredentialStatus, 'GithubCredentialStatusClient').value(MockGithubCredentialStatusClient);
     apiServer = await build();
     await apiServer.ready();
   });
@@ -443,11 +448,10 @@ describe("api", () => {
 
 const beforeEachCredStatusMgmt = async () => {
   resetConfig();
-  const credStatusClient = new MockGithubCredStatusClient(credStatusRepoName, credStatusRepoOwner, credStatusRepoVisibility, githubOauthToken);
+  const credStatusClient = new MockGithubCredentialStatusClient({ credStatusRepoName, credStatusRepoOwner, credStatusRepoVisibility, githubApiAccessToken });
   sandbox.stub(process, "env").value(validEnv);
   sandbox.stub(OctokitClient.Octokit.prototype, 'constructor').returns(null);
-  sandbox.stub(CredentialStatus, 'generateStatusListId').returns(statusListId);
-  sandbox.stub(CredentialStatus, 'GithubCredStatusClient').returns(credStatusClient);
+  sandbox.stub(GithubCredentialStatus, 'GithubCredentialStatusClient').returns(credStatusClient);
   sandbox.stub(IssuerHelper, 'credentialRecordFromOidc').returns(Promise.resolve({}));
   sandbox.stub(Certificate, 'composeCredential').returns(demoCredential);
   const apiServer = await build();
@@ -599,8 +603,7 @@ describe("api with demo issuance", () => {
       }
     );
     sandbox.stub(OctokitClient.Octokit.prototype, 'constructor').returns(null);
-    sandbox.stub(CredentialStatus, 'generateStatusListId').returns(statusListId);
-    sandbox.stub(CredentialStatus, 'GithubCredStatusClient').value(MockGithubCredStatusClient);
+    sandbox.stub(GithubCredentialStatus, 'GithubCredentialStatusClient').value(MockGithubCredentialStatusClient);
     apiServer = await build();
     await apiServer.ready();
   });
@@ -660,8 +663,7 @@ describe("api with db inspection", () => {
       new Database.DatabaseClient(dbUri, dbName, dbCollection)
     );
     sandbox.stub(OctokitClient.Octokit.prototype, 'constructor').returns(null);
-    sandbox.stub(CredentialStatus, 'generateStatusListId').returns(statusListId);
-    sandbox.stub(CredentialStatus, 'GithubCredStatusClient').value(MockGithubCredStatusClient);
+    sandbox.stub(GithubCredentialStatus, 'GithubCredentialStatusClient').value(MockGithubCredentialStatusClient);
     await dbConnect(dbUri);
   });
 

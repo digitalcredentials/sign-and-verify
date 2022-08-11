@@ -11,10 +11,10 @@ export type Config = {
   vcApiIssuerUrl: string;
   oidcIssuerUrl: string | undefined;
   issuerMembershipRegistryUrl: string;
-  credStatusRepoName: string | undefined;
-  credStatusRepoOwner: string | undefined;
+  credStatusRepoName: string;
+  credStatusRepoOwner: string;
   credStatusRepoVisibility: VisibilityLevel;
-  githubOauthToken: string | undefined;
+  githubApiAccessToken: string;
   hmacSecret: string | null;
   hmacRequiredHeaders: Array<string>;
   digestCheck: boolean;
@@ -45,10 +45,10 @@ export function parseConfig(): Config {
     vcApiIssuerUrl: process.env.URL,
     oidcIssuerUrl: process.env.OIDC_ISSUER_URL,
     issuerMembershipRegistryUrl: process.env.ISSUER_MEMBERSHIP_REGISTRY_URL || 'https://digitalcredentials.github.io/issuer-registry/registry.json',
-    credStatusRepoName: process.env.CRED_STATUS_REPO_NAME,
-    credStatusRepoOwner: process.env.CRED_STATUS_REPO_OWNER,
+    credStatusRepoName: process.env.CRED_STATUS_REPO_NAME || '',
+    credStatusRepoOwner: process.env.CRED_STATUS_REPO_OWNER || '',
     credStatusRepoVisibility: process.env.CRED_STATUS_REPO_VISIBILITY as VisibilityLevel || VisibilityLevel.Public,
-    githubOauthToken: process.env.GITHUB_OAUTH_TOKEN,
+    githubApiAccessToken: process.env.GITHUB_API_ACCESS_TOKEN || '',
     hmacSecret: process.env.HMAC_SECRET || null,
     hmacRequiredHeaders: (
       process.env.HMAC_REQUIRED_HEADERS || "date,digest"
