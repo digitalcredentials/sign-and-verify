@@ -19,6 +19,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 - \*`CRED_STATUS_CLIENT_ACCESS_TOKEN`: access token for source control API (required - necessary for credential status/revocation management hosted in source control services like GitHub and GitLab)
 - \*`CRED_STATUS_REPO_NAME`: name of credential status repo (required - necessary for delegated hosting of credential status/revocation management)
 - `CRED_STATUS_REPO_ORG_NAME`: name of org in source control service that owns credential status/revocation management repo (required - necessary for delegated hosting of credential status/revocation management)
+- `CRED_STATUS_REPO_ORG_ID`: ID of org in source control service that owns credential status/revocation management repo (required - GitLab only)
 - \*`CRED_STATUS_REPO_VISIBILITY`: level of visibility of credential status/revocation management repo (optional, default: `public`)
 - \*`CRED_STATUS_CLIENT_TYPE`: credential status management client type (optional, default: `github`)
 - `DID_WEB_URL`: the url used to generate `did:web` document and keys for issuer (optional, default: `undefined`)

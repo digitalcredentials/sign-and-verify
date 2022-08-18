@@ -103,7 +103,6 @@ export async function build(opts = {}) {
     issuerMembershipRegistryUrl,
     credStatusClientType,
     credStatusRepoName,
-    credStatusRepoId,
     credStatusRepoOrgName,
     credStatusRepoOrgId,
     credStatusRepoVisibility,
@@ -156,7 +155,6 @@ export async function build(opts = {}) {
     case CredentialStatusClientType.Gitlab:
       credStatusClient = new GitlabCredentialStatusClient({
         credStatusRepoName,
-        credStatusRepoId,
         credStatusRepoOrgName,
         credStatusRepoOrgId,
         credStatusRepoVisibility,

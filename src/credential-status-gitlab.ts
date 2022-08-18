@@ -43,7 +43,6 @@ gem "jekyll"`;
 
 export type GitlabCredentialStatusClientParameters = {
   credStatusRepoName: string;
-  credStatusRepoId: string;
   credStatusRepoOrgName: string;
   credStatusRepoOrgId: string;
   credStatusRepoVisibility: VisibilityLevel;
@@ -61,7 +60,7 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
   constructor(config: GitlabCredentialStatusClientParameters) {
     super();
     this.credStatusRepoName = config.credStatusRepoName;
-    this.credStatusRepoId = config.credStatusRepoId;
+    this.credStatusRepoId = ''; // This value is set in createStatusRepo
     this.credStatusRepoOrgName = config.credStatusRepoOrgName;
     this.credStatusRepoOrgId = config.credStatusRepoOrgId;
     this.credStatusRepoVisibility = config.credStatusRepoVisibility;
@@ -149,7 +148,9 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
       visibility: this.credStatusRepoVisibility,
       description: 'Manages credential status for instance of VC-API'
     };
-    await this.client.post(this.reposEndpoint(), repoRequestConfig);
+    const repoResponse = await this.client.post(this.reposEndpoint(), repoRequestConfig);
+    this.credStatusRepoId = repoResponse.data.id;
+    await this.setupCredentialStatusWebsite();
   }
 
   // Create data in config file

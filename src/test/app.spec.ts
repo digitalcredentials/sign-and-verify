@@ -45,7 +45,6 @@ const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer
 const credStatusClientType = CredentialStatus.CredentialStatusClientType.Github;
 const credStatusClientAccessToken = "abc";
 const credStatusRepoName = "credential-status";
-const credStatusRepoId = "12345678";
 const credStatusRepoOrgName = "university-xyz";
 const credStatusRepoOrgId = "87654321";
 const credStatusRepoVisibility = CredentialStatus.VisibilityLevel.Public;
@@ -59,7 +58,6 @@ const validEnv = {
   CRED_STATUS_CLIENT_TYPE: credStatusClientType,
   CRED_STATUS_CLIENT_ACCESS_TOKEN: credStatusClientAccessToken,
   CRED_STATUS_REPO_NAME: credStatusRepoName,
-  CRED_STATUS_REPO_ID: credStatusRepoId,
   CRED_STATUS_REPO_ORG_NAME: credStatusRepoOrgName,
   CRED_STATUS_REPO_ORG_ID: credStatusRepoOrgId,
   CRED_STATUS_REPO_VISIBILITY: credStatusRepoVisibility,
