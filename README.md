@@ -20,7 +20,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 - \*`CRED_STATUS_REPO_NAME`: name of credential status repo (required - necessary for delegated hosting of credential status/revocation management)
 - `CRED_STATUS_REPO_ORG_NAME`: name of org in source control service that owns credential status/revocation management repo (required - necessary for delegated hosting of credential status/revocation management)
 - \*`CRED_STATUS_REPO_VISIBILITY`: level of visibility of credential status/revocation management repo (optional, default: `public`)
-- \*`CRED_STATUS_CLIENT`: credential status management client (optional, default: `github`)
+- \*`CRED_STATUS_CLIENT_TYPE`: credential status management client type (optional, default: `github`)
 - `DID_WEB_URL`: the url used to generate `did:web` document and keys for issuer (optional, default: `undefined`)
 - `PORT`: the port the web service will bind to (optional, default: `5000`)
 - `DIGEST_CHECK`: set to `true` to enable `Digest` header verification (optional, default: `false`)
@@ -71,7 +71,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 - `private`: Private repositories are only accessible to you, people you explicitly share access with, and, for organization repositories, certain organization members.
 - `internal`: Internal repositories are accessible to all enterprise members.
 
-\*NOTE: `CRED_STATUS_CLIENT` accepts the following values:
+\*NOTE: `CRED_STATUS_CLIENT_TYPE` accepts the following values:
 - `github`: manages credential status at GitHub
 - `gitlab`: manages credential status at GitLab
 - `internal`: manages credential status at the same service that is hosting your organization’s instance of *sign-and-verify*

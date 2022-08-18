@@ -37,10 +37,9 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   // Check if status repo exists
   async statusRepoExists(): Promise<boolean> {
     const repos = await this.client.repos.listForAuthenticatedUser();
-    const credStatusRepoExists = repos.data.some((repo) => {
+    return repos.data.some((repo) => {
       return repo.name === this.credStatusRepoName;
     });
-    return credStatusRepoExists;
   }
 
   // Create status repo
@@ -56,7 +55,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   // Create data in config file
   async createConfigData(data: any) {
     const timestamp = (new Date()).toISOString();
-    const message = `[${timestamp}]: updated status credential config`;
+    const message = `[${timestamp}]: created status credential config`;
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
     await this.client.repos.createOrUpdateFileContents({
       owner: this.credStatusRepoOrgName,
@@ -103,7 +102,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   // Create data in log file
   async createLogData(data: any) {
     const timestamp = (new Date()).toISOString();
-    const message = `[${timestamp}]: updated status log`;
+    const message = `[${timestamp}]: created status log`;
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
     await this.client.repos.createOrUpdateFileContents({
       owner: this.credStatusRepoOrgName,
@@ -152,7 +151,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
     const configData = await this.readConfigData();
     const { latestList } = configData;
     const timestamp = (new Date()).toISOString();
-    const message = `[${timestamp}]: updated status credential`;
+    const message = `[${timestamp}]: created status credential`;
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
     await this.client.repos.createOrUpdateFileContents({
       owner: this.credStatusRepoOrgName,

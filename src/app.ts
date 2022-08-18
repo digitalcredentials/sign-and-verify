@@ -16,13 +16,16 @@ import { v4 as uuidv4 } from 'uuid';
 import LRU from 'lru-cache';
 import { composeCredential } from './templates/Certificate';
 import {
+  BaseCredentialStatusClient,
   composeStatusCredential,
   CredentialAction,
+  CredentialStatusClientType,
   CredentialStatusConfig,
   CredentialStatusLogEntry,
   CREDENTIAL_STATUS_FOLDER,
 } from './credential-status';
 import { GithubCredentialStatusClient } from './credential-status-github';
+import { GitlabCredentialStatusClient } from './credential-status-gitlab';
 
 const cryptoLd = new CryptoLD();
 cryptoLd.use(Ed25519VerificationKey2020);
@@ -98,8 +101,11 @@ export async function build(opts = {}) {
     didWebUrl,
     demoIssuerMethod,
     issuerMembershipRegistryUrl,
+    credStatusClientType,
     credStatusRepoName,
+    credStatusRepoId,
     credStatusRepoOrgName,
+    credStatusRepoOrgId,
     credStatusRepoVisibility,
     credStatusClientAccessToken,
   } = getConfig();
@@ -145,7 +151,26 @@ export async function build(opts = {}) {
   });
 
   // Setup the credential status client
-  const credStatusClient = new GithubCredentialStatusClient({ credStatusRepoName, credStatusRepoOrgName, credStatusRepoVisibility, credStatusClientAccessToken });
+  let credStatusClient: BaseCredentialStatusClient;
+  switch (credStatusClientType) {
+    case CredentialStatusClientType.Gitlab:
+      credStatusClient = new GitlabCredentialStatusClient({
+        credStatusRepoName,
+        credStatusRepoId,
+        credStatusRepoOrgName,
+        credStatusRepoOrgId,
+        credStatusRepoVisibility,
+        credStatusClientAccessToken
+      });
+    case CredentialStatusClientType.Github:
+    default:
+      credStatusClient = new GithubCredentialStatusClient({
+        credStatusRepoName,
+        credStatusRepoOrgName,
+        credStatusRepoVisibility,
+        credStatusClientAccessToken
+      });
+  }
 
   // Setup status credential
   const credentialStatusUrl = credStatusClient.getCredentialStatusUrl();

@@ -3,7 +3,7 @@ import { createSandbox } from 'sinon';
 import 'mocha';
 
 import { parseConfig, getConfig, resetConfig, Config } from '../config';
-import { CredentialStatusClient, VisibilityLevel } from '../credential-status';
+import { CredentialStatusClientType, VisibilityLevel } from '../credential-status';
 import { ConfigurationError } from '../errors';
 import { AuthType } from '../issuer';
 
@@ -15,10 +15,12 @@ const didWebUrl = "https://vc-issuer.example.com";
 const vcApiIssuerUrl = "https://vc-issuer.example.com";
 const oidcIssuerUrl = "https://oidc-issuer.example.com";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
-const credStatusClient = CredentialStatusClient.Github;
+const credStatusClientType = CredentialStatusClientType.Github;
 const credStatusClientAccessToken = "abc";
 const credStatusRepoName = "credential-status";
+const credStatusRepoId = "12345678";
 const credStatusRepoOrgName = "university-xyz";
+const credStatusRepoOrgId = "87654321";
 const credStatusRepoVisibility = VisibilityLevel.Public;
 const expectedConfig: Config = {
   port: 5000,
@@ -28,10 +30,12 @@ const expectedConfig: Config = {
   vcApiIssuerUrl,
   oidcIssuerUrl,
   issuerMembershipRegistryUrl,
-  credStatusClient,
+  credStatusClientType,
   credStatusClientAccessToken,
   credStatusRepoName,
+  credStatusRepoId,
   credStatusRepoOrgName,
+  credStatusRepoOrgId,
   credStatusRepoVisibility,
   hmacSecret: null,
   hmacRequiredHeaders: ["date", "digest"],
@@ -46,10 +50,12 @@ const validEnv = {
   URL: vcApiIssuerUrl,
   OIDC_ISSUER_URL: oidcIssuerUrl,
   ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl,
-  CRED_STATUS_CLIENT: credStatusClient,
+  CRED_STATUS_CLIENT_TYPE: credStatusClientType,
   CRED_STATUS_CLIENT_ACCESS_TOKEN: credStatusClientAccessToken,
   CRED_STATUS_REPO_NAME: credStatusRepoName,
+  CRED_STATUS_REPO_ID: credStatusRepoId,
   CRED_STATUS_REPO_ORG_NAME: credStatusRepoOrgName,
+  CRED_STATUS_REPO_ORG_ID: credStatusRepoOrgId,
   CRED_STATUS_REPO_VISIBILITY: credStatusRepoVisibility
 };
 

@@ -8,7 +8,7 @@ export const CREDENTIAL_STATUS_FOLDER = 'credentials/status';
 export const CREDENTIAL_STATUS_CONFIG_FILE = 'config.json';
 export const CREDENTIAL_STATUS_LOG_FILE = 'log.json';
 
-export enum CredentialStatusClient {
+export enum CredentialStatusClientType {
   Github = 'github',
   Gitlab = 'gitlab',
   Internal = 'internal'
