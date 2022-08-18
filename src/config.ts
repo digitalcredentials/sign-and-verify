@@ -42,8 +42,10 @@ export function parseConfig(): Config {
   switch (process.env.CRED_STATUS_CLIENT_TYPE as CredentialStatusClientType) {
     case CredentialStatusClientType.Gitlab:
       assureGitlabClientConfigured();
+      break;
     case CredentialStatusClientType.Github:
       assureGithubClientConfigured();
+      break;
   }
 
   return Object.freeze({

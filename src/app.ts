@@ -160,6 +160,7 @@ export async function build(opts = {}) {
         credStatusRepoVisibility,
         credStatusClientAccessToken
       });
+      break;
     case CredentialStatusClientType.Github:
     default:
       credStatusClient = new GithubCredentialStatusClient({
