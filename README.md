@@ -49,7 +49,8 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 \*NOTE: the `DID_SEED` included as an example is just for your reference. Do not check in production did seeds, private keys, or the equivalent.
 
 \*NOTE: Here are the steps for retrieving a valid value for `CRED_STATUS_CLIENT_ACCESS_TOKEN` (Please reserve this step for after you have run `npm run setup` or `yarn setup` per the instructions below):
-### GitHub
+
+**GitHub**
 1. Login to GitHub as an authorized member of the organization
 2. Click on your profile dropdown icon in the top-right corner of the screen
 3. Select the *Settings* tab
@@ -63,7 +64,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 11. Copy the generated token
 12. \*Save the token from the previous step as the `CRED_STATUS_CLIENT_ACCESS_TOKEN` environment variable at the service that is hosting your organization’s instance of `sign-and-verify`
 
-### GitLab
+**GitLab**
 1. Login to GitLab as an authorized member of the group
 2. Click on your profile dropdown icon in the top-right corner of the screen
 3. Select the *Preferences* tab
