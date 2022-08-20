@@ -141,6 +141,9 @@ export abstract class BaseCredentialStatusClient {
   // Create status repo
   abstract createStatusRepo(): Promise<void>;
 
+  // Sync status repo state
+  async syncStatusRepoState(): Promise<void> {};
+
   // Create data in config file
   abstract createConfigData(data: any): Promise<void>;
 

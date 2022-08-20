@@ -202,6 +202,9 @@ export async function build(opts = {}) {
 
     // Setup credential status website
     await credStatusClient.setupCredentialStatusWebsite();
+  } else {
+    // Sync status repo state
+    await credStatusClient.syncStatusRepoState();
   }
 
   server.register(require('fastify-cors'), {});

@@ -128,8 +128,8 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
     await this.client.post(this.commitsEndpoint(), websiteRequestConfig);
   }
 
-  // Check if status repo exists
-  async statusRepoExists(): Promise<boolean> {
+  // Retrieve list of repos in org
+  async getReposInOrg(): Promise<any[]> {
     const repoRequestConfig = {
       params: {
         owned: true,
@@ -137,7 +137,13 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
       }
     };
     const repos = await this.client.get(this.reposInOrgEndpoint(), repoRequestConfig);
-    return repos.data.some((repo) => {
+    return repos.data as any[];
+  }
+
+  // Check if status repo exists
+  async statusRepoExists(): Promise<boolean> {
+    const repos = await this.getReposInOrg();
+    return repos.some((repo) => {
       return repo.name === this.credStatusRepoName;
     });
   }
@@ -148,10 +154,20 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
       name: this.credStatusRepoName,
       namespace_id: this.credStatusRepoOrgId,
       visibility: this.credStatusRepoVisibility,
+      pages_access_level: 'public',
       description: 'Manages credential status for instance of VC-API'
     };
-    const repoResponse = await this.client.post(this.reposEndpoint(), repoRequestConfig);
-    this.credStatusRepoId = repoResponse.data.id;
+    const repoResponse = (await this.client.post(this.reposEndpoint(), repoRequestConfig)).data;
+    this.credStatusRepoId = repoResponse.id;
+  }
+
+  // Sync status repo state
+  async syncStatusRepoState(): Promise<void> {
+    const repos = await this.getReposInOrg();
+    const repoOrg = repos.find((repo) => {
+      return repo.name === this.credStatusRepoName;
+    });
+    this.credStatusRepoId = repoOrg.id;
   }
 
   // Create data in config file

@@ -50,8 +50,8 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
 
   // Check if status repo exists
   async statusRepoExists(): Promise<boolean> {
-    const repos = await this.client.repos.listForAuthenticatedUser();
-    return repos.data.some((repo) => {
+    const repos = (await this.client.repos.listForAuthenticatedUser()).data;
+    return repos.some((repo) => {
       return repo.name === this.credStatusRepoName;
     });
   }
