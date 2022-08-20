@@ -49,17 +49,31 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 \*NOTE: the `DID_SEED` included as an example is just for your reference. Do not check in production did seeds, private keys, or the equivalent.
 
 \*NOTE: Here are the steps for retrieving a valid value for `CRED_STATUS_CLIENT_ACCESS_TOKEN` (Please reserve this step for after you have run `npm run setup` or `yarn setup` per the instructions below):
-1. Retrieve access token for GitHub API
-2. Login to GitHub as an authorized member of the organization
-3. Click on your profile dropdown icon in the top-right corner of the screen
-4. Select the *Settings* tab
-5. Select the *Developer settings* tab toward the bottom of the left navigation bar
-6. Select the *Personal access tokens* tab
-7. Click *Generate a new token*
-8. Select the full *repo* scope
-9. Click *Generate token*
-10. Copy the generated token
-11. \*Save the token from the previous step as the `CRED_STATUS_CLIENT_ACCESS_TOKEN` environment variable at the service that is hosting your organization’s instance of *sign-and-verify*
+### GitHub
+1. Login to GitHub as an authorized member of the organization
+2. Click on your profile dropdown icon in the top-right corner of the screen
+3. Select the *Settings* tab
+4. Select the *Developer settings* tab toward the bottom of the left navigation bar
+5. Select the *Personal access tokens* tab
+6. Click the *Generate a new token* button
+7. Enter the name for access token
+8. Select the expiration date for access token
+9. Select the full *repo* scope
+10. Click the *Generate token* button
+11. Copy the generated token
+12. \*Save the token from the previous step as the `CRED_STATUS_CLIENT_ACCESS_TOKEN` environment variable at the service that is hosting your organization’s instance of `sign-and-verify`
+
+### GitLab
+1. Login to GitLab as an authorized member of the group
+2. Click on your profile dropdown icon in the top-right corner of the screen
+3. Select the *Preferences* tab
+4. Select the *Access Tokens* tab in the left navigation bar
+5. Enter the name for access token
+6. Select the expiration date for access token
+7. Select the *api* scope
+8. Click the *Create personal access token* button
+9. Copy the generated token
+10. \*Save the token from the previous step as the `CRED_STATUS_CLIENT_ACCESS_TOKEN` environment variable at the service that is hosting your organization’s instance of `sign-and-verify`
 
 \*NOTE: `CRED_STATUS_REPO_NAME`, the designated credential status repo, will automatically be generated after running `npm run start` or `yarn start`, per the instructions below.
 
@@ -71,7 +85,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 \*NOTE: `CRED_STATUS_CLIENT_TYPE` accepts the following values:
 - `github`: manages credential status at GitHub
 - `gitlab`: manages credential status at GitLab
-- `internal`: manages credential status at the same service that is hosting your organization’s instance of *sign-and-verify*
+- `internal`: manages credential status at the same service that is hosting your organization’s instance of `sign-and-verify`
 
 \*NOTE: Here are some important points on credential status management to consider in a live deployment:
 - According to [this GitHub Pages resource](https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages): *GitHub Pages is available in public repositories with GitHub Free and GitHub Free for organizations, and in public and private repositories with GitHub Pro, GitHub Team, GitHub Enterprise Cloud, and GitHub Enterprise Server. For more information, see "[GitHub's products](https://docs.github.com/en/get-started/learning-about-github/githubs-products)."*
