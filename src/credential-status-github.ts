@@ -2,12 +2,14 @@ import { Octokit } from '@octokit/rest';
 import {
   CREDENTIAL_STATUS_CONFIG_FILE,
   CREDENTIAL_STATUS_LOG_FILE,
+  CREDENTIAL_STATUS_REPO_BRANCH_NAME,
   BaseCredentialStatusClient,
   VisibilityLevel,
   decodeSystemData,
   encodeAsciiAsBase64,
 } from './credential-status';
 
+// Type definition for GithubCredentialStatusClient constructor method
 export type GithubCredentialStatusClientParameters = {
   credStatusRepoName: string;
   credStatusRepoOrgName: string;
@@ -15,6 +17,7 @@ export type GithubCredentialStatusClientParameters = {
   credStatusClientAccessToken: string;
 };
 
+// Implementation of BaseCredentialStatusClient for GitHub
 export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   private credStatusRepoName: string;
   private credStatusRepoOrgName: string;
@@ -32,6 +35,17 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   // Get credential status url
   getCredentialStatusUrl(): string {
     return `https://${this.credStatusRepoOrgName}.github.io/${this.credStatusRepoName}`;
+  }
+
+  // Setup website to host credential status management resources
+  async setupCredentialStatusWebsite(): Promise<void> {
+    const timestamp = (new Date()).toISOString();
+    const message = `[${timestamp}]: setup status website`;
+    await this.client.repos.createPagesSite({
+      owner: this.credStatusRepoOrgName,
+      repo: this.credStatusRepoName,
+      source: { branch: CREDENTIAL_STATUS_REPO_BRANCH_NAME }
+    });
   }
 
   // Check if status repo exists
@@ -60,6 +74,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
     await this.client.repos.createOrUpdateFileContents({
       owner: this.credStatusRepoOrgName,
       repo: this.credStatusRepoName,
+      branch: CREDENTIAL_STATUS_REPO_BRANCH_NAME,
       path: CREDENTIAL_STATUS_CONFIG_FILE,
       message,
       content
@@ -107,6 +122,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
     await this.client.repos.createOrUpdateFileContents({
       owner: this.credStatusRepoOrgName,
       repo: this.credStatusRepoName,
+      branch: CREDENTIAL_STATUS_REPO_BRANCH_NAME,
       path: CREDENTIAL_STATUS_LOG_FILE,
       message,
       content
@@ -156,6 +172,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
     await this.client.repos.createOrUpdateFileContents({
       owner: this.credStatusRepoOrgName,
       repo: this.credStatusRepoName,
+      branch: CREDENTIAL_STATUS_REPO_BRANCH_NAME,
       path: latestList,
       message,
       content

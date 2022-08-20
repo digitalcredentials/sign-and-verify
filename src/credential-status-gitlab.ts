@@ -2,6 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 import {
   CREDENTIAL_STATUS_CONFIG_FILE,
   CREDENTIAL_STATUS_LOG_FILE,
+  CREDENTIAL_STATUS_REPO_BRANCH_NAME,
   BaseCredentialStatusClient,
   VisibilityLevel,
   decodeSystemData,
@@ -9,7 +10,6 @@ import {
 
 const CREDENTIAL_STATUS_CONFIG_PATH_ENCODED = encodeURIComponent(CREDENTIAL_STATUS_CONFIG_FILE);
 const CREDENTIAL_STATUS_LOG_PATH_ENCODED = encodeURIComponent(CREDENTIAL_STATUS_LOG_FILE);
-const CREDENTIAL_STATUS_BRANCH_NAME = 'main';
 
 const CREDENTIAL_STATUS_WEBSITE_HOME_PAGE_PATH = 'index.html';
 const CREDENTIAL_STATUS_WEBSITE_HOME_PAGE =
@@ -41,6 +41,7 @@ const CREDENTIAL_STATUS_WEBSITE_GEMFILE =
 
 gem "jekyll"`;
 
+// Type definition for GitlabCredentialStatusClient constructor method
 export type GitlabCredentialStatusClientParameters = {
   credStatusRepoName: string;
   credStatusRepoOrgName: string;
@@ -49,6 +50,7 @@ export type GitlabCredentialStatusClientParameters = {
   credStatusClientAccessToken: string;
 };
 
+// Implementation of BaseCredentialStatusClient for GitLab
 export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
   private credStatusRepoName: string;
   private credStatusRepoId: string;
@@ -93,12 +95,17 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
     return `/projects/${this.credStatusRepoId}/repository/commits`;
   }
 
-  // Setup GitLab Pages website to host credential status management resources
-  async setupCredentialStatusWebsite() {
+  // Get credential status url
+  getCredentialStatusUrl(): string {
+    return `https://${this.credStatusRepoOrgName}.gitlab.io/${this.credStatusRepoName}`;
+  }
+
+  // Setup website to host credential status management resources
+  async setupCredentialStatusWebsite(): Promise<void> {
     const timestamp = (new Date()).toISOString();
     const message = `[${timestamp}]: setup status website`;
     const websiteRequestConfig = {
-      branch: CREDENTIAL_STATUS_BRANCH_NAME,
+      branch: CREDENTIAL_STATUS_REPO_BRANCH_NAME,
       commit_message: message,
       actions: [
         {
@@ -119,11 +126,6 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
       ]
     };
     await this.client.post(this.commitsEndpoint(), websiteRequestConfig);
-  }
-
-  // Get credential status url
-  getCredentialStatusUrl(): string {
-    return `https://${this.credStatusRepoOrgName}.gitlab.io/${this.credStatusRepoName}`;
   }
 
   // Check if status repo exists
@@ -150,7 +152,6 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
     };
     const repoResponse = await this.client.post(this.reposEndpoint(), repoRequestConfig);
     this.credStatusRepoId = repoResponse.data.id;
-    await this.setupCredentialStatusWebsite();
   }
 
   // Create data in config file
@@ -159,7 +160,7 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
     const message = `[${timestamp}]: created status credential config`;
     const content = JSON.stringify(data, null, 2);
     const configRequestConfig = {
-      branch: CREDENTIAL_STATUS_BRANCH_NAME,
+      branch: CREDENTIAL_STATUS_REPO_BRANCH_NAME,
       commit_message: message,
       content
     };
@@ -170,7 +171,7 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
   async readConfigResponse(): Promise<any> {
     const configRequestConfig = {
       params: {
-        ref: CREDENTIAL_STATUS_BRANCH_NAME
+        ref: CREDENTIAL_STATUS_REPO_BRANCH_NAME
       }
     };
     const configResponse = await this.client.get(this.filesEndpoint(CREDENTIAL_STATUS_CONFIG_PATH_ENCODED), configRequestConfig);
@@ -189,7 +190,7 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
     const message = `[${timestamp}]: updated status credential config`;
     const content = JSON.stringify(data, null, 2);
     const configRequestConfig = {
-      branch: CREDENTIAL_STATUS_BRANCH_NAME,
+      branch: CREDENTIAL_STATUS_REPO_BRANCH_NAME,
       commit_message: message,
       content
     };
@@ -202,7 +203,7 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
     const message = `[${timestamp}]: created status log`;
     const content = JSON.stringify(data, null, 2);
     const logRequestConfig = {
-      branch: CREDENTIAL_STATUS_BRANCH_NAME,
+      branch: CREDENTIAL_STATUS_REPO_BRANCH_NAME,
       commit_message: message,
       content
     };
@@ -213,7 +214,7 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
   async readLogResponse(): Promise<any> {
     const logRequestConfig = {
       params: {
-        ref: CREDENTIAL_STATUS_BRANCH_NAME
+        ref: CREDENTIAL_STATUS_REPO_BRANCH_NAME
       }
     };
     const logResponse = await this.client.get(this.filesEndpoint(CREDENTIAL_STATUS_LOG_PATH_ENCODED), logRequestConfig);
@@ -232,7 +233,7 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
     const message = `[${timestamp}]: updated status log`;
     const content = JSON.stringify(data, null, 2);
     const logRequestConfig = {
-      branch: CREDENTIAL_STATUS_BRANCH_NAME,
+      branch: CREDENTIAL_STATUS_REPO_BRANCH_NAME,
       commit_message: message,
       content
     };
@@ -247,7 +248,7 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
     const message = `[${timestamp}]: created status credential`;
     const content = JSON.stringify(data, null, 2);
     const statusRequestConfig = {
-      branch: CREDENTIAL_STATUS_BRANCH_NAME,
+      branch: CREDENTIAL_STATUS_REPO_BRANCH_NAME,
       commit_message: message,
       content
     };
@@ -261,7 +262,7 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
     const { latestList } = configData;
     const statusRequestConfig = {
       params: {
-        ref: CREDENTIAL_STATUS_BRANCH_NAME
+        ref: CREDENTIAL_STATUS_REPO_BRANCH_NAME
       }
     };
     const statusPath = encodeURIComponent(latestList);
@@ -283,7 +284,7 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
     const message = `[${timestamp}]: updated status credential`;
     const content = JSON.stringify(data, null, 2);
     const statusRequestConfig = {
-      branch: CREDENTIAL_STATUS_BRANCH_NAME,
+      branch: CREDENTIAL_STATUS_REPO_BRANCH_NAME,
       commit_message: message,
       content
     };

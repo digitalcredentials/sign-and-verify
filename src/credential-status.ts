@@ -3,17 +3,26 @@ import { CONTEXT_URL_V1 } from '@digitalbazaar/vc-status-list-context';
 
 // Number of credentials tracked in a list
 const CREDENTIAL_STATUS_LIST_SIZE = 100000;
+
+// Credential status type
 const CREDENTIAL_STATUS_TYPE = 'StatusList2021Entry';
+
+// Name of credential status branch
+export const CREDENTIAL_STATUS_REPO_BRANCH_NAME = 'main';
+
+// Credential status resource names
 export const CREDENTIAL_STATUS_FOLDER = 'credentials/status';
 export const CREDENTIAL_STATUS_CONFIG_FILE = 'config.json';
 export const CREDENTIAL_STATUS_LOG_FILE = 'log.json';
 
+// Type of credential status client
 export enum CredentialStatusClientType {
   Github = 'github',
   Gitlab = 'gitlab',
   Internal = 'internal'
 }
 
+// Level of visibility of credential status management repo
 export enum VisibilityLevel {
   Public = 'public',
   Private = 'private',
@@ -33,11 +42,13 @@ export enum CredentialAction {
   Revoked = 'revoked'
 }
 
+// Type definition for credential status config file
 export type CredentialStatusConfig = {
   credentialsIssued: number;
   latestList: string;
 };
 
+// Type definition for credential status log entry
 export type CredentialStatusLogEntry = {
   timestamp: string;
   credentialId?: string;
@@ -49,6 +60,7 @@ export type CredentialStatusLogEntry = {
   statusListIndex: number;
 };
 
+// Type definition for composeStatusCredential function input
 type ComposeStatusCredentialParameters = {
   issuerDid: string;
   credentialId: string;
@@ -56,16 +68,19 @@ type ComposeStatusCredentialParameters = {
   statusPurpose?: string;
 };
 
+// Type definition for embedCredentialStatus method input
 type EmbedCredentialStatusParameters = {
   credential: any;
   statusPurpose?: string;
 };
 
+// Type definition for embedCredentialStatus method output
 type EmbedCredentialStatusResult = {
   credential: any;
   newList: string | undefined;
 };
 
+// Base class for credential status clients
 export abstract class BaseCredentialStatusClient {
   // Generate new status list ID
   generateStatusListId(): string {
@@ -116,6 +131,9 @@ export abstract class BaseCredentialStatusClient {
 
   // Get credential status url
   abstract getCredentialStatusUrl(): string;
+
+  // Setup website to host credential status management resources
+  async setupCredentialStatusWebsite(): Promise<void> {};
 
   // Check if status repo exists
   abstract statusRepoExists(): Promise<boolean>;

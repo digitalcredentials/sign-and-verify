@@ -175,7 +175,7 @@ export async function build(opts = {}) {
   const credentialStatusUrl = credStatusClient.getCredentialStatusUrl();
   const repoExists = await credStatusClient.statusRepoExists();
   if (!repoExists) {
-    // Create status directory
+    // Create status repo
     await credStatusClient.createStatusRepo();
 
     // Create and persist status config
@@ -199,6 +199,9 @@ export async function build(opts = {}) {
 
     // Create and persist status data
     await credStatusClient.createStatusData(statusCredentialData);
+
+    // Setup credential status website
+    await credStatusClient.setupCredentialStatusWebsite();
   }
 
   server.register(require('fastify-cors'), {});

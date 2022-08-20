@@ -230,6 +230,9 @@ class MockGithubCredentialStatusClient extends GithubCredentialStatus.GithubCred
     return statusListId;
   }
 
+  // Setup website to host credential status management resources
+  async setupCredentialStatusWebsite(): Promise<void> {};
+
   // Check if status repo exists
   async statusRepoExists(): Promise<boolean> {
     return false;
