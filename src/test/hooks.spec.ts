@@ -15,8 +15,8 @@ const sandbox = createSandbox();
 const validEnv = {
   AUTH_TYPE: AuthType.OidcToken,
   DID_SEED: "DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2",
-  URL: "https://vc-issuer.example.com",
   OIDC_ISSUER_URL: "https://oidc-issuer.example.com",
+  VC_API_ISSUER_URL_HOST: "vc-issuer.example.com",
   DIGEST_CHECK: "true",
   HMAC_SECRET: "secret"
 };

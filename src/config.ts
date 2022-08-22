@@ -8,8 +8,9 @@ export type Config = {
   authType: AuthType;
   didSeed: string;
   didWebUrl: string | undefined;
-  vcApiIssuerUrl: string;
   oidcIssuerUrl: string | undefined;
+  vcApiIssuerUrlHost: string;
+  vcApiIssuerUrlProtocol: string;
   issuerMembershipRegistryUrl: string;
   credStatusClientType: CredentialStatusClientType;
   credStatusClientAccessToken: string;
@@ -33,18 +34,18 @@ export function parseConfig(): Config {
   if (!process.env.DID_SEED) {
     throw new ConfigurationError("Environment variable 'DID_SEED' is not set");
   }
-  if (!process.env.URL) {
-    throw new ConfigurationError("Environment variable 'URL' is not set");
+  if (!process.env.VC_API_ISSUER_URL_HOST) {
+    throw new ConfigurationError("Environment variable 'VC_API_ISSUER_URL_HOST' is not set");
   }
   if (!process.env.OIDC_ISSUER_URL) {
     throw new ConfigurationError("Environment variable 'OIDC_ISSUER_URL' is not set");
   }
   switch (process.env.CRED_STATUS_CLIENT_TYPE as CredentialStatusClientType) {
-    case CredentialStatusClientType.Gitlab:
-      assureGitlabClientConfigured();
-      break;
     case CredentialStatusClientType.Github:
       assureGithubClientConfigured();
+      break;
+    case CredentialStatusClientType.Gitlab:
+      assureGitlabClientConfigured();
       break;
   }
 
@@ -53,8 +54,9 @@ export function parseConfig(): Config {
     authType: process.env.AUTH_TYPE as AuthType,
     didSeed: process.env.DID_SEED,
     didWebUrl: process.env.DID_WEB_URL,
-    vcApiIssuerUrl: process.env.URL,
     oidcIssuerUrl: process.env.OIDC_ISSUER_URL,
+    vcApiIssuerUrlHost: process.env.VC_API_ISSUER_URL_HOST,
+    vcApiIssuerUrlProtocol: process.env.VC_API_ISSUER_URL_PROTOCOL || 'https',
     issuerMembershipRegistryUrl: process.env.ISSUER_MEMBERSHIP_REGISTRY_URL || 'https://digitalcredentials.github.io/issuer-registry/registry.json',
     credStatusClientType: process.env.CRED_STATUS_CLIENT_TYPE as CredentialStatusClientType || CredentialStatusClientType.Github,
     credStatusClientAccessToken: process.env.CRED_STATUS_CLIENT_ACCESS_TOKEN || '',

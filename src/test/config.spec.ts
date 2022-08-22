@@ -12,8 +12,9 @@ const sandbox = createSandbox();
 const authType = AuthType.OidcToken;
 const didSeed = "DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2";
 const didWebUrl = "https://vc-issuer.example.com";
-const vcApiIssuerUrl = "https://vc-issuer.example.com";
 const oidcIssuerUrl = "https://oidc-issuer.example.com";
+const vcApiIssuerUrlHost = "vc-issuer.example.com";
+const vcApiIssuerUrlProtocol = "https";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
 const credStatusClientType = CredentialStatusClientType.Github;
 const credStatusClientAccessToken = "abc";
@@ -26,8 +27,9 @@ const expectedConfig: Config = {
   authType,
   didSeed,
   didWebUrl,
-  vcApiIssuerUrl,
   oidcIssuerUrl,
+  vcApiIssuerUrlHost,
+  vcApiIssuerUrlProtocol,
   issuerMembershipRegistryUrl,
   credStatusClientType,
   credStatusClientAccessToken,
@@ -45,8 +47,9 @@ const validEnv = {
   AUTH_TYPE: authType,
   DID_SEED: didSeed,
   DID_WEB_URL: didWebUrl,
-  URL: vcApiIssuerUrl,
   OIDC_ISSUER_URL: oidcIssuerUrl,
+  VC_API_ISSUER_URL_HOST: vcApiIssuerUrlHost,
+  VC_API_ISSUER_URL_PROTOCOL: vcApiIssuerUrlProtocol,
   ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl,
   CRED_STATUS_CLIENT_TYPE: credStatusClientType,
   CRED_STATUS_CLIENT_ACCESS_TOKEN: credStatusClientAccessToken,
@@ -159,11 +162,11 @@ describe("config", () => {
 
     it("should throw an exception if env.URL isn't set", () => {
       sandbox.stub(process, "env").value({ AUTH_TYPE: authType, DID_SEED: didSeed });
-      assert.throws(parseConfig, ConfigurationError, "Environment variable 'URL' is not set");
+      assert.throws(parseConfig, ConfigurationError, "Environment variable 'VC_API_ISSUER_URL_HOST' is not set");
     });
 
     it("should throw an exception if env.OIDC_ISSUER_URL isn't set", () => {
-      sandbox.stub(process, "env").value({ AUTH_TYPE: authType, DID_SEED: didSeed, URL: vcApiIssuerUrl });
+      sandbox.stub(process, "env").value({ AUTH_TYPE: authType, DID_SEED: didSeed, VC_API_ISSUER_URL_HOST: vcApiIssuerUrlHost });
       assert.throws(parseConfig, ConfigurationError, "Environment variable 'OIDC_ISSUER_URL' is not set");
     });
   });

@@ -11,7 +11,6 @@ const CREDENTIAL_STATUS_TYPE = 'StatusList2021Entry';
 export const CREDENTIAL_STATUS_REPO_BRANCH_NAME = 'main';
 
 // Credential status resource names
-export const CREDENTIAL_STATUS_FOLDER = 'credentials/status';
 export const CREDENTIAL_STATUS_CONFIG_FILE = 'config.json';
 export const CREDENTIAL_STATUS_LOG_FILE = 'log.json';
 

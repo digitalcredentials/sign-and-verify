@@ -1,6 +1,6 @@
+import axios from 'axios';
 import fastify from 'fastify';
 import fastifyRawBody from 'fastify-raw-body';
-import axios from 'axios';
 import fastifySensible from 'fastify-sensible';
 import { createIssuer, createVerifier, DIDDocument } from '@digitalcredentials/sign-and-verify-core';
 import { Ed25519VerificationKey2020 } from '@digitalcredentials/ed25519-verification-key-2020';
@@ -22,10 +22,10 @@ import {
   CredentialStatusClientType,
   CredentialStatusConfig,
   CredentialStatusLogEntry,
-  CREDENTIAL_STATUS_FOLDER,
 } from './credential-status';
 import { GithubCredentialStatusClient } from './credential-status-github';
 import { GitlabCredentialStatusClient } from './credential-status-gitlab';
+import { CREDENTIAL_STATUS_FOLDER, InternalCredentialStatusClient } from './credential-status-internal';
 
 const cryptoLd = new CryptoLD();
 cryptoLd.use(Ed25519VerificationKey2020);
@@ -99,6 +99,8 @@ export async function build(opts = {}) {
     authType,
     didSeed,
     didWebUrl,
+    vcApiIssuerUrlHost,
+    vcApiIssuerUrlProtocol,
     demoIssuerMethod,
     issuerMembershipRegistryUrl,
     credStatusClientType,
@@ -152,6 +154,14 @@ export async function build(opts = {}) {
   // Setup the credential status client
   let credStatusClient: BaseCredentialStatusClient;
   switch (credStatusClientType) {
+    case CredentialStatusClientType.Github:
+      credStatusClient = new GithubCredentialStatusClient({
+        credStatusRepoName,
+        credStatusRepoOrgName,
+        credStatusRepoVisibility,
+        credStatusClientAccessToken
+      });
+      break;
     case CredentialStatusClientType.Gitlab:
       credStatusClient = new GitlabCredentialStatusClient({
         credStatusRepoName,
@@ -161,14 +171,9 @@ export async function build(opts = {}) {
         credStatusClientAccessToken
       });
       break;
-    case CredentialStatusClientType.Github:
-    default:
-      credStatusClient = new GithubCredentialStatusClient({
-        credStatusRepoName,
-        credStatusRepoOrgName,
-        credStatusRepoVisibility,
-        credStatusClientAccessToken
-      });
+    case CredentialStatusClientType.Internal:
+      credStatusClient = new InternalCredentialStatusClient({ vcApiIssuerUrlHost, vcApiIssuerUrlProtocol });
+      break;
   }
 
   // Setup status credential

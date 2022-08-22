@@ -39,8 +39,9 @@ lruStub.set.returns(true);
 const authType = IssuerHelper.AuthType.OidcToken;
 const didSeed = "DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2";
 const didWebUrl = "https://vc-issuer.example.com";
-const vcApiIssuerUrl = "https://vc-issuer.example.com";
 const oidcIssuerUrl = "https://oidc-issuer.example.com";
+const vcApiIssuerUrlHost = "vc-issuer.example.com";
+const vcApiIssuerUrlProtocol = "https";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
 const credStatusClientType = CredentialStatus.CredentialStatusClientType.Github;
 const credStatusClientAccessToken = "abc";
@@ -52,8 +53,9 @@ const validEnv = {
   AUTH_TYPE: authType,
   DID_SEED: didSeed,
   DID_WEB_URL: didWebUrl,
-  URL: vcApiIssuerUrl,
   OIDC_ISSUER_URL: oidcIssuerUrl,
+  VC_API_ISSUER_URL_HOST: vcApiIssuerUrlHost,
+  VC_API_ISSUER_URL_PROTOCOL: vcApiIssuerUrlProtocol,
   ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl,
   CRED_STATUS_CLIENT_TYPE: credStatusClientType,
   CRED_STATUS_CLIENT_ACCESS_TOKEN: credStatusClientAccessToken,
@@ -239,12 +241,10 @@ class MockGithubCredentialStatusClient extends GithubCredentialStatus.GithubCred
   }
 
   // Create status repo
-  async createStatusRepo() {
-    return;
-  }
+  async createStatusRepo(): Promise<void> {}
 
   // Create data in config file
-  async createConfigData(data: any) {
+  async createConfigData(data: any): Promise<void> {
     this.statusConfig = data;
   }
 
@@ -254,12 +254,12 @@ class MockGithubCredentialStatusClient extends GithubCredentialStatus.GithubCred
   }
 
   // Update data in config file
-  async updateConfigData(data: any) {
+  async updateConfigData(data: any): Promise<void> {
     this.statusConfig = data;
   }
 
   // Create data in log file
-  async createLogData(data: any) {
+  async createLogData(data: any): Promise<void> {
     this.statusLog = data;
   }
 
@@ -269,12 +269,12 @@ class MockGithubCredentialStatusClient extends GithubCredentialStatus.GithubCred
   }
 
   // Update data in log file
-  async updateLogData(data: any) {
+  async updateLogData(data: any): Promise<void> {
     this.statusLog = data;
   }
 
   // Create data in status file
-  async createStatusData(data: any) {
+  async createStatusData(data: any): Promise<void> {
     this.statusList = data;
   }
 
@@ -284,7 +284,7 @@ class MockGithubCredentialStatusClient extends GithubCredentialStatus.GithubCred
   }
 
   // Update data in status file
-  async updateStatusData(data: any) {
+  async updateStatusData(data: any): Promise<void> {
     this.statusList = data;
   }
 }

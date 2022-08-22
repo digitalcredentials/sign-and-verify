@@ -67,7 +67,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Create data in config file
-  async createConfigData(data: any) {
+  async createConfigData(data: any): Promise<void> {
     const timestamp = (new Date()).toISOString();
     const message = `[${timestamp}]: created status credential config`;
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
@@ -98,7 +98,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Update data in config file
-  async updateConfigData(data: any) {
+  async updateConfigData(data: any): Promise<void> {
     const configResponse = await this.readConfigResponse();
     const { sha } = configResponse;
     const timestamp = (new Date()).toISOString();
@@ -115,7 +115,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Create data in log file
-  async createLogData(data: any) {
+  async createLogData(data: any): Promise<void> {
     const timestamp = (new Date()).toISOString();
     const message = `[${timestamp}]: created status log`;
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
@@ -146,7 +146,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Update data in log file
-  async updateLogData(data: any) {
+  async updateLogData(data: any): Promise<void> {
     const logResponse = await this.readLogResponse();
     const { sha } = logResponse;
     const timestamp = (new Date()).toISOString();
@@ -163,7 +163,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Create data in status file
-  async createStatusData(data: any) {
+  async createStatusData(data: any): Promise<void> {
     const configData = await this.readConfigData();
     const { latestList } = configData;
     const timestamp = (new Date()).toISOString();
@@ -198,7 +198,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Update data in status file
-  async updateStatusData(data: any) {
+  async updateStatusData(data: any): Promise<void> {
     const configData = await this.readConfigData();
     const { latestList } = configData;
     const statusResponse = await this.readStatusResponse();

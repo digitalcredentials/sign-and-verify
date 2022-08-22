@@ -5,9 +5,9 @@ services:
     container_name: sign-and-verify
     build: .
     environment:
-      - VIRTUAL_HOST=${URL}
+      - VIRTUAL_HOST=${VC_API_ISSUER_URL_HOST}
       - VIRTUAL_PORT=5000
-      - LETSENCRYPT_HOST=${URL}
+      - LETSENCRYPT_HOST=${VC_API_ISSUER_URL_HOST}
   nginx-proxy:
     container_name: nginx-proxy
     image: nginxproxy/nginx-proxy
