@@ -15,7 +15,7 @@ import { getConfig, decodeSeed } from './config';
 import { default as demoCredential } from './demoCredential.json';
 import { AuthType, credentialRecordFromOidc, credentialRecordFromChallenge } from './issuer';
 import { composeCredential } from './templates/Certificate';
-import { Credential, VerifiableCredential, VerifiablePresentation } from './types';
+import { Credential, Presentation, VerifiableCredential, VerifiablePresentation } from './types';
 import {
   BaseCredentialStatusClient,
   composeStatusCredential,
@@ -491,7 +491,7 @@ export async function build(opts = {}) {
 
   server.post(
     '/prove/presentations', async (request, reply) => {
-      const req = request.body as { presentation: VerifiablePresentation; options: Object; };
+      const req = request.body as { presentation: Presentation; options: Object; };
       const credential = req.presentation;
       const options = req.options;
 

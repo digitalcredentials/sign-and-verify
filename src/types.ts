@@ -11,7 +11,7 @@ type IssuerObject = {
 type Issuer = IssuerURI | IssuerObject;
 
 type CreditValue = {
-  value?: string;
+  readonly value?: string;
 }
 
 type CourseInstance = {
@@ -55,7 +55,7 @@ type StudentId = {
   readonly image: string;
 }
 
-type SubjectExtensions = { 
+type SubjectExtensions = {
   readonly type?: string;
   readonly name?: string;
   readonly hasCredential?: EducationalOperationalCredential; // https://schema.org/hasCredential
@@ -72,6 +72,7 @@ type Subject = SubjectExtensions & {
 }
 
 type CredentialStatusSubjectExtensions = {
+  // Status List 2021
   readonly statusPurpose?: string;
   readonly statusListIndex?: string;
   readonly statusListCredential?: string;
@@ -83,20 +84,20 @@ type CredentialStatus = CredentialStatusSubjectExtensions & {
 }
 
 type Proof = {
-  type: string;
-  created: string;
-  verificationMethod: string;
-  proofPurpose: string;
-  proofValue: string;
-  challenge?: string;
-  jws?: string;
+  readonly type: string;
+  readonly created: string;
+  readonly verificationMethod: string;
+  readonly proofPurpose: string;
+  readonly proofValue: string;
+  readonly challenge?: string;
+  readonly jws?: string;
 }
 
 // https://digitalcredentials.github.io/dcc/v1/dcc-context-v1.json
-export type Credential = { 
+export type Credential = {
   readonly '@context': string[];         // https://w3c.github.io/vc-data-model/#contexts
   readonly id: string;                   // https://w3c.github.io/vc-data-model/#identifiers
-  readonly type: string[];               // https://w3c.github.io/vc-data-model/#types
+  readonly type: string | string[];               // https://w3c.github.io/vc-data-model/#types
   readonly issuer: Issuer;               // https://w3c.github.io/vc-data-model/#issuer
   readonly issuanceDate: string;         // https://w3c.github.io/vc-data-model/#issuance-date
   readonly expirationDate?: string;      // https://w3c.github.io/vc-data-model/#expiration
@@ -106,10 +107,10 @@ export type Credential = {
 }
 
 // https://digitalcredentials.github.io/dcc/v1/dcc-context-v1.json
-export type VerifiableCredential = { 
+export type VerifiableCredential = {
   readonly '@context': string[];         // https://w3c.github.io/vc-data-model/#contexts
   readonly id: string;                   // https://w3c.github.io/vc-data-model/#identifiers
-  readonly type: string[];               // https://w3c.github.io/vc-data-model/#types
+  readonly type: string | string[];               // https://w3c.github.io/vc-data-model/#types
   readonly issuer: Issuer;               // https://w3c.github.io/vc-data-model/#issuer
   readonly issuanceDate: string;         // https://w3c.github.io/vc-data-model/#issuance-date
   readonly expirationDate?: string;      // https://w3c.github.io/vc-data-model/#expiration
@@ -118,10 +119,19 @@ export type VerifiableCredential = {
   readonly proof: Proof;                // https://w3c.github.io/vc-data-model/#proofs-signatures
 }
 
-export type VerifiablePresentation = { 
+export type Presentation = {
   readonly '@context': string[];
   readonly issuer: Issuer;
-  readonly type: string[];
+  readonly type: string | string[];
+  readonly holder?: string;
+  readonly verifiableCredential: Credential | Credential[];
+  readonly proof?: Proof;
+}
+
+export type VerifiablePresentation = {
+  readonly '@context': string[];
+  readonly issuer: Issuer;
+  readonly type: string | string[];
   readonly holder?: string;
   readonly verifiableCredential: Credential | Credential[];
   readonly proof: Proof;
