@@ -108,6 +108,7 @@ export async function build(opts = {}) {
     issuerMembershipRegistryUrl,
     credStatusClientType,
     credStatusRepoName,
+    credStatusMetaRepoName,
     credStatusRepoOrgName,
     credStatusRepoOrgId,
     credStatusRepoVisibility,
@@ -160,6 +161,7 @@ export async function build(opts = {}) {
     case CredentialStatusClientType.Github:
       credStatusClient = new GithubCredentialStatusClient({
         credStatusRepoName,
+        credStatusMetaRepoName,
         credStatusRepoOrgName,
         credStatusRepoVisibility,
         credStatusClientAccessToken
@@ -168,6 +170,7 @@ export async function build(opts = {}) {
     case CredentialStatusClientType.Gitlab:
       credStatusClient = new GitlabCredentialStatusClient({
         credStatusRepoName,
+        credStatusMetaRepoName,
         credStatusRepoOrgName,
         credStatusRepoOrgId,
         credStatusRepoVisibility,

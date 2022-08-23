@@ -47,6 +47,7 @@ gem "jekyll"`;
 // Type definition for GitlabCredentialStatusClient constructor method
 type GitlabCredentialStatusClientParameters = {
   credStatusRepoName: string;
+  credStatusMetaRepoName: string;
   credStatusRepoOrgName: string;
   credStatusRepoOrgId: string;
   credStatusRepoVisibility: VisibilityLevel;
@@ -57,6 +58,8 @@ type GitlabCredentialStatusClientParameters = {
 export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
   private credStatusRepoName: string;
   private credStatusRepoId: string;
+  private credStatusMetaRepoName: string;
+  private credStatusMetaRepoId: string;
   private credStatusRepoOrgName: string;
   private credStatusRepoOrgId: string;
   private credStatusRepoVisibility: VisibilityLevel;
@@ -66,6 +69,8 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
     super();
     this.credStatusRepoName = config.credStatusRepoName;
     this.credStatusRepoId = ''; // This value is set in createStatusRepo
+    this.credStatusMetaRepoName = config.credStatusMetaRepoName;
+    this.credStatusMetaRepoId = ''; // This value is set in createStatusRepo
     this.credStatusRepoOrgName = config.credStatusRepoOrgName;
     this.credStatusRepoOrgId = config.credStatusRepoOrgId;
     this.credStatusRepoVisibility = config.credStatusRepoVisibility;
@@ -89,13 +94,13 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Retrieve endpoint for files
-  filesEndpoint(path: string): string {
-    return `/projects/${this.credStatusRepoId}/repository/files/${path}`;
+  filesEndpoint(repoId: string, path: string): string {
+    return `/projects/${repoId}/repository/files/${path}`;
   }
 
   // Retrieve endpoint for commits
-  commitsEndpoint(): string {
-    return `/projects/${this.credStatusRepoId}/repository/commits`;
+  commitsEndpoint(repoId: string): string {
+    return `/projects/${repoId}/repository/commits`;
   }
 
   // Get credential status url
@@ -128,7 +133,7 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
         }
       ]
     };
-    await this.client.post(this.commitsEndpoint(), websiteRequestConfig);
+    await this.client.post(this.commitsEndpoint(this.credStatusRepoId), websiteRequestConfig);
   }
 
   // Retrieve list of repos in org
@@ -162,15 +167,29 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
     };
     const repoResponse = (await this.client.post(this.reposEndpoint(), repoRequestConfig)).data;
     this.credStatusRepoId = repoResponse.id;
+
+    const metaRepoRequestConfig = {
+      name: this.credStatusMetaRepoName,
+      namespace_id: this.credStatusRepoOrgId,
+      visibility: VisibilityLevel.Private,
+      description: 'Manages credential status metadata for instance of VC-API'
+    };
+    const metaRepoResponse = (await this.client.post(this.reposEndpoint(), metaRepoRequestConfig)).data;
+    this.credStatusMetaRepoId = metaRepoResponse.id;
   }
 
   // Sync status repo state
   async syncStatusRepoState(): Promise<void> {
     const repos = await this.getReposInOrg();
-    const repoOrg = repos.find((repo) => {
-      return repo.name === this.credStatusRepoName;
+    const repo = repos.find((r) => {
+      return r.name === this.credStatusRepoName;
     });
-    this.credStatusRepoId = repoOrg.id;
+    this.credStatusRepoId = repo.id;
+
+    const metaRepo = repos.find((r) => {
+      return r.name === this.credStatusMetaRepoName;
+    });
+    this.credStatusMetaRepoId = metaRepo.id;
   }
 
   // Create data in config file
@@ -183,7 +202,8 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
       commit_message: message,
       content
     };
-    await this.client.post(this.filesEndpoint(CREDENTIAL_STATUS_CONFIG_PATH_ENCODED), configRequestConfig);
+    const configRequestEndpoint = this.filesEndpoint(this.credStatusMetaRepoId, CREDENTIAL_STATUS_CONFIG_PATH_ENCODED);
+    await this.client.post(configRequestEndpoint, configRequestConfig);
   }
 
   // Retrieve response from fetching config file
@@ -193,7 +213,8 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
         ref: CREDENTIAL_STATUS_REPO_BRANCH_NAME
       }
     };
-    const configResponse = await this.client.get(this.filesEndpoint(CREDENTIAL_STATUS_CONFIG_PATH_ENCODED), configRequestConfig);
+    const configRequestEndpoint = this.filesEndpoint(this.credStatusMetaRepoId, CREDENTIAL_STATUS_CONFIG_PATH_ENCODED);
+    const configResponse = await this.client.get(configRequestEndpoint, configRequestConfig);
     return configResponse.data as any;
   }
 
@@ -213,7 +234,8 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
       commit_message: message,
       content
     };
-    await this.client.put(this.filesEndpoint(CREDENTIAL_STATUS_CONFIG_PATH_ENCODED), configRequestConfig);
+    const configRequestEndpoint = this.filesEndpoint(this.credStatusMetaRepoId, CREDENTIAL_STATUS_CONFIG_PATH_ENCODED);
+    await this.client.put(configRequestEndpoint, configRequestConfig);
   }
 
   // Create data in log file
@@ -226,7 +248,8 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
       commit_message: message,
       content
     };
-    await this.client.post(this.filesEndpoint(CREDENTIAL_STATUS_LOG_PATH_ENCODED), logRequestConfig);
+    const logRequestEndpoint = this.filesEndpoint(this.credStatusMetaRepoId, CREDENTIAL_STATUS_LOG_PATH_ENCODED);
+    await this.client.post(logRequestEndpoint, logRequestConfig);
   }
 
   // Retrieve response from fetching log file
@@ -236,7 +259,8 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
         ref: CREDENTIAL_STATUS_REPO_BRANCH_NAME
       }
     };
-    const logResponse = await this.client.get(this.filesEndpoint(CREDENTIAL_STATUS_LOG_PATH_ENCODED), logRequestConfig);
+    const logRequestEndpoint = this.filesEndpoint(this.credStatusMetaRepoId, CREDENTIAL_STATUS_LOG_PATH_ENCODED);
+    const logResponse = await this.client.get(logRequestEndpoint, logRequestConfig);
     return logResponse.data as any;
   }
 
@@ -256,7 +280,8 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
       commit_message: message,
       content
     };
-    await this.client.put(this.filesEndpoint(CREDENTIAL_STATUS_LOG_PATH_ENCODED), logRequestConfig);
+    const logRequestEndpoint = this.filesEndpoint(this.credStatusMetaRepoId, CREDENTIAL_STATUS_LOG_PATH_ENCODED);
+    await this.client.put(logRequestEndpoint, logRequestConfig);
   }
 
   // Create data in status file
@@ -272,7 +297,8 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
       content
     };
     const statusPath = encodeURIComponent(latestList);
-    await this.client.post(this.filesEndpoint(statusPath), statusRequestConfig);
+    const statusRequestEndpoint = this.filesEndpoint(this.credStatusRepoId, statusPath);
+    await this.client.post(statusRequestEndpoint, statusRequestConfig);
   }
 
   // Retrieve response from fetching status file
@@ -285,7 +311,8 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
       }
     };
     const statusPath = encodeURIComponent(latestList);
-    const statusResponse = await this.client.get(this.filesEndpoint(statusPath), statusRequestConfig);
+    const statusRequestEndpoint = this.filesEndpoint(this.credStatusRepoId, statusPath);
+    const statusResponse = await this.client.get(statusRequestEndpoint, statusRequestConfig);
     return statusResponse.data as any;
   }
 
@@ -308,6 +335,7 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
       content
     };
     const statusPath = encodeURIComponent(latestList);
-    await this.client.put(this.filesEndpoint(statusPath), statusRequestConfig);
+    const statusRequestEndpoint = this.filesEndpoint(this.credStatusRepoId, statusPath);
+    await this.client.put(statusRequestEndpoint, statusRequestConfig);
   }
 }

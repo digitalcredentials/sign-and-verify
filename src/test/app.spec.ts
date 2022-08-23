@@ -47,6 +47,7 @@ const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer
 const credStatusClientType = CredentialStatus.CredentialStatusClientType.Github;
 const credStatusClientAccessToken = "abc";
 const credStatusRepoName = "credential-status";
+const credStatusMetaRepoName = "credential-status-metadata";
 const credStatusRepoOrgName = "university-xyz";
 const credStatusRepoOrgId = "87654321";
 const credStatusRepoVisibility = CredentialStatus.VisibilityLevel.Public;
@@ -61,6 +62,7 @@ const validEnv = {
   CRED_STATUS_CLIENT_TYPE: credStatusClientType,
   CRED_STATUS_CLIENT_ACCESS_TOKEN: credStatusClientAccessToken,
   CRED_STATUS_REPO_NAME: credStatusRepoName,
+  CRED_STATUS_META_REPO_NAME: credStatusMetaRepoName,
   CRED_STATUS_REPO_ORG_NAME: credStatusRepoOrgName,
   CRED_STATUS_REPO_ORG_ID: credStatusRepoOrgId,
   CRED_STATUS_REPO_VISIBILITY: credStatusRepoVisibility,
@@ -218,15 +220,23 @@ class MockGithubCredentialStatusClient extends GithubCredentialStatus.GithubCred
   private statusConfig: CredentialStatus.CredentialStatusConfigData;
   private statusLog: CredentialStatus.CredentialStatusLogEntry[];
   private statusRepoName: string;
+  private statusMetaRepoName: string;
   private statusRepoOrgName: string;
   private statusRepoVisibility: CredentialStatus.VisibilityLevel;
 
   constructor(config: GithubCredentialStatus.GithubCredentialStatusClientParameters) {
-    super({ credStatusRepoName, credStatusRepoOrgName, credStatusRepoVisibility, credStatusClientAccessToken });
+    super({
+      credStatusRepoName,
+      credStatusMetaRepoName,
+      credStatusRepoOrgName,
+      credStatusRepoVisibility,
+      credStatusClientAccessToken
+    });
     this.statusList = {};
     this.statusConfig = {} as CredentialStatus.CredentialStatusConfigData;
     this.statusLog = [];
     this.statusRepoName = credStatusRepoName;
+    this.statusMetaRepoName = credStatusMetaRepoName;
     this.statusRepoOrgName = credStatusRepoOrgName;
     this.statusRepoVisibility = credStatusRepoVisibility;
   }
@@ -459,7 +469,13 @@ describe("api", () => {
 
 const beforeEachCredStatusMgmt = async () => {
   resetConfig();
-  const credStatusClient = new MockGithubCredentialStatusClient({ credStatusRepoName, credStatusRepoOrgName, credStatusRepoVisibility, credStatusClientAccessToken });
+  const credStatusClient = new MockGithubCredentialStatusClient({
+    credStatusRepoName,
+    credStatusMetaRepoName,
+    credStatusRepoOrgName,
+    credStatusRepoVisibility,
+    credStatusClientAccessToken
+  });
   sandbox.stub(process, "env").value(validEnv);
   sandbox.stub(OctokitClient.Octokit.prototype, 'constructor').returns(null);
   sandbox.stub(GithubCredentialStatus, 'GithubCredentialStatusClient').returns(credStatusClient);

@@ -15,6 +15,7 @@ export type Config = {
   credStatusClientType: CredentialStatusClientType;
   credStatusClientAccessToken: string;
   credStatusRepoName: string;
+  credStatusMetaRepoName: string;
   credStatusRepoOrgName: string;
   credStatusRepoOrgId: string;
   credStatusRepoVisibility: VisibilityLevel;
@@ -61,6 +62,7 @@ export function parseConfig(): Config {
     credStatusClientType: process.env.CRED_STATUS_CLIENT_TYPE as CredentialStatusClientType || CredentialStatusClientType.Github,
     credStatusClientAccessToken: process.env.CRED_STATUS_CLIENT_ACCESS_TOKEN || '',
     credStatusRepoName: process.env.CRED_STATUS_REPO_NAME || 'credential-status',
+    credStatusMetaRepoName: process.env.CRED_STATUS_META_REPO_NAME || 'credential-status-metadata',
     credStatusRepoOrgName: process.env.CRED_STATUS_REPO_ORG_NAME || '',
     credStatusRepoOrgId: process.env.CRED_STATUS_REPO_ORG_ID || '',
     credStatusRepoVisibility: process.env.CRED_STATUS_REPO_VISIBILITY as VisibilityLevel || VisibilityLevel.Public,

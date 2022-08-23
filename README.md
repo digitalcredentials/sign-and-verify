@@ -21,6 +21,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 - `CRED_STATUS_REPO_ORG_ID`: ID of org in source control service that owns credential status/revocation management repo (required - GitLab only)
 - `VC_API_ISSUER_URL_PROTOCOL`: protocol of the url where an instance of the api service will be hosted (optional, default: `https`)
 - \*`CRED_STATUS_REPO_NAME`: name of credential status repo (optional, default: `credential-status` - necessary for delegated hosting of credential status/revocation management)
+- \*`CRED_STATUS_META_REPO_NAME`: name of credential status metadata repo (optional, default: `credential-status-metadata` - necessary for delegated hosting of credential status/revocation management)
 - \*`CRED_STATUS_REPO_VISIBILITY`: level of visibility of credential status/revocation management repo (optional, default: `public`)
 - \*`CRED_STATUS_CLIENT_TYPE`: credential status management client type (optional, default: `github`)
 - `DID_WEB_URL`: the url used to generate `did:web` document and keys for issuer (optional, default: `undefined`)
@@ -77,7 +78,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 9. Copy the generated token
 10. \*Save the token from the previous step as the `CRED_STATUS_CLIENT_ACCESS_TOKEN` environment variable at the service that is hosting your organization’s instance of `sign-and-verify`
 
-\*NOTE: `CRED_STATUS_REPO_NAME`, the designated credential status repo, will automatically be generated after running `npm run start` or `yarn start`, per the instructions below.
+\*NOTE: `CRED_STATUS_REPO_NAME`, the designated credential status repo, and `CRED_STATUS_META_REPO_NAME`, the designated credential status metadata repo, will automatically be generated after running `npm run start` or `yarn start`, per the instructions below.
 
 \*NOTE: `CRED_STATUS_REPO_VISIBILITY` accepts the following values (per GitHub's guidance [here](https://docs.github.com/en/enterprise-cloud@latest/repositories/creating-and-managing-repositories/about-repositories)):
 - `public`: Public repositories are accessible to everyone on the internet.

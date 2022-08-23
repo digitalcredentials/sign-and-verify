@@ -15,6 +15,7 @@ import { VerifiableCredential } from './types';
 // Type definition for GithubCredentialStatusClient constructor method
 export type GithubCredentialStatusClientParameters = {
   credStatusRepoName: string;
+  credStatusMetaRepoName: string;
   credStatusRepoOrgName: string;
   credStatusRepoVisibility: VisibilityLevel;
   credStatusClientAccessToken: string;
@@ -23,6 +24,7 @@ export type GithubCredentialStatusClientParameters = {
 // Implementation of BaseCredentialStatusClient for GitHub
 export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   private credStatusRepoName: string;
+  private credStatusMetaRepoName: string;
   private credStatusRepoOrgName: string;
   private credStatusRepoVisibility: VisibilityLevel;
   private client: Octokit;
@@ -30,6 +32,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   constructor(config: GithubCredentialStatusClientParameters) {
     super();
     this.credStatusRepoName = config.credStatusRepoName;
+    this.credStatusMetaRepoName = config.credStatusMetaRepoName;
     this.credStatusRepoOrgName = config.credStatusRepoOrgName;
     this.credStatusRepoVisibility = config.credStatusRepoVisibility;
     this.client = new Octokit({ auth: config.credStatusClientAccessToken });
@@ -67,6 +70,13 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
       visibility: this.credStatusRepoVisibility,
       description: 'Manages credential status for instance of VC-API'
     });
+
+    await this.client.repos.createInOrg({
+      org: this.credStatusRepoOrgName,
+      name: this.credStatusMetaRepoName,
+      visibility: VisibilityLevel.Private,
+      description: 'Manages credential status metadata for instance of VC-API'
+    });
   }
 
   // Create data in config file
@@ -76,7 +86,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
     await this.client.repos.createOrUpdateFileContents({
       owner: this.credStatusRepoOrgName,
-      repo: this.credStatusRepoName,
+      repo: this.credStatusMetaRepoName,
       branch: CREDENTIAL_STATUS_REPO_BRANCH_NAME,
       path: CREDENTIAL_STATUS_CONFIG_FILE,
       message,
@@ -88,7 +98,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   async readConfigResponse(): Promise<any> {
     const configResponse = await this.client.repos.getContent({
       owner: this.credStatusRepoOrgName,
-      repo: this.credStatusRepoName,
+      repo: this.credStatusMetaRepoName,
       path: CREDENTIAL_STATUS_CONFIG_FILE
     });
     return configResponse.data as any;
@@ -109,7 +119,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
     await this.client.repos.createOrUpdateFileContents({
       owner: this.credStatusRepoOrgName,
-      repo: this.credStatusRepoName,
+      repo: this.credStatusMetaRepoName,
       path: CREDENTIAL_STATUS_CONFIG_FILE,
       message,
       content,
@@ -124,7 +134,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
     await this.client.repos.createOrUpdateFileContents({
       owner: this.credStatusRepoOrgName,
-      repo: this.credStatusRepoName,
+      repo: this.credStatusMetaRepoName,
       branch: CREDENTIAL_STATUS_REPO_BRANCH_NAME,
       path: CREDENTIAL_STATUS_LOG_FILE,
       message,
@@ -136,7 +146,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   async readLogResponse(): Promise<any> {
     const logResponse = await this.client.repos.getContent({
       owner: this.credStatusRepoOrgName,
-      repo: this.credStatusRepoName,
+      repo: this.credStatusMetaRepoName,
       path: CREDENTIAL_STATUS_LOG_FILE
     });
     return logResponse.data as any;
@@ -157,7 +167,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
     await this.client.repos.createOrUpdateFileContents({
       owner: this.credStatusRepoOrgName,
-      repo: this.credStatusRepoName,
+      repo: this.credStatusMetaRepoName,
       path: CREDENTIAL_STATUS_LOG_FILE,
       message,
       content,
