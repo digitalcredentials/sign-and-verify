@@ -9,6 +9,7 @@ import {
   VisibilityLevel,
   decodeSystemData,
 } from './credential-status';
+import { VerifiableCredential } from './types';
 
 const CREDENTIAL_STATUS_CONFIG_PATH_ENCODED = encodeURIComponent(CREDENTIAL_STATUS_CONFIG_FILE);
 const CREDENTIAL_STATUS_LOG_PATH_ENCODED = encodeURIComponent(CREDENTIAL_STATUS_LOG_FILE);
@@ -259,7 +260,7 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Create data in status file
-  async createStatusData(data: any): Promise<void> {
+  async createStatusData(data: VerifiableCredential): Promise<void> {
     const configData = await this.readConfigData();
     const { latestList } = configData;
     const timestamp = (new Date()).toISOString();
@@ -289,13 +290,13 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Retrieve data from status file
-  async readStatusData(): Promise<any> {
+  async readStatusData(): Promise<VerifiableCredential> {
     const statusResponse = await this.readStatusResponse();
     return decodeSystemData(statusResponse.content);
   }
 
   // Update data in status file
-  async updateStatusData(data: any): Promise<void> {
+  async updateStatusData(data: VerifiableCredential): Promise<void> {
     const configData = await this.readConfigData();
     const { latestList } = configData;
     const timestamp = (new Date()).toISOString();

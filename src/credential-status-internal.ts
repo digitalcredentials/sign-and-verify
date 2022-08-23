@@ -6,6 +6,7 @@ import {
   CredentialStatusConfigData,
   CredentialStatusLogData,
 } from './credential-status';
+import { VerifiableCredential } from './types';
 
 // Credential status resource location
 export const CREDENTIAL_STATUS_FOLDER = 'credentials/status';
@@ -78,12 +79,12 @@ export class InternalCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Create data in status file
-  async createStatusData(data: any): Promise<void> {
+  async createStatusData(data: VerifiableCredential): Promise<void> {
     this.updateStatusData(data);
   }
 
   // Retrieve data from status file
-  async readStatusData(): Promise<any> {
+  async readStatusData(): Promise<VerifiableCredential> {
     const configData = await this.readConfigData();
     const { latestList } = configData;
     const statusFile = `${CREDENTIAL_STATUS_DIR}/${latestList}`;
@@ -91,7 +92,7 @@ export class InternalCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Update data in status file
-  async updateStatusData(data: any): Promise<void> {
+  async updateStatusData(data: VerifiableCredential): Promise<void> {
     const configData = await this.readConfigData();
     const { latestList } = configData;
     const statusFile = `${CREDENTIAL_STATUS_DIR}/${latestList}`;

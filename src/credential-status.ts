@@ -1,5 +1,6 @@
 import { createList, createCredential } from '@digitalbazaar/vc-status-list';
 import { CONTEXT_URL_V1 } from '@digitalbazaar/vc-status-list-context';
+import { VerifiableCredential } from './types';
 
 // Number of credentials tracked in a list
 const CREDENTIAL_STATUS_LIST_SIZE = 100000;
@@ -178,13 +179,13 @@ export abstract class BaseCredentialStatusClient {
   abstract updateLogData(data: CredentialStatusLogData): Promise<void>;
 
   // Create data in status file
-  abstract createStatusData(data: any): Promise<void>;
+  abstract createStatusData(data: VerifiableCredential): Promise<void>;
 
   // Retrieve data from status file
-  abstract readStatusData(): Promise<any>;
+  abstract readStatusData(): Promise<VerifiableCredential>;
 
   // Update data in status file
-  abstract updateStatusData(data: any): Promise<void>;
+  abstract updateStatusData(data: VerifiableCredential): Promise<void>;
 }
 
 // Compose StatusList2021Credential

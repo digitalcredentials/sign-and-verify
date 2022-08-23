@@ -18,7 +18,8 @@ import * as Database from '../database';
 import demoCredential from '../demoCredential.json';
 import * as IssuerHelper from '../issuer';
 import * as Certificate from '../templates/Certificate';
-import { dbCreate, dbConnect, dbDisconnect, Credential } from './database';
+import { VerifiableCredential } from '../types';
+import { dbCreate, dbConnect, dbDisconnect, DbCredential } from './database';
 
 const sandbox = createSandbox();
 const lruStub = sandbox.createStubInstance(LRU) as SinonStubbedInstance<LRU> & LRU;
@@ -277,17 +278,17 @@ class MockGithubCredentialStatusClient extends GithubCredentialStatus.GithubCred
   }
 
   // Create data in status file
-  async createStatusData(data: any): Promise<void> {
+  async createStatusData(data: VerifiableCredential): Promise<void> {
     this.statusList = data;
   }
 
   // Retrieve data from status file
-  async readStatusData(): Promise<any> {
+  async readStatusData(): Promise<VerifiableCredential> {
     return this.statusList;
   }
 
   // Update data in status file
-  async updateStatusData(data: any): Promise<void> {
+  async updateStatusData(data: VerifiableCredential): Promise<void> {
     this.statusList = data;
   }
 }
@@ -722,7 +723,7 @@ describe("api with db inspection", () => {
 
     const url = "/request/credential";
     it("returns proper credential db record", async () => {
-      const validCredentialRecord = new Credential(sampleDbCredential1);
+      const validCredentialRecord = new DbCredential(sampleDbCredential1);
       const savedCredentialRecord = await validCredentialRecord.save();
       validateNotEmpty(savedCredentialRecord);
       await apiServer.inject({
@@ -760,7 +761,7 @@ describe("api with db inspection", () => {
       const bearerToken = "Bearer @cc3$$t0k3n123";
       sandbox.stub(Issuer, "discover").resolves(new Issuer({ issuer: issuerUrl2, userinfo_endpoint: userinfoEndpoint }));
       sandbox.stub(axios, "get").withArgs(userinfoEndpoint).resolves({ data: { email: email2 } });
-      const validCredentialRecord = new Credential(sampleDbCredential2);
+      const validCredentialRecord = new DbCredential(sampleDbCredential2);
       const savedCredentialRecord = await validCredentialRecord.save();
       validateNotEmpty(savedCredentialRecord);
       await apiServer.inject({

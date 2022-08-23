@@ -25,4 +25,4 @@ const credentialSchema = new Schema({
   challenge: { type: String }
 });
 
-export const Credential = model('Credential', credentialSchema);
+export const DbCredential = model('Credential', credentialSchema);

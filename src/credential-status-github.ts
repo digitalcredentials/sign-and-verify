@@ -10,6 +10,7 @@ import {
   decodeSystemData,
   encodeAsciiAsBase64,
 } from './credential-status';
+import { VerifiableCredential } from './types';
 
 // Type definition for GithubCredentialStatusClient constructor method
 export type GithubCredentialStatusClientParameters = {
@@ -165,7 +166,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Create data in status file
-  async createStatusData(data: any): Promise<void> {
+  async createStatusData(data: VerifiableCredential): Promise<void> {
     const configData = await this.readConfigData();
     const { latestList } = configData;
     const timestamp = (new Date()).toISOString();
@@ -194,13 +195,13 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Retrieve data from status file
-  async readStatusData(): Promise<any> {
+  async readStatusData(): Promise<VerifiableCredential> {
     const statusResponse = await this.readStatusResponse();
     return decodeSystemData(statusResponse.content);
   }
 
   // Update data in status file
-  async updateStatusData(data: any): Promise<void> {
+  async updateStatusData(data: VerifiableCredential): Promise<void> {
     const configData = await this.readConfigData();
     const { latestList } = configData;
     const statusResponse = await this.readStatusResponse();
