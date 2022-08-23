@@ -14,11 +14,11 @@ services:
   ports:
     - "${HTTPPORT}:80"
     - "${HTTPSPORT}:443"
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - ./certs:/etc/nginx/certs
-      - ./vhost:/etc/nginx/vhost.d
-      - ./html:/usr/share/nginx/html
+  volumes:
+    - /var/run/docker.sock:/tmp/docker.sock:ro
+    - ./certs:/etc/nginx/certs
+    - ./vhost:/etc/nginx/vhost.d
+    - ./html:/usr/share/nginx/html
   nginx-proxy-acme:
     container_name: nginx-proxy-acme
     image: nginxproxy/acme-companion

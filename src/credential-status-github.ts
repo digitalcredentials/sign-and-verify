@@ -4,6 +4,8 @@ import {
   CREDENTIAL_STATUS_LOG_FILE,
   CREDENTIAL_STATUS_REPO_BRANCH_NAME,
   BaseCredentialStatusClient,
+  CredentialStatusConfigData,
+  CredentialStatusLogData,
   VisibilityLevel,
   decodeSystemData,
   encodeAsciiAsBase64,
@@ -67,7 +69,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Create data in config file
-  async createConfigData(data: any): Promise<void> {
+  async createConfigData(data: CredentialStatusConfigData): Promise<void> {
     const timestamp = (new Date()).toISOString();
     const message = `[${timestamp}]: created status credential config`;
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
@@ -92,13 +94,13 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Retrieve data from config file
-  async readConfigData(): Promise<any> {
+  async readConfigData(): Promise<CredentialStatusConfigData> {
     const configResponse = await this.readConfigResponse();
     return decodeSystemData(configResponse.content);
   }
 
   // Update data in config file
-  async updateConfigData(data: any): Promise<void> {
+  async updateConfigData(data: CredentialStatusConfigData): Promise<void> {
     const configResponse = await this.readConfigResponse();
     const { sha } = configResponse;
     const timestamp = (new Date()).toISOString();
@@ -115,7 +117,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Create data in log file
-  async createLogData(data: any): Promise<void> {
+  async createLogData(data: CredentialStatusLogData): Promise<void> {
     const timestamp = (new Date()).toISOString();
     const message = `[${timestamp}]: created status log`;
     const content = encodeAsciiAsBase64(JSON.stringify(data, null, 2));
@@ -140,13 +142,13 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Retrieve data from log file
-  async readLogData(): Promise<any> {
+  async readLogData(): Promise<CredentialStatusLogData> {
     const logResponse = await this.readLogResponse();
     return decodeSystemData(logResponse.content);
   }
 
   // Update data in log file
-  async updateLogData(data: any): Promise<void> {
+  async updateLogData(data: CredentialStatusLogData): Promise<void> {
     const logResponse = await this.readLogResponse();
     const { sha } = logResponse;
     const timestamp = (new Date()).toISOString();

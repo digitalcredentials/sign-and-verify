@@ -78,6 +78,7 @@ const credentialOptions = { verificationMethod: issuerVerificationMethod };
 // same as above for credentials, but also with a 'challenge':
 const presentationOptions = { ...credentialOptions, challenge };
 
+const credentialSubject = "did:example:abcdef";
 const sampleUnsignedCredential = {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
@@ -90,7 +91,7 @@ const sampleUnsignedCredential = {
   "issuer": issuerId,
   "issuanceDate": "2020-03-10T04:24:12.164Z",
   "credentialSubject": {
-    "id": "did:example:abcdef"
+    "id": credentialSubject
   }
 };
 
@@ -106,7 +107,7 @@ const sampleSignedCredential = {
   "issuer": issuerId,
   "issuanceDate": "2020-03-10T04:24:12.164Z",
   "credentialSubject": {
-    "id": "did:example:abcdef"
+    "id": credentialSubject
   },
   "proof": {
     "type": "Ed25519Signature2020",
@@ -211,7 +212,7 @@ const statusListIndex = 3;
 
 class MockGithubCredentialStatusClient extends GithubCredentialStatus.GithubCredentialStatusClient {
   private statusList: any;
-  private statusConfig: CredentialStatus.CredentialStatusConfig;
+  private statusConfig: CredentialStatus.CredentialStatusConfigData;
   private statusLog: CredentialStatus.CredentialStatusLogEntry[];
   private statusRepoName: string;
   private statusRepoOrgName: string;
@@ -220,7 +221,7 @@ class MockGithubCredentialStatusClient extends GithubCredentialStatus.GithubCred
   constructor(config: GithubCredentialStatus.GithubCredentialStatusClientParameters) {
     super({ credStatusRepoName, credStatusRepoOrgName, credStatusRepoVisibility, credStatusClientAccessToken });
     this.statusList = {};
-    this.statusConfig = {} as CredentialStatus.CredentialStatusConfig;
+    this.statusConfig = {} as CredentialStatus.CredentialStatusConfigData;
     this.statusLog = [];
     this.statusRepoName = credStatusRepoName;
     this.statusRepoOrgName = credStatusRepoOrgName;
@@ -244,32 +245,32 @@ class MockGithubCredentialStatusClient extends GithubCredentialStatus.GithubCred
   async createStatusRepo(): Promise<void> {}
 
   // Create data in config file
-  async createConfigData(data: any): Promise<void> {
+  async createConfigData(data: CredentialStatus.CredentialStatusConfigData): Promise<void> {
     this.statusConfig = data;
   }
 
   // Retrieve data from config file
-  async readConfigData(): Promise<any> {
+  async readConfigData(): Promise<CredentialStatus.CredentialStatusConfigData> {
     return this.statusConfig;
   }
 
   // Update data in config file
-  async updateConfigData(data: any): Promise<void> {
+  async updateConfigData(data: CredentialStatus.CredentialStatusConfigData): Promise<void> {
     this.statusConfig = data;
   }
 
   // Create data in log file
-  async createLogData(data: any): Promise<void> {
+  async createLogData(data: CredentialStatus.CredentialStatusLogData): Promise<void> {
     this.statusLog = data;
   }
 
   // Retrieve data from log file
-  async readLogData(): Promise<any> {
+  async readLogData(): Promise<CredentialStatus.CredentialStatusLogData> {
     return this.statusLog;
   }
 
   // Update data in log file
-  async updateLogData(data: any): Promise<void> {
+  async updateLogData(data: CredentialStatus.CredentialStatusLogData): Promise<void> {
     this.statusLog = data;
   }
 
@@ -500,15 +501,15 @@ describe("api with credential status management", () => {
       validateArrayNotEmpty(statusLogAfter);
       expect(statusLogAfter.length).to.equal(1);
       const statusLogAfterEntry = statusLogAfter[0];
-      expect(statusLogAfterEntry.credentialAction).to.equal(CredentialStatus.CredentialAction.Issued);
-      expect(statusLogAfterEntry.statusListCredential.endsWith(statusListId)).to.be.true;
+      expect(statusLogAfterEntry.credentialState).to.equal(CredentialStatus.CredentialState.Issued);
+      expect(statusLogAfterEntry.statusListId).to.equal(statusListId);
 
       afterEachCredStatusMgmt();
     }).timeout(6000);
   });
 
-  describe("/revoke/credential", () => {
-    const url = "/revoke/credential";
+  describe("/credentials/status", () => {
+    const url = "/credentials/status";
     it("POST returns 200 and status cred", async () => {
       const { apiServer, credStatusClient } = await beforeEachCredStatusMgmt();
 
@@ -520,10 +521,30 @@ describe("api with credential status management", () => {
       expect(statusListBeforeDecoded.getStatus(statusListIndex)).to.be.false;
       validateArrayEmpty(statusLogBefore);
 
+      const credentialId = `${credStatusClient.getCredentialStatusUrl()}/${statusListId}`;
+      await credStatusClient.updateLogData([{
+        timestamp: (new Date()).toISOString(),
+        credentialId,
+        credentialIssuer: issuerId,
+        credentialSubject,
+        credentialState: CredentialStatus.CredentialState.Issued,
+        verificationMethod: issuerVerificationMethod,
+        statusListId,
+        statusListIndex
+      }]);
+
       const response = await apiServer.inject({
         method: "POST",
         url,
-        payload: { listId: statusListId, listIndex: statusListIndex }
+        payload: {
+          credentialId,
+          credentialStatus: [
+            {
+              type: CredentialStatus.CREDENTIAL_STATUS_TYPE,
+              status: CredentialStatus.CredentialState.Revoked
+            }
+          ]
+        }
       });
 
       const statusConfigAfter = await credStatusClient.readConfigData();
@@ -536,10 +557,10 @@ describe("api with credential status management", () => {
       validateObjectEquality(payload, statusListAfter);
       validateObjectEquality(statusConfigAfter, statusConfigBefore);
       validateArrayNotEmpty(statusLogAfter);
-      expect(statusLogAfter.length).to.equal(1);
-      const statusLogAfterEntry = statusLogAfter[0];
-      expect(statusLogAfterEntry.credentialAction).to.equal(CredentialStatus.CredentialAction.Revoked);
-      expect(statusLogAfterEntry.statusListCredential.endsWith(statusListId)).to.be.true;
+      expect(statusLogAfter.length).to.equal(2);
+      const statusLogAfterEntry = statusLogAfter[1];
+      expect(statusLogAfterEntry.credentialState).to.equal(CredentialStatus.CredentialState.Revoked);
+      expect(statusLogAfterEntry.statusListId).to.equal(statusListId);
       expect(statusLogAfterEntry.statusListIndex).to.equal(statusListIndex);
       expect(statusListAfter.credentialSubject.type).to.equal(statusListBefore.credentialSubject.type);
       expect(statusListAfter.credentialSubject.type).to.equal('StatusList2021');
@@ -590,8 +611,8 @@ describe("api with credential status management", () => {
       validateArrayNotEmpty(statusLogAfter);
       expect(statusLogAfter.length).to.equal(1);
       const statusLogAfterEntry = statusLogAfter[0];
-      expect(statusLogAfterEntry.credentialAction).to.equal(CredentialStatus.CredentialAction.Issued);
-      expect(statusLogAfterEntry.statusListCredential.endsWith(statusListId)).to.be.true;
+      expect(statusLogAfterEntry.credentialState).to.equal(CredentialStatus.CredentialState.Issued);
+      expect(statusLogAfterEntry.statusListId).to.equal(statusListId);
 
       afterEachCredStatusMgmt();
     }).timeout(6000);

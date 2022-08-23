@@ -5,7 +5,7 @@ import { CONTEXT_URL_V1 } from '@digitalbazaar/vc-status-list-context';
 const CREDENTIAL_STATUS_LIST_SIZE = 100000;
 
 // Credential status type
-const CREDENTIAL_STATUS_TYPE = 'StatusList2021Entry';
+export const CREDENTIAL_STATUS_TYPE = 'StatusList2021Entry';
 
 // Name of credential status branch
 export const CREDENTIAL_STATUS_REPO_BRANCH_NAME = 'main';
@@ -35,14 +35,15 @@ export enum SystemFile {
   Status = 'status'
 }
 
-// Actions applied to credentials and tracked in status log
-export enum CredentialAction {
+// States of credential resulting from issuer actions and tracked in status log
+export enum CredentialState {
   Issued = 'issued',
-  Revoked = 'revoked'
+  Revoked = 'revoked',
+  Suspended = 'suspended'
 }
 
 // Type definition for credential status config file
-export type CredentialStatusConfig = {
+export type CredentialStatusConfigData = {
   credentialsIssued: number;
   latestList: string;
 };
@@ -50,14 +51,17 @@ export type CredentialStatusConfig = {
 // Type definition for credential status log entry
 export type CredentialStatusLogEntry = {
   timestamp: string;
-  credentialId?: string;
+  credentialId: string;
+  credentialIssuer: string;
   credentialSubject?: string;
-  credentialAction: CredentialAction;
-  issuerDid: string;
+  credentialState: CredentialState;
   verificationMethod: string;
-  statusListCredential: string;
+  statusListId: string;
   statusListIndex: number;
 };
+
+// Type definition for credential status log
+export type CredentialStatusLogData = CredentialStatusLogEntry[];
 
 // Type definition for composeStatusCredential function input
 type ComposeStatusCredentialParameters = {
@@ -144,22 +148,22 @@ export abstract class BaseCredentialStatusClient {
   async syncStatusRepoState(): Promise<void> {};
 
   // Create data in config file
-  abstract createConfigData(data: any): Promise<void>;
+  abstract createConfigData(data: CredentialStatusConfigData): Promise<void>;
 
   // Retrieve data from config file
-  abstract readConfigData(): Promise<any>;
+  abstract readConfigData(): Promise<CredentialStatusConfigData>;
 
   // Update data in config file
-  abstract updateConfigData(data: any): Promise<void>;
+  abstract updateConfigData(data: CredentialStatusConfigData): Promise<void>;
 
   // Create data in log file
-  abstract createLogData(data: any): Promise<void>;
+  abstract createLogData(data: CredentialStatusLogData): Promise<void>;
 
   // Retrieve data from log file
-  abstract readLogData(): Promise<any>;
+  abstract readLogData(): Promise<CredentialStatusLogData>;
 
   // Update data in log file
-  abstract updateLogData(data: any): Promise<void>;
+  abstract updateLogData(data: CredentialStatusLogData): Promise<void>;
 
   // Create data in status file
   abstract createStatusData(data: any): Promise<void>;

@@ -3,6 +3,8 @@ import {
   CREDENTIAL_STATUS_CONFIG_FILE,
   CREDENTIAL_STATUS_LOG_FILE,
   BaseCredentialStatusClient,
+  CredentialStatusConfigData,
+  CredentialStatusLogData,
 } from './credential-status';
 
 // Credential status resource location
@@ -40,36 +42,36 @@ export class InternalCredentialStatusClient extends BaseCredentialStatusClient {
   }
 
   // Create data in config file
-  async createConfigData(data: any): Promise<void> {
+  async createConfigData(data: CredentialStatusConfigData): Promise<void> {
     this.updateConfigData(data);
   }
 
   // Retrieve data from config file
-  async readConfigData(): Promise<any> {
+  async readConfigData(): Promise<CredentialStatusConfigData> {
     const configFile = `${CREDENTIAL_STATUS_DIR}/${CREDENTIAL_STATUS_CONFIG_FILE}`;
     return JSON.parse(fs.readFileSync(configFile, { encoding: 'utf8' }));
   }
 
   // Update data in config file
-  async updateConfigData(data: any): Promise<void> {
+  async updateConfigData(data: CredentialStatusConfigData): Promise<void> {
     const configFile = `${CREDENTIAL_STATUS_DIR}/${CREDENTIAL_STATUS_CONFIG_FILE}`;
     const content = JSON.stringify(data, null, 2);
     fs.writeFileSync(configFile, content);
   }
 
   // Create data in log file
-  async createLogData(data: any): Promise<void> {
+  async createLogData(data: CredentialStatusLogData): Promise<void> {
     this.updateLogData(data);
   }
 
   // Retrieve data from log file
-  async readLogData(): Promise<any> {
+  async readLogData(): Promise<CredentialStatusLogData> {
     const logFile = `${CREDENTIAL_STATUS_DIR}/${CREDENTIAL_STATUS_LOG_FILE}`;
     return JSON.parse(fs.readFileSync(logFile, { encoding: 'utf8' }));
   }
 
   // Update data in log file
-  async updateLogData(data: any): Promise<void> {
+  async updateLogData(data: CredentialStatusLogData): Promise<void> {
     const logFile = `${CREDENTIAL_STATUS_DIR}/${CREDENTIAL_STATUS_LOG_FILE}`;
     const content = JSON.stringify(data, null, 2);
     fs.writeFileSync(logFile, content);

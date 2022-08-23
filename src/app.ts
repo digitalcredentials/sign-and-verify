@@ -18,9 +18,10 @@ import { composeCredential } from './templates/Certificate';
 import {
   BaseCredentialStatusClient,
   composeStatusCredential,
-  CredentialAction,
+  CredentialState,
   CredentialStatusClientType,
-  CredentialStatusConfig,
+  CredentialStatusConfigData,
+  CredentialStatusLogData,
   CredentialStatusLogEntry,
 } from './credential-status';
 import { GithubCredentialStatusClient } from './credential-status-github';
@@ -185,7 +186,7 @@ export async function build(opts = {}) {
 
     // Create and persist status config
     const listId = credStatusClient.generateStatusListId();
-    const configData: CredentialStatusConfig = {
+    const configData: CredentialStatusConfigData = {
       credentialsIssued: 0,
       latestList: listId
     };
@@ -337,15 +338,17 @@ export async function build(opts = {}) {
         const result = await sign(credential, options);
 
         // Add new entry to status log
+        const { id: credentialStatusId, statusListCredential, statusListIndex } = credential.credentialStatus;
+        const statusListId = statusListCredential.split('/').slice(-1).pop(); // retrieve status list id from status credential url
         const statusLogEntry: CredentialStatusLogEntry = {
           timestamp: (new Date()).toISOString(),
-          credentialId: credential.id,
+          credentialId: credential.id || credentialStatusId,
+          credentialIssuer: issuerDid,
           credentialSubject: credential.credentialSubject?.id,
-          credentialAction: CredentialAction.Issued,
-          issuerDid,
+          credentialState: CredentialState.Issued,
           verificationMethod,
-          statusListCredential: credential.credentialStatus.statusListCredential,
-          statusListIndex: credential.credentialStatus.statusListIndex
+          statusListId,
+          statusListIndex
         };
         const statusLogData = await credStatusClient.readLogData();
         statusLogData.push(statusLogEntry);
@@ -391,15 +394,17 @@ export async function build(opts = {}) {
         const result = await sign(credential, options);
 
         // Add new entry to status log
+        const { id: credentialStatusId, statusListCredential, statusListIndex } = credential.credentialStatus;
+        const statusListId = statusListCredential.split('/').slice(-1).pop(); // retrieve status list id from status credential url
         const statusLogEntry: CredentialStatusLogEntry = {
           timestamp: (new Date()).toISOString(),
-          credentialId: credential.id,
+          credentialId: credential.id || credentialStatusId,
+          credentialIssuer: issuerDid,
           credentialSubject: credential.credentialSubject?.id,
-          credentialAction: CredentialAction.Issued,
-          issuerDid,
+          credentialState: CredentialState.Issued,
           verificationMethod,
-          statusListCredential: credential.credentialStatus.statusListCredential,
-          statusListIndex: credential.credentialStatus.statusListIndex
+          statusListId,
+          statusListIndex
         };
         const statusLogData = await credStatusClient.readLogData();
         statusLogData.push(statusLogEntry);
@@ -418,10 +423,21 @@ export async function build(opts = {}) {
   )
 
   server.post(
-    '/revoke/credential', async (request, reply) => {
-      const req: any = request.body;
-      const listId = req.listId;
-      const listIndex = req.listIndex;
+    '/credentials/status', async (request, reply) => {
+      const { credentialId, credentialStatus } = request.body as any;
+      const logData: CredentialStatusLogData = await credStatusClient.readLogData();
+      const logEntry = logData.find((entry) => {
+        return entry.credentialId === credentialId;
+      });
+
+      // Unable to find credential with given id
+      if (!logEntry) {
+        return reply
+          .code(404)
+          .send({ message: 'Credential not found' });
+      }
+
+      const { statusListId, statusListIndex } = logEntry as CredentialStatusLogEntry;
 
       try {
         // Setup data necessary for composing signed status credential
@@ -434,25 +450,29 @@ export async function build(opts = {}) {
 
         // Update status credential
         const statusCredentialListDecoded = await decodeList({ encodedList: statusCredentialListEncodedBefore });
-        statusCredentialListDecoded.setStatus(listIndex, true);
-        const statusCredentialId = `${credentialStatusUrl}/${listId}`;
+        statusCredentialListDecoded.setStatus(statusListIndex, true);
+        const statusCredentialId = `${credentialStatusUrl}/${statusListId}`;
         const statusCredentialDataUnsigned = await composeStatusCredential({ issuerDid, credentialId: statusCredentialId, statusList: statusCredentialListDecoded });
 
         // Resign and persist status credential
         const statusCredentialDataAfter = await sign(statusCredentialDataUnsigned, { verificationMethod });
         await credStatusClient.updateStatusData(statusCredentialDataAfter);
 
-        // Add new entry to status log
-        const statusLogEntry: CredentialStatusLogEntry = {
-          timestamp: (new Date()).toISOString(),
-          credentialAction: CredentialAction.Revoked,
-          issuerDid,
-          verificationMethod,
-          statusListCredential: statusCredentialId,
-          statusListIndex: listIndex
-        };
+        // Add new entries to status log
         const statusLogData = await credStatusClient.readLogData();
-        statusLogData.push(statusLogEntry);
+        for (let item of credentialStatus) {
+          const { status } = item;
+          const statusLogEntry: CredentialStatusLogEntry = {
+            timestamp: (new Date()).toISOString(),
+            credentialId: credentialId,
+            credentialIssuer: issuerDid,
+            credentialState: status as CredentialState,
+            verificationMethod,
+            statusListId,
+            statusListIndex
+          };
+          statusLogData.push(statusLogEntry);
+        }
         await credStatusClient.updateLogData(statusLogData);
 
         reply
