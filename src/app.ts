@@ -23,6 +23,7 @@ import {
   CredentialStatusConfigData,
   CredentialStatusLogData,
   CredentialStatusLogEntry,
+  CredentialStatusRequest,
 } from './credential-status';
 import { GithubCredentialStatusClient } from './credential-status-github';
 import { GitlabCredentialStatusClient } from './credential-status-gitlab';
@@ -424,7 +425,7 @@ export async function build(opts = {}) {
 
   server.post(
     '/credentials/status', async (request, reply) => {
-      const { credentialId, credentialStatus } = request.body as any;
+      const { credentialId, credentialStatus } = request.body as CredentialStatusRequest;
       const logData: CredentialStatusLogData = await credStatusClient.readLogData();
       const logEntry = logData.find((entry) => {
         return entry.credentialId === credentialId;

@@ -63,6 +63,18 @@ export type CredentialStatusLogEntry = {
 // Type definition for credential status log
 export type CredentialStatusLogData = CredentialStatusLogEntry[];
 
+// Type definition for item of credential status api request body
+type CredentialStatusRequestItem = {
+  type: string;
+  status: string;
+}
+
+// Type definition for credential status api request body
+export type CredentialStatusRequest = {
+  credentialId: string;
+  credentialStatus: CredentialStatusRequestItem[];
+};
+
 // Type definition for composeStatusCredential function input
 type ComposeStatusCredentialParameters = {
   issuerDid: string;
