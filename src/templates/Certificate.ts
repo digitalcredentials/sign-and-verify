@@ -1,5 +1,8 @@
+import { v4 as uuidv4 } from 'uuid';
+
 export function composeCredential (issuerDid: string, holderDid: string, credentialRecord: any): any {
   const credential: any = {
+    id: uuidv4(),
     '@context': [
       'https://www.w3.org/2018/credentials/v1',
       'https://w3id.org/security/suites/ed25519-2020/v1',

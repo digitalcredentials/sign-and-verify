@@ -78,13 +78,14 @@ const credentialOptions = { verificationMethod: issuerVerificationMethod };
 // same as above for credentials, but also with a 'challenge':
 const presentationOptions = { ...credentialOptions, challenge };
 
+const credentialId = 'http://example.gov/credentials/3732';
 const credentialSubject = "did:example:abcdef";
 const sampleUnsignedCredential = {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
     "https://w3id.org/security/suites/ed25519-2020/v1"
   ],
-  "id": "http://example.gov/credentials/3732",
+  "id": credentialId,
   "type": [
     "VerifiableCredential"
   ],
@@ -100,7 +101,7 @@ const sampleSignedCredential = {
     "https://www.w3.org/2018/credentials/v1",
     "https://w3id.org/security/suites/ed25519-2020/v1"
   ],
-  "id": "http://example.gov/credentials/3732",
+  "id": credentialId,
   "type": [
     "VerifiableCredential"
   ],
@@ -118,6 +119,7 @@ const sampleSignedCredential = {
   }
 };
 
+const presentationId = '123';
 const sampleUnsignedPresentation = {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
@@ -126,7 +128,7 @@ const sampleUnsignedPresentation = {
   "type": [
     "VerifiablePresentation"
   ],
-  "id": "123",
+  "id": presentationId,
   "holder": holderId
 };
 
@@ -138,7 +140,7 @@ const sampleSignedPresentation = {
   "type": [
     "VerifiablePresentation"
   ],
-  "id": "123",
+  "id": presentationId,
   "holder": holderId,
   "proof": {
     "type": "Ed25519Signature2020",
