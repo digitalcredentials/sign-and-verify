@@ -95,28 +95,28 @@ type Proof = {
 
 // https://digitalcredentials.github.io/dcc/v1/dcc-context-v1.json
 export type Credential = {
-  readonly '@context': string[];         // https://w3c.github.io/vc-data-model/#contexts
-  readonly id: string;                   // https://w3c.github.io/vc-data-model/#identifiers
+  readonly '@context': string[];                  // https://w3c.github.io/vc-data-model/#contexts
+  readonly id: string;                            // https://w3c.github.io/vc-data-model/#identifiers
   readonly type: string | string[];               // https://w3c.github.io/vc-data-model/#types
-  readonly issuer: Issuer;               // https://w3c.github.io/vc-data-model/#issuer
-  readonly issuanceDate: string;         // https://w3c.github.io/vc-data-model/#issuance-date
-  readonly expirationDate?: string;      // https://w3c.github.io/vc-data-model/#expiration
-  readonly credentialSubject: Subject;   // https://w3c.github.io/vc-data-model/#credential-subject
-  readonly credentialStatus?: CredentialStatus;
-  readonly proof?: Proof;                // https://w3c.github.io/vc-data-model/#proofs-signatures
+  readonly issuer: Issuer;                        // https://w3c.github.io/vc-data-model/#issuer
+  readonly issuanceDate: string;                  // https://w3c.github.io/vc-data-model/#issuance-date
+  readonly expirationDate?: string;               // https://w3c.github.io/vc-data-model/#expiration
+  readonly credentialSubject: Subject;            // https://w3c.github.io/vc-data-model/#credential-subject
+  readonly credentialStatus?: CredentialStatus;   // https://w3c.github.io/vc-data-model/#status
+  readonly proof?: Proof;                         // https://w3c.github.io/vc-data-model/#proofs-signatures
 }
 
 // https://digitalcredentials.github.io/dcc/v1/dcc-context-v1.json
 export type VerifiableCredential = {
-  readonly '@context': string[];         // https://w3c.github.io/vc-data-model/#contexts
-  readonly id: string;                   // https://w3c.github.io/vc-data-model/#identifiers
+  readonly '@context': string[];                  // https://w3c.github.io/vc-data-model/#contexts
+  readonly id: string;                            // https://w3c.github.io/vc-data-model/#identifiers
   readonly type: string | string[];               // https://w3c.github.io/vc-data-model/#types
-  readonly issuer: Issuer;               // https://w3c.github.io/vc-data-model/#issuer
-  readonly issuanceDate: string;         // https://w3c.github.io/vc-data-model/#issuance-date
-  readonly expirationDate?: string;      // https://w3c.github.io/vc-data-model/#expiration
-  readonly credentialSubject: Subject;   // https://w3c.github.io/vc-data-model/#credential-subject
-  readonly credentialStatus?: CredentialStatus;
-  readonly proof: Proof;                // https://w3c.github.io/vc-data-model/#proofs-signatures
+  readonly issuer: Issuer;                        // https://w3c.github.io/vc-data-model/#issuer
+  readonly issuanceDate: string;                  // https://w3c.github.io/vc-data-model/#issuance-date
+  readonly expirationDate?: string;               // https://w3c.github.io/vc-data-model/#expiration
+  readonly credentialSubject: Subject;            // https://w3c.github.io/vc-data-model/#credential-subject
+  readonly credentialStatus?: CredentialStatus;   // https://w3c.github.io/vc-data-model/#status
+  readonly proof: Proof;                          // https://w3c.github.io/vc-data-model/#proofs-signatures
 }
 
 export type Presentation = {
