@@ -144,8 +144,8 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
         simple: true
       }
     };
-    const repos = await this.client.get(this.reposInOrgEndpoint(), repoRequestConfig);
-    return repos.data as any[];
+    const repoResponse = await this.client.get(this.reposInOrgEndpoint(), repoRequestConfig);
+    return repoResponse.data as any[];
   }
 
   // Check if status repo exists
@@ -165,8 +165,8 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
       pages_access_level: 'public',
       description: 'Manages credential status for instance of VC-API'
     };
-    const repoResponse = (await this.client.post(this.reposEndpoint(), repoRequestConfig)).data;
-    this.credStatusRepoId = repoResponse.id;
+    const statusRepo = (await this.client.post(this.reposEndpoint(), repoRequestConfig)).data;
+    this.credStatusRepoId = statusRepo.id;
 
     const metaRepoRequestConfig = {
       name: this.credStatusMetaRepoName,
@@ -174,8 +174,8 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
       visibility: VisibilityLevel.Private,
       description: 'Manages credential status metadata for instance of VC-API'
     };
-    const metaRepoResponse = (await this.client.post(this.reposEndpoint(), metaRepoRequestConfig)).data;
-    this.credStatusMetaRepoId = metaRepoResponse.id;
+    const metaRepo = (await this.client.post(this.reposEndpoint(), metaRepoRequestConfig)).data;
+    this.credStatusMetaRepoId = metaRepo.id;
   }
 
   // Sync status repo state
