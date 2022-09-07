@@ -136,6 +136,32 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
     await this.client.post(this.commitsEndpoint(this.credStatusRepoId), websiteRequestConfig);
   }
 
+  // Reset client authorization
+  resetClientAuthorization(accessToken: string): void {
+    this.client = axios.create({
+      baseURL: 'https://gitlab.com/api/v4',
+      timeout: 6000,
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+  }
+
+  // Check if issuer client has access to status repo
+  async hasStatusRepoAccess(accessToken: string): Promise<boolean> {
+    this.resetClientAuthorization(accessToken);
+    const repoRequestConfig = {
+      params: {
+        owned: true,
+        simple: true
+      }
+    };
+    const repos = (await this.client.get(`/projects`, repoRequestConfig)).data;
+    return repos.some((repo) => {
+      return repo.path_with_namespace === `${this.credStatusRepoOrgName}/${this.credStatusRepoName}`;
+    });
+  }
+
   // Retrieve list of repos in org
   async getReposInOrg(): Promise<any[]> {
     const repoRequestConfig = {
@@ -158,6 +184,7 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
 
   // Create status repo
   async createStatusRepo(): Promise<void> {
+    // Create status repo
     const repoRequestConfig = {
       name: this.credStatusRepoName,
       namespace_id: this.credStatusRepoOrgId,
@@ -168,6 +195,7 @@ export class GitlabCredentialStatusClient extends BaseCredentialStatusClient {
     const statusRepo = (await this.client.post(this.reposEndpoint(), repoRequestConfig)).data;
     this.credStatusRepoId = statusRepo.id;
 
+    // Create status metadata repo
     const metaRepoRequestConfig = {
       name: this.credStatusMetaRepoName,
       namespace_id: this.credStatusRepoOrgId,

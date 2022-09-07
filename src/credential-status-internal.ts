@@ -32,6 +32,9 @@ export class InternalCredentialStatusClient extends BaseCredentialStatusClient {
     return `${this.vcApiIssuerUrl}/${CREDENTIAL_STATUS_FOLDER}`;
   }
 
+  // Check if issuer client has access to status repo
+  async hasStatusRepoAccess(accessToken: string): Promise<boolean> { return true; }
+
   // Check if status repo exists
   async statusRepoExists(): Promise<boolean> {
     return fs.existsSync(CREDENTIAL_STATUS_DIR);

@@ -247,7 +247,10 @@ class MockGithubCredentialStatusClient extends GithubCredentialStatus.GithubCred
   }
 
   // Setup website to host credential status management resources
-  async setupCredentialStatusWebsite(): Promise<void> {};
+  async setupCredentialStatusWebsite(): Promise<void> {}
+
+  // Check if issuer client has access to status repo
+  async hasStatusRepoAccess(accessToken: string): Promise<boolean> { return true; }
 
   // Check if status repo exists
   async statusRepoExists(): Promise<boolean> {
@@ -341,6 +344,9 @@ describe("api", () => {
       const response = await apiServer.inject({
         method: "POST",
         url,
+        headers: {
+          authorization: "Bearer @cc3$$t0k3n123"
+        },
         payload: { credential: sampleUnsignedCredential, options: credentialOptions }
       });
 
@@ -505,6 +511,9 @@ describe("api with credential status management", () => {
       const response = await apiServer.inject({
         method: "POST",
         url,
+        headers: {
+          authorization: "Bearer @cc3$$t0k3n123"
+        },
         payload: { credential: sampleUnsignedCredential, options: credentialOptions }
       });
 
@@ -555,6 +564,9 @@ describe("api with credential status management", () => {
       const response = await apiServer.inject({
         method: "POST",
         url,
+        headers: {
+          authorization: "Bearer @cc3$$t0k3n123"
+        },
         payload: {
           credentialId,
           credentialStatus: [

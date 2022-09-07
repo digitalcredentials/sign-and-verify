@@ -151,6 +151,9 @@ export abstract class BaseCredentialStatusClient {
   // Setup website to host credential status management resources
   async setupCredentialStatusWebsite(): Promise<void> {};
 
+  // Check if issuer client has access to status repo
+  abstract hasStatusRepoAccess(accessToken: string): Promise<boolean>;
+
   // Check if status repo exists
   abstract statusRepoExists(): Promise<boolean>;
 

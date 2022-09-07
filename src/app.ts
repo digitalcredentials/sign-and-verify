@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import LRU from 'lru-cache';
 import axios from 'axios';
-import fastify from 'fastify';
+import fastify, { FastifyReply, FastifyRequest } from 'fastify';
 import fastifyRawBody from 'fastify-raw-body';
 import fastifySensible from 'fastify-sensible';
 import { createIssuer, createVerifier, DIDDocument } from '@digitalcredentials/sign-and-verify-core';
@@ -182,6 +182,27 @@ export async function build(opts = {}) {
       break;
   }
 
+  // Verify whether issuer client has access to status repo
+  const verifyStatusRepoAccess = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const { headers } = request;
+    // Verify that access token was included in request
+    const accessToken = extractAccessToken(headers);
+    if (!accessToken) {
+      reply
+        .code(401)
+        .send({ message: 'Failed to provide access token in request' });
+      return;
+    }
+    // Check if issuer client has access to status repo
+    const hasAccess = await credStatusClient.hasStatusRepoAccess(accessToken);
+    if (!hasAccess) {
+      reply
+        .code(403)
+        .send({ message: 'Issuer is unauthorized to access status repo' });
+      return;
+    }
+  };
+
   // Setup status credential
   const credentialStatusUrl = credStatusClient.getCredentialStatusUrl();
   const repoExists = await credStatusClient.statusRepoExists();
@@ -263,8 +284,8 @@ export async function build(opts = {}) {
     '/request/credential', async (request, reply) => {
       const { headers, body } = request;
 
-      const accessToken = extractAccessToken(headers);
       // Verify that access token was included in request
+      const accessToken = extractAccessToken(headers);
       if (authType === AuthType.OidcToken && !accessToken) {
         return reply
           .code(401)
@@ -372,7 +393,11 @@ export async function build(opts = {}) {
   )
 
   server.post(
-    '/issue/credentials', async (request, reply) => {
+    '/issue/credentials',
+    {
+      preHandler: [verifyStatusRepoAccess]
+    },
+    async (request, reply) => {
       const req = request.body as { credential: Credential; options: Object; };
 
       try {
@@ -428,8 +453,13 @@ export async function build(opts = {}) {
   )
 
   server.post(
-    '/credentials/status', async (request, reply) => {
+    '/credentials/status',
+    {
+      preHandler: [verifyStatusRepoAccess]
+    },
+    async (request, reply) => {
       const { credentialId, credentialStatus } = request.body as CredentialStatusRequest;
+
       const logData: CredentialStatusLogData = await credStatusClient.readLogData();
       const logEntry = logData.find((entry) => {
         return entry.credentialId === credentialId;
@@ -469,7 +499,7 @@ export async function build(opts = {}) {
           const { status } = item;
           const statusLogEntry: CredentialStatusLogEntry = {
             timestamp: (new Date()).toISOString(),
-            credentialId: credentialId,
+            credentialId,
             credentialIssuer: issuerDid,
             credentialState: status as CredentialState,
             verificationMethod,

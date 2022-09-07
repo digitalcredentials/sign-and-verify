@@ -54,9 +54,25 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
     });
   }
 
+  // Reset client authorization
+  resetClientAuthorization(accessToken: string): void {
+    this.client = new Octokit({ auth: accessToken });
+  }
+
+  // Check if issuer client has access to status repo
+  async hasStatusRepoAccess(accessToken: string): Promise<boolean> {
+    this.resetClientAuthorization(accessToken);
+    const repos = (await this.client.repos.listForOrg({ org: this.credStatusRepoOrgName })).data;
+    return repos.some((repo) => {
+      const hasAccess = repo.full_name === `${this.credStatusRepoOrgName}/${this.credStatusRepoName}`;
+      const hasScope = repo.permissions?.admin && repo.permissions?.push && repo.permissions?.pull;
+      return hasAccess && hasScope;
+    });
+  }
+
   // Check if status repo exists
   async statusRepoExists(): Promise<boolean> {
-    const repos = (await this.client.repos.listForAuthenticatedUser()).data;
+    const repos = (await this.client.repos.listForOrg({ org: this.credStatusRepoOrgName })).data;
     return repos.some((repo) => {
       return repo.name === this.credStatusRepoName;
     });
@@ -64,6 +80,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
 
   // Create status repo
   async createStatusRepo(): Promise<void> {
+    // Create status repo
     await this.client.repos.createInOrg({
       org: this.credStatusRepoOrgName,
       name: this.credStatusRepoName,
@@ -71,6 +88,7 @@ export class GithubCredentialStatusClient extends BaseCredentialStatusClient {
       description: 'Manages credential status for instance of VC-API'
     });
 
+    // Create status metadata repo
     await this.client.repos.createInOrg({
       org: this.credStatusRepoOrgName,
       name: this.credStatusMetaRepoName,
