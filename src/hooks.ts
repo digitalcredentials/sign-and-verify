@@ -1,10 +1,25 @@
+import { createHash } from 'crypto';
 import { FastifyReply, FastifyRequest, HookHandlerDoneFunction } from 'fastify';
 import httpSignature from 'http-signature';
-import { HttpSignatureError } from "http-signature/lib/utils";
+import { HttpSignatureError } from 'http-signature/lib/utils';
 import { getConfig } from './config';
-import { createHash } from 'crypto';
+import { BaseCredentialStatusClient } from './credential-status';
 
+// Signature of hook function
+type HookFunction = (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
 
+// Extract access token from request header
+export function extractAccessToken(headers): string | undefined {
+  if (!headers.authorization) {
+    return;
+  }
+  const [scheme, token] = headers.authorization.split(' ');
+  if (scheme === 'Bearer') {
+    return token;
+  }
+}
+
+// Verify request request digest
 export function verifyRequestDigest(request: FastifyRequest, reply: FastifyReply, done: HookHandlerDoneFunction): void {
   const { digestCheck, digestAlorithms } = getConfig();
 
@@ -42,6 +57,7 @@ export function verifyRequestDigest(request: FastifyRequest, reply: FastifyReply
   done();
 }
 
+// Verify request signature
 export function verifyRequestSignature(request: FastifyRequest, reply: FastifyReply, done: HookHandlerDoneFunction): void {
   const { hmacSecret, hmacRequiredHeaders } = getConfig();
   if (!hmacSecret) {
@@ -75,3 +91,27 @@ export function verifyRequestSignature(request: FastifyRequest, reply: FastifyRe
   request.log.debug("HMAC signature is valid");
   done();
 }
+
+// Verify whether issuer client has access to status repo
+export function verifyStatusRepoAccess(credStatusClient: BaseCredentialStatusClient): HookFunction {
+  const verifyStatusRepoAccessHook = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const { headers } = request;
+    // Verify that access token was included in request
+    const accessToken = extractAccessToken(headers);
+    if (!accessToken) {
+      reply
+        .code(401)
+        .send({ message: 'Failed to provide access token in request' });
+      return;
+    }
+    // Check if issuer client has access to status repo
+    const hasAccess = await credStatusClient.hasStatusRepoAccess(accessToken);
+    if (!hasAccess) {
+      reply
+        .code(403)
+        .send({ message: 'Issuer is unauthorized to access status repo' });
+      return;
+    }
+  };
+  return verifyStatusRepoAccessHook;
+};

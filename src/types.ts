@@ -7,18 +7,18 @@ type IssuerObject = {
   readonly name?: string;
   readonly url?: string;
   readonly image?: string;
-}
+};
 type Issuer = IssuerURI | IssuerObject;
 
 type CreditValue = {
   readonly value?: string;
-}
+};
 
 type CourseInstance = {
   readonly type?: string;
   readonly startDate?: string;
   readonly endDate?: string;
-}
+};
 
 type CompletionDocument = {
   readonly type?: string | string[];
@@ -30,12 +30,12 @@ type CompletionDocument = {
   readonly hasCourseInstance?: CourseInstance;
   readonly startDate?: string;
   readonly endDate?: string;
-}
+};
 
 type EducationalOperationalCredentialExtensions = {
   readonly type?: string | string[];
   readonly awardedOnCompletionOf?: CompletionDocument;
-}
+};
 // https://schema.org/EducationalOccupationalCredential (this doesn't really conform)
 type EducationalOperationalCredential = EducationalOperationalCredentialExtensions & {
   readonly id?: string;
@@ -43,17 +43,17 @@ type EducationalOperationalCredential = EducationalOperationalCredentialExtensio
   readonly description?: string;
   readonly competencyRequired?: string;
   readonly credentialCategory?: string;
-}
+};
 
 type DegreeCompletion = {
   readonly type: string;
   readonly name: string;
-}
+};
 
 type StudentId = {
   readonly id: string;
   readonly image: string;
-}
+};
 
 type SubjectExtensions = {
   readonly type?: string;
@@ -66,22 +66,22 @@ type SubjectExtensions = {
   // Status List 2021
   readonly encodedList?: string;
   readonly statusPurpose?: string;
-}
+};
 type Subject = SubjectExtensions & {
   readonly id?: string;
-}
+};
 
 type CredentialStatusSubjectExtensions = {
   // Status List 2021
   readonly statusPurpose?: string;
   readonly statusListIndex?: string;
   readonly statusListCredential?: string;
-}
+};
 // https://w3c-ccg.github.io/vc-status-list-2021
 type CredentialStatus = CredentialStatusSubjectExtensions & {
   readonly id: string;
   readonly type: string | string[];
-}
+};
 
 type Proof = {
   readonly type: string;
@@ -91,7 +91,7 @@ type Proof = {
   readonly proofValue: string;
   readonly challenge?: string;
   readonly jws?: string;
-}
+};
 
 // https://digitalcredentials.github.io/dcc/v1/dcc-context-v1.json
 export type Credential = {
@@ -104,7 +104,7 @@ export type Credential = {
   readonly credentialSubject: Subject;            // https://w3c.github.io/vc-data-model/#credential-subject
   readonly credentialStatus?: CredentialStatus;   // https://w3c.github.io/vc-data-model/#status
   readonly proof?: Proof;                         // https://w3c.github.io/vc-data-model/#proofs-signatures
-}
+};
 
 // https://digitalcredentials.github.io/dcc/v1/dcc-context-v1.json
 export type VerifiableCredential = {
@@ -117,7 +117,7 @@ export type VerifiableCredential = {
   readonly credentialSubject: Subject;            // https://w3c.github.io/vc-data-model/#credential-subject
   readonly credentialStatus?: CredentialStatus;   // https://w3c.github.io/vc-data-model/#status
   readonly proof: Proof;                          // https://w3c.github.io/vc-data-model/#proofs-signatures
-}
+};
 
 export type Presentation = {
   readonly '@context': string[];
@@ -126,7 +126,7 @@ export type Presentation = {
   readonly holder?: string;
   readonly verifiableCredential: Credential | Credential[];
   readonly proof?: Proof;
-}
+};
 
 export type VerifiablePresentation = {
   readonly '@context': string[];
@@ -135,4 +135,4 @@ export type VerifiablePresentation = {
   readonly holder?: string;
   readonly verifiableCredential: Credential | Credential[];
   readonly proof: Proof;
-}
+};

@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import LRU from 'lru-cache';
 import axios from 'axios';
-import fastify, { FastifyReply, FastifyRequest } from 'fastify';
+import fastify from 'fastify';
 import fastifyRawBody from 'fastify-raw-body';
 import fastifySensible from 'fastify-sensible';
 import { createIssuer, createVerifier, DIDDocument } from '@digitalcredentials/sign-and-verify-core';
@@ -13,6 +13,7 @@ import * as didKey from '@digitalcredentials/did-method-key';
 import { decodeList } from '@digitalbazaar/vc-status-list';
 import { getConfig, decodeSeed } from './config';
 import { default as demoCredential } from './demoCredential.json';
+import { extractAccessToken, verifyStatusRepoAccess } from './hooks';
 import { AuthType, credentialRecordFromOidc, credentialRecordFromChallenge } from './issuer';
 import { composeCredential } from './templates/Certificate';
 import { Credential, Presentation, VerifiableCredential, VerifiablePresentation } from './types';
@@ -51,16 +52,6 @@ const VERIFICATION_METHOD_PURPOSES = [
   'capabilityInvocation',
   'keyAgreement'
 ];
-
-export function extractAccessToken(headers): string | undefined {
-  if (!headers.authorization) {
-    return;
-  }
-  const [scheme, token] = headers.authorization.split(' ');
-  if (scheme === 'Bearer') {
-    return token;
-  }
-}
 
 const ensureId = (field) => {
   if (typeof field === 'object') {
@@ -181,27 +172,6 @@ export async function build(opts = {}) {
       credStatusClient = new InternalCredentialStatusClient({ vcApiIssuerUrlHost, vcApiIssuerUrlProtocol });
       break;
   }
-
-  // Verify whether issuer client has access to status repo
-  const verifyStatusRepoAccess = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
-    const { headers } = request;
-    // Verify that access token was included in request
-    const accessToken = extractAccessToken(headers);
-    if (!accessToken) {
-      reply
-        .code(401)
-        .send({ message: 'Failed to provide access token in request' });
-      return;
-    }
-    // Check if issuer client has access to status repo
-    const hasAccess = await credStatusClient.hasStatusRepoAccess(accessToken);
-    if (!hasAccess) {
-      reply
-        .code(403)
-        .send({ message: 'Issuer is unauthorized to access status repo' });
-      return;
-    }
-  };
 
   // Setup status credential
   const credentialStatusUrl = credStatusClient.getCredentialStatusUrl();
@@ -395,7 +365,7 @@ export async function build(opts = {}) {
   server.post(
     '/issue/credentials',
     {
-      preHandler: [verifyStatusRepoAccess]
+      preHandler: [verifyStatusRepoAccess(credStatusClient)]
     },
     async (request, reply) => {
       const req = request.body as { credential: Credential; options: Object; };
@@ -455,7 +425,7 @@ export async function build(opts = {}) {
   server.post(
     '/credentials/status',
     {
-      preHandler: [verifyStatusRepoAccess]
+      preHandler: [verifyStatusRepoAccess(credStatusClient)]
     },
     async (request, reply) => {
       const { credentialId, credentialStatus } = request.body as CredentialStatusRequest;

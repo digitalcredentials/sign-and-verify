@@ -64,7 +64,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 9. Select the full *repo* scope
 10. Click the *Generate token* button
 11. Copy the generated token
-12. \*Save the token from the previous step as the `CRED_STATUS_CLIENT_ACCESS_TOKEN` environment variable at the service that is hosting your organization’s instance of `sign-and-verify`
+12. \*Save the token from the previous step as the `CRED_STATUS_CLIENT_ACCESS_TOKEN` environment variable at the service that is hosting your organization’s instance of `sign-and-verify` and use it as an authorization bearer token in issuance and revocation requests
 
 **GitLab**
 1. Login to GitLab as an authorized member of the group
@@ -76,7 +76,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 7. Select the *api* scope
 8. Click the *Create personal access token* button
 9. Copy the generated token
-10. \*Save the token from the previous step as the `CRED_STATUS_CLIENT_ACCESS_TOKEN` environment variable at the service that is hosting your organization’s instance of `sign-and-verify`
+10. \*Save the token from the previous step as the `CRED_STATUS_CLIENT_ACCESS_TOKEN` environment variable at the service that is hosting your organization’s instance of `sign-and-verify` and use it as an authorization bearer token in issuance and revocation requests
 
 \*NOTE: `CRED_STATUS_REPO_NAME`, the designated credential status repo, and `CRED_STATUS_META_REPO_NAME`, the designated credential status metadata repo, will automatically be generated after running `npm run start` or `yarn start`, per the instructions below.
 

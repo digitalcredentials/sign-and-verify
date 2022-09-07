@@ -5,8 +5,8 @@
 
 import axios from 'axios';
 import { Issuer } from 'openid-client';
-import { dbCredClient } from './database';
 import { getConfig } from './config';
+import { dbCredClient } from './database';
 
 export enum AuthType {
   OidcToken = 'oidc_token',
