@@ -4,6 +4,7 @@ import { decodeSecretKeySeed } from '@digitalcredentials/bnid';
 
 export type Config = {
   port: number;
+  enableHttpsForDev: boolean;
   authType: AuthType;
   didSeed: string;
   didWebUrl: string | undefined;
@@ -29,7 +30,8 @@ export function parseConfig(): Config {
     throw new ConfigurationError("Environment variable 'OIDC_ISSUER_URL' is not set");
   }
   return Object.freeze({
-    port: process.env.PORT ? Number(process.env.PORT) : 5000,
+    port: process.env.PORT ? Number(process.env.PORT) : 3000,
+    enableHttpsForDev: process.env.ENABLE_HTTPS_FOR_DEV?.toLowerCase() === 'true',
     authType: process.env.AUTH_TYPE as AuthType,
     didSeed: process.env.DID_SEED,
     didWebUrl: process.env.DID_WEB_URL,

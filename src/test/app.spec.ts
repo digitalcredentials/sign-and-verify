@@ -224,6 +224,22 @@ describe("api", () => {
     }).timeout(6000);
   });
 
+  describe("/credentials/issue", () => {
+    const url = "/credentials/issue";
+    it("POST returns 201 and cred", async () => {
+      const response = await apiServer.inject({
+        method: "POST",
+        url: url,
+        payload: { credential: sampleUnsignedCredential }
+      });
+      expect(response.statusCode).to.equal(201);
+      const payload = JSON.parse(response.payload);
+      console.log(payload)
+      expect(payload.proof.type).to.equal('Ed25519Signature2020');
+      expect(payload.issuer).to.equal(issuerId);
+    }).timeout(6000);
+  });
+
   describe("/prove/presentations", () => {
     const url = "/prove/presentations";
     it("POST returns 201 and presentation", async () => {
@@ -269,11 +285,15 @@ describe("api", () => {
     }).timeout(9000);
   });
 
-  describe("/request/credential", () => {
-    sandbox.stub(IssuerHelper, 'credentialRecordFromOidc').returns(Promise.resolve({}));
-    sandbox.stub(Certificate, 'composeCredential').returns(demoCredential);
+   describe("/request/credential and alias /exchange/:exchangeId", () => {
+
+    before(async () => {
+      sandbox.stub(IssuerHelper, 'credentialRecordFromOidc').returns(Promise.resolve({}));
+      sandbox.stub(Certificate, 'composeCredential').returns(demoCredential);
+    });
+
     const url = "/request/credential";
-    it("POST returns 201", async () => {
+    it(`${url} POST returns 201`, async () => {
       const response = await apiServer.inject({
         method: "POST",
         url: url,
@@ -287,8 +307,25 @@ describe("api", () => {
       expect(payload.proof.type).to.equal('Ed25519Signature2020');
       expect(payload.issuer.id).to.equal(issuerId);
     }).timeout(9000);
-  });
 
+    const aliasURL = "/exchange/:exchangeId";
+    it(`${aliasURL} POST returns 201`, async () => {
+      const response = await apiServer.inject({
+        method: "POST",
+        url: aliasURL,
+        headers: {
+          authorization: "Bearer @cc3$$t0k3n123"
+        },
+        payload: sampleSignedPresentation
+      });
+      expect(response.statusCode).to.equal(200);
+      const payload = JSON.parse(response.payload);
+      expect(payload.proof.type).to.equal('Ed25519Signature2020');
+      expect(payload.issuer.id).to.equal(issuerId);
+    }).timeout(9000);
+
+  });
+ 
   describe("/request/democredential/nodidproof", () => {
     const url = "/request/democredential/nodidproof";
     it("POST returns 500 if demo issuance not supported", async () => {

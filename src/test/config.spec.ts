@@ -14,12 +14,13 @@ const didWebUrl = "https://vc-issuer.example.com";
 const oidcIssuerUrl = "https://oidc-issuer.example.com";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
 const expectedConfig: Config = {
-  port: 5000,
+  port: 3000,
   authType,
   didSeed,
   didWebUrl,
   oidcIssuerUrl,
   issuerMembershipRegistryUrl,
+  enableHttpsForDev: false,
   hmacSecret: null,
   hmacRequiredHeaders: ["date", "digest"],
   digestCheck: false,
