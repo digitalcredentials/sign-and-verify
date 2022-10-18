@@ -26,6 +26,7 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 - `DB_HOST`: database client hostname (optional)
 - `DB_NAME`: database name (optional)
 - `DB_COLLECTION`: database credentials collection name (optional)
+- `ENABLE_HTTPS_FOR_DEV`: set to `true` to enable https for a local dev instance, using 'server-dev-only.cert' and 'server-dev-only.key` It goes without saying that this is NOT for production.  It was introduced to make it easier to test against the JFF VC-API tests, which require an https endpoint.
 
 2. Copy `.env.example` to `.env`, which `npm run start` will pick up, to test these values.
 
