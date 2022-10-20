@@ -123,3 +123,6 @@ build
 
 # dotenv
 .env
+
+# docker-compose
+docker-compose.yml

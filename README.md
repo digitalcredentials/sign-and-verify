@@ -364,7 +364,10 @@ If you want to work with a non-root user without using `sudo`, log in to your in
 - Clone the  `sign-and-verify` repo with
 `git clone https://github.com/digitalcredentials/sign-and-verify.git`
 
-Optional: If you want to have a automatically generated TLS-certificate provided by Let's Encrypt, then copy the `.yml` file from the `Docker` folder to your main folder by
+Copy the docker-compose example file:
+- `cp docker-compose.example.yml docker-compose.yml`
+
+Optional: If you want to have a automatically generated TLS-certificate provided by Let's Encrypt, then instead copy the `.yml` file from the `Docker` folder to your main folder by
 - `cp Docker/docker-compose-acme.yml docker-compose.yml`
 
 - Change the `.env` variables to your liking; first, rename the `.env.example` to `.env` by
@@ -384,7 +387,7 @@ Optional: If you want to have a automatically generated TLS-certificate provided
 `docker-compose down`
 
 ### 8. Usage
-If everything works as intended, then you should be able to execute any of the [above-mentioned commands](#api-docs). The `sign-and-verify` service is available at `YOUR_IPADDRESS:5000`. If you use SSL/TLS-certificates, your service will be available at `https://yourdomain.edu` on standard port 443.
+If everything works as intended, then you should be able to execute any of the [above-mentioned commands](#api-docs). The `sign-and-verify` service is available at `YOUR_IPADDRESS:3000`. If you use SSL/TLS-certificates, your service will be available at `https://yourdomain.edu` on standard port 443.
 
 ### 9. SSL/TLS-Certificate
 Please check step 6 for an automatic TLS certificate with Let's Encrypt and ACME.
