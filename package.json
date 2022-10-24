@@ -9,7 +9,7 @@
     "build": "tsc -p tsconfig.json",
     "setup": "bin/setup.sh",
     "start": "node --require dotenv/config dist/index.js",
-    "postinstall": "rm node_modules/mongodb/mongodb.d.ts",
+    "postinstall": "rm -f node_modules/mongodb/*.d.ts",
     "postbuild": "npm run copy-files",
     "copy-files": "copyfiles -u 1 src/**/*.yaml src/templates/* dist/"
   },
@@ -58,6 +58,6 @@
     "sinon": "^9.2.4",
     "source-map-support": "^0.5.19",
     "ts-node": "^8.10.2",
-    "typescript": "^3.9.9"
+    "typescript": "^4.8.4"
   }
 }

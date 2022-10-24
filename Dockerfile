@@ -15,7 +15,9 @@ RUN apt-get update && \
 
 COPY . /usr/src/app
 
+RUN npm run postinstall
 RUN npm run build
+RUN npm run copy-files
 
 EXPOSE 5000
 
