@@ -15,7 +15,7 @@ export function composeCredential (issuerDid: string, holderDid: string, credent
         "Profile",
       ],
       id: issuerDid,
-      name: credentialRecord.issuer.name
+      name: credentialRecord.issuer.name,
       url: "https://www.jff.org/",
       image: "https://w3c-ccg.github.io/vc-ed/plugfest-1-2022/images/JFF_LogoLockup.png"
     },
