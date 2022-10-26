@@ -17,10 +17,6 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 - `ISSUER_MEMBERSHIP_REGISTRY_URL`: location of registry used to confirm issuer's membership status in DCC (required)
 - `DID_WEB_URL`: the url used to generate `did:web` document and keys for issuer (optional, default: `undefined`)
 - `PORT`: the port the web service will bind to (optional, default: `5000`)
-- `DIGEST_CHECK`: set to `true` to enable `Digest` header verification (optional, default: `false`)
-- `DIGEST_ALGORITHMS`: a comma-delimited list of acceptable digest algorithms (optional, default: `sha256,sha512`)
-- `HMAC_SECRET`: set to the shared HMAC secret to require [HMAC signing](https://tools.ietf.org/html/draft-ietf-httpbis-message-signatures-00) of the request via the `Signature` header (optional, default: `null`)
-- `HMAC_REQUIRED_HEADERS`: a comma-delimited list of headers that are required to be in the HMAC signature (optional, default: `date,digest`)
 - `DB_USER`: database client username (optional)
 - `DB_PASS`: database client password (optional)
 - `DB_HOST`: database client hostname (optional)
@@ -45,7 +41,7 @@ NOTE: the `DID_SEED` included as an example is just for your reference. Do not c
 ## Install
 
 ```
-npm run install
+npm install
 ```
 
 ## Build
@@ -280,22 +276,6 @@ As described in [Verify Presentation](#Verify-Presentation), response code 200 m
    holder : did:web:digitalcredentials.github.io
 }
 ```
-
-## Security
-
-In order to ensure that requests to issue digital credentials are from a trusted source, there are two security mechanisms in place that work to establish a chain of trust.
-
-### Digest Verification
-
-In order to verify the integrity of incoming requests, there is an optional validation of the integrity of the request body. This is done by comparing the hash of the body against the hash provided in the `Digest` header, using the hash algorithm specified by the header. The header is required to be in the form of `Digest: {ALGORITHM}={HASH}`.
-
-If the verification fails a response with a 400 status code and an appropriate error message are returned.
-
-### HMAC Signature Verification
-
-Digest Verification alone only isn't useful if the header and request body have been tampered with. To combat this, a request signature check can be made which verifies the signature of the request headers using a shared HMAC secret. Only a client that knows this secret will be able to generate a correct signature.
-
-This, combined with Digest Verification, ensures that a) the request (specifically the headers in the signature) came from a trusted source and b) the request contents (encapsulated by the `Digest` header, which is part of the signature) haven't been tampered with and can be trusted.
 
 ## Generate a test control proof 
 

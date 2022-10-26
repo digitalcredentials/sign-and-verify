@@ -10,10 +10,6 @@ export type Config = {
   didWebUrl: string | undefined;
   oidcIssuerUrl: string | undefined;
   issuerMembershipRegistryUrl: string;
-  hmacSecret: string | null;
-  hmacRequiredHeaders: Array<string>;
-  digestCheck: boolean;
-  digestAlorithms: Array<string>;
   demoIssuerMethod: string | null;
 }
 
@@ -37,14 +33,6 @@ export function parseConfig(): Config {
     didWebUrl: process.env.DID_WEB_URL,
     oidcIssuerUrl: process.env.OIDC_ISSUER_URL,
     issuerMembershipRegistryUrl: process.env.ISSUER_MEMBERSHIP_REGISTRY_URL || 'https://digitalcredentials.github.io/issuer-registry/registry.json',
-    hmacSecret: process.env.HMAC_SECRET || null,
-    hmacRequiredHeaders: (
-      process.env.HMAC_REQUIRED_HEADERS || "date,digest"
-    ).split(",").map((header) => header.trim()),
-    digestCheck: process.env.DIGEST_CHECK?.toLowerCase() === 'true',
-    digestAlorithms: (
-      process.env.DIGEST_ALGORITHMS || "SHA256,SHA512"
-    ).split(",").map((alg) => alg.trim()),
     demoIssuerMethod : process.env.DEMO_ISSUER_METHOD || null
   });
 }

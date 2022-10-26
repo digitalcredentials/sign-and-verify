@@ -21,10 +21,6 @@ const expectedConfig: Config = {
   oidcIssuerUrl,
   issuerMembershipRegistryUrl,
   enableHttpsForDev: false,
-  hmacSecret: null,
-  hmacRequiredHeaders: ["date", "digest"],
-  digestCheck: false,
-  digestAlorithms: ["SHA256", "SHA512"],
   demoIssuerMethod: null
 };
 const validEnv = {
@@ -57,61 +53,6 @@ describe("config", () => {
       expect(parseConfig()).to.deep.equal({
         ...expectedConfig,
         port: 6739,
-      });
-    });
-
-    it("should parse env.HMAC_SECRET", () => {
-      const hmacSecret = "abc123";
-      sandbox.stub(process, "env").value({
-        ...validEnv,
-        HMAC_SECRET: hmacSecret
-      });
-      expect(parseConfig()).to.deep.equal({
-        ...expectedConfig,
-        hmacSecret
-      });
-    });
-
-    it("should parse env.HMAC_REQUIRED_HEADERS", () => {
-      sandbox.stub(process, "env").value({
-        ...validEnv,
-        HMAC_REQUIRED_HEADERS: "abc,def, gher, asf"
-      });
-      expect(parseConfig()).to.deep.equal({
-        ...expectedConfig,
-        hmacRequiredHeaders: ["abc", "def", "gher", "asf"],
-      });
-    });
-
-    ;[
-      ['true', true],
-      ['True', true],
-      ['TRUE', true],
-      ['false', false],
-      ['123', false],
-      ['', false],
-      [undefined, false],
-    ].forEach(([value, expected]) => {
-      it(`should parse env.DIGEST_CHECK with value=${value}`, () => {
-        sandbox.stub(process, "env").value({
-          ...validEnv,
-          DIGEST_CHECK: value,
-        });
-        expect(parseConfig()).to.deep.equal({
-          ...expectedConfig,
-          digestCheck: expected
-        });
-      });
-    });
-
-    it("should parse env.DIGEST_ALGORITHMS", () => {
-      sandbox.stub(process, "env").value({
-        ...validEnv,
-        HMAC_REQUIRED_HEADERS: "abc,def, gher, asf"
-      });
-      expect(parseConfig()).to.deep.equal({
-        ...expectedConfig,
-        hmacRequiredHeaders: ["abc", "def", "gher", "asf"],
       });
     });
 

@@ -11,7 +11,6 @@ import * as didWeb from '@interop/did-web-resolver';
 import * as didKey from '@digitalcredentials/did-method-key';
 import { AuthType, credentialRecordFromOidc, credentialRecordFromChallenge } from './issuer';
 import { getConfig, decodeSeed } from './config';
-import { verifyRequestDigest, verifyRequestSignature } from './hooks';
 import { default as demoCredential } from './demoCredential.json';
 import { v4 as uuidv4 } from 'uuid';
 import LRU from 'lru-cache';
@@ -335,11 +334,7 @@ export async function build(opts = {}) {
     {
       config: {
         rawBody: true,
-      },
-      preValidation: [
-        verifyRequestDigest,
-        verifyRequestSignature
-      ]
+      }
     },
     async (request, reply) => {
       const req: any = request.body;
@@ -362,11 +357,7 @@ export async function build(opts = {}) {
       },
       config: {
         rawBody: true,
-      },
-      preValidation: [
-        verifyRequestDigest,
-        verifyRequestSignature
-      ]
+      }
     },
     async (request, reply) => {
       const req: any = request.body;
@@ -379,8 +370,6 @@ export async function build(opts = {}) {
       const options = { verificationMethod }
       
       try {
-        console.log("the request body:")
-        console.log(req)
         const result = await sign(credential, options);
         reply
         .code(201)
