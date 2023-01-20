@@ -22,7 +22,7 @@
     "@digitalcredentials/bnid": "^2.1.2",
     "@digitalcredentials/did-method-key": "^2.0.3",
     "@digitalcredentials/ed25519-verification-key-2020": "^3.2.2",
-    "@digitalcredentials/sign-and-verify-core": "github:digitalcredentials/sign-and-verify-core#revoke-credential",
+    "@digitalcredentials/sign-and-verify-core": "^2.1.0",
     "@digitalcredentials/vc": "^1.1.2",
     "@digitalcredentials/x25519-key-agreement-key-2020": "^2.0.2",
     "@interop/did-web-resolver": "^2.2.0",
