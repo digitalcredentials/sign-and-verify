@@ -7,15 +7,19 @@ import { Server, IncomingMessage, ServerResponse } from 'http';
 import LRU from 'lru-cache';
 import { Collection } from 'mongodb';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import { decodeList } from '@digitalbazaar/vc-status-list';
+import * as OctokitClient from '@octokit/rest';
 import { Issuer } from 'openid-client';
 import { build } from '../app';
 import { resetConfig } from '../config';
+import * as CredentialStatus from '../credential-status';
+import * as GithubCredentialStatus from '../credential-status-github';
+import * as Database from '../database';
+import demoCredential from '../demoCredential.json';
 import * as IssuerHelper from '../issuer';
 import * as Certificate from '../templates/Certificate';
-import demoCredential from '../demoCredential.json';
-import { AuthType } from '../issuer';
-import * as Database from '../database';
-import { dbCreate, dbConnect, dbDisconnect, Credential } from './database';
+import { VerifiableCredential } from '../types';
+import { dbCreate, dbConnect, dbDisconnect, DbCredential } from './database';
 
 const sandbox = createSandbox();
 const lruStub = sandbox.createStubInstance(LRU) as SinonStubbedInstance<LRU> & LRU;
@@ -33,17 +37,35 @@ const sampleIssuerMembershipRegistry = {
 lruStub.get.returns(sampleIssuerMembershipRegistry);
 lruStub.set.returns(true);
 
-const authType = AuthType.OidcToken;
+const authType = IssuerHelper.AuthType.OidcToken;
 const didSeed = "DsnrHBHFQP0ab59dQELh3uEwy7i5ArcOTwxkwRO2hM87CBRGWBEChPO7AjmwkAZ2";
 const didWebUrl = "https://vc-issuer.example.com";
 const oidcIssuerUrl = "https://oidc-issuer.example.com";
+const vcApiIssuerUrlHost = "vc-issuer.example.com";
+const vcApiIssuerUrlProtocol = "https";
 const issuerMembershipRegistryUrl = "https://digitalcredentials.github.io/issuer-registry/registry.json";
+const credStatusClientType = CredentialStatus.CredentialStatusClientType.Github;
+const credStatusClientAccessToken = "abc";
+const credStatusRepoName = "credential-status";
+const credStatusMetaRepoName = "credential-status-metadata";
+const credStatusRepoOrgName = "university-xyz";
+const credStatusRepoOrgId = "87654321";
+const credStatusRepoVisibility = CredentialStatus.VisibilityLevel.Public;
 const validEnv = {
   AUTH_TYPE: authType,
   DID_SEED: didSeed,
   DID_WEB_URL: didWebUrl,
   OIDC_ISSUER_URL: oidcIssuerUrl,
-  ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl
+  VC_API_ISSUER_URL_HOST: vcApiIssuerUrlHost,
+  VC_API_ISSUER_URL_PROTOCOL: vcApiIssuerUrlProtocol,
+  ISSUER_MEMBERSHIP_REGISTRY_URL: issuerMembershipRegistryUrl,
+  CRED_STATUS_CLIENT_TYPE: credStatusClientType,
+  CRED_STATUS_CLIENT_ACCESS_TOKEN: credStatusClientAccessToken,
+  CRED_STATUS_REPO_NAME: credStatusRepoName,
+  CRED_STATUS_META_REPO_NAME: credStatusMetaRepoName,
+  CRED_STATUS_REPO_ORG_NAME: credStatusRepoOrgName,
+  CRED_STATUS_REPO_ORG_ID: credStatusRepoOrgId,
+  CRED_STATUS_REPO_VISIBILITY: credStatusRepoVisibility,
 };
 
 const issuerKey = 'z6MkhVTX9BF3NGYX6cc7jWpbNnR7cAjH8LUffabZP8Qu4ysC';
@@ -59,19 +81,21 @@ const credentialOptions = { verificationMethod: issuerVerificationMethod };
 // same as above for credentials, but also with a 'challenge':
 const presentationOptions = { ...credentialOptions, challenge };
 
+const credentialId = 'http://example.gov/credentials/3732';
+const credentialSubject = "did:example:abcdef";
 const sampleUnsignedCredential = {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
     "https://w3id.org/security/suites/ed25519-2020/v1"
   ],
-  "id": "http://example.gov/credentials/3732",
+  "id": credentialId,
   "type": [
     "VerifiableCredential"
   ],
   "issuer": issuerId,
   "issuanceDate": "2020-03-10T04:24:12.164Z",
   "credentialSubject": {
-    "id": "did:example:abcdef"
+    "id": credentialSubject
   }
 };
 
@@ -80,14 +104,14 @@ const sampleSignedCredential = {
     "https://www.w3.org/2018/credentials/v1",
     "https://w3id.org/security/suites/ed25519-2020/v1"
   ],
-  "id": "http://example.gov/credentials/3732",
+  "id": credentialId,
   "type": [
     "VerifiableCredential"
   ],
   "issuer": issuerId,
   "issuanceDate": "2020-03-10T04:24:12.164Z",
   "credentialSubject": {
-    "id": "did:example:abcdef"
+    "id": credentialSubject
   },
   "proof": {
     "type": "Ed25519Signature2020",
@@ -98,6 +122,7 @@ const sampleSignedCredential = {
   }
 };
 
+const presentationId = '123';
 const sampleUnsignedPresentation = {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
@@ -106,7 +131,7 @@ const sampleUnsignedPresentation = {
   "type": [
     "VerifiablePresentation"
   ],
-  "id": "123",
+  "id": presentationId,
   "holder": holderId
 };
 
@@ -118,7 +143,7 @@ const sampleSignedPresentation = {
   "type": [
     "VerifiablePresentation"
   ],
-  "id": "123",
+  "id": presentationId,
   "holder": holderId,
   "proof": {
     "type": "Ed25519Signature2020",
@@ -168,9 +193,17 @@ const sampleDbCredential2 = {
   "challenge": challenge
 };
 
+const validateArrayEmpty = (received) => {
+  expect(received).to.be.empty;
+};
+
+const validateArrayNotEmpty = (received) => {
+  expect(received).not.to.be.empty;
+};
+
 const validateNotEmpty = (received) => {
   expect(received).not.to.be.null;
-  expect(received).not.to.not.equal(undefined);
+  expect(received).not.to.equal(undefined);
 };
 
 const validateObjectEquality = (received, expected) => {
@@ -179,31 +212,127 @@ const validateObjectEquality = (received, expected) => {
   }
 };
 
+const statusListId = "V27UAUYPNR";
+const statusListIndex = 3;
+
+class MockGithubCredentialStatusClient extends GithubCredentialStatus.GithubCredentialStatusClient {
+  private statusList: any;
+  private statusConfig: CredentialStatus.CredentialStatusConfigData;
+  private statusLog: CredentialStatus.CredentialStatusLogEntry[];
+  private statusRepoName: string;
+  private statusMetaRepoName: string;
+  private statusRepoOrgName: string;
+  private statusRepoVisibility: CredentialStatus.VisibilityLevel;
+
+  constructor(config: GithubCredentialStatus.GithubCredentialStatusClientParameters) {
+    super({
+      credStatusRepoName,
+      credStatusMetaRepoName,
+      credStatusRepoOrgName,
+      credStatusRepoVisibility,
+      credStatusClientAccessToken
+    });
+    this.statusList = {};
+    this.statusConfig = {} as CredentialStatus.CredentialStatusConfigData;
+    this.statusLog = [];
+    this.statusRepoName = credStatusRepoName;
+    this.statusMetaRepoName = credStatusMetaRepoName;
+    this.statusRepoOrgName = credStatusRepoOrgName;
+    this.statusRepoVisibility = credStatusRepoVisibility;
+  }
+
+  // Generate new status list ID
+  generateStatusListId(): string {
+    return statusListId;
+  }
+
+  // Setup website to host credential status management resources
+  async setupCredentialStatusWebsite(): Promise<void> {}
+
+  // Check if issuer client has access to status repo
+  async hasStatusRepoAccess(accessToken: string): Promise<boolean> { return true; }
+
+  // Check if status repo exists
+  async statusRepoExists(): Promise<boolean> {
+    return false;
+  }
+
+  // Create status repo
+  async createStatusRepo(): Promise<void> {}
+
+  // Create data in config file
+  async createConfigData(data: CredentialStatus.CredentialStatusConfigData): Promise<void> {
+    this.statusConfig = data;
+  }
+
+  // Retrieve data from config file
+  async readConfigData(): Promise<CredentialStatus.CredentialStatusConfigData> {
+    return this.statusConfig;
+  }
+
+  // Update data in config file
+  async updateConfigData(data: CredentialStatus.CredentialStatusConfigData): Promise<void> {
+    this.statusConfig = data;
+  }
+
+  // Create data in log file
+  async createLogData(data: CredentialStatus.CredentialStatusLogData): Promise<void> {
+    this.statusLog = data;
+  }
+
+  // Retrieve data from log file
+  async readLogData(): Promise<CredentialStatus.CredentialStatusLogData> {
+    return this.statusLog;
+  }
+
+  // Update data in log file
+  async updateLogData(data: CredentialStatus.CredentialStatusLogData): Promise<void> {
+    this.statusLog = data;
+  }
+
+  // Create data in status file
+  async createStatusData(data: VerifiableCredential): Promise<void> {
+    this.statusList = data;
+  }
+
+  // Retrieve data from status file
+  async readStatusData(): Promise<VerifiableCredential> {
+    return this.statusList;
+  }
+
+  // Update data in status file
+  async updateStatusData(data: VerifiableCredential): Promise<void> {
+    this.statusList = data;
+  }
+}
+
 describe("api", () => {
   let apiServer: FastifyInstance<Server, IncomingMessage, ServerResponse>;
 
   before(async () => {
     resetConfig();
     sandbox.stub(process, "env").value(validEnv);
+    sandbox.stub(OctokitClient.Octokit.prototype, 'constructor').returns(null);
+    sandbox.stub(GithubCredentialStatus, 'GithubCredentialStatusClient').value(MockGithubCredentialStatusClient);
     apiServer = await build();
     await apiServer.ready();
   });
 
-  after(async () => {
+  after(() => {
     sandbox.restore();
   });
 
   describe("/status", () => {
     const url = "/status";
     it("GET returns 200", async () => {
-      const response = await apiServer.inject({ method: "GET", url: url });
+      const response = await apiServer.inject({ method: "GET", url });
       expect(response.statusCode).to.equal(200);
       const payload: { status: String } = JSON.parse(response.payload);
       expect(payload).to.deep.equal({ status: 'OK' });
     });
 
     it("POST returns 404", async () => {
-      const response = await apiServer.inject({ method: "POST", url: url });
+      const response = await apiServer.inject({ method: "POST", url });
       expect(response.statusCode).to.equal(404);
       expect(response.payload).to.deep.equal('{"message":"Route POST:/status not found","error":"Not Found","statusCode":404}');
     });
@@ -214,27 +343,15 @@ describe("api", () => {
     it("POST returns 201 and cred", async () => {
       const response = await apiServer.inject({
         method: "POST",
-        url: url,
+        url,
+        headers: {
+          authorization: "Bearer @cc3$$t0k3n123"
+        },
         payload: { credential: sampleUnsignedCredential, options: credentialOptions }
       });
-      expect(response.statusCode).to.equal(201);
-      const payload = JSON.parse(response.payload);
-      expect(payload.proof.type).to.equal('Ed25519Signature2020');
-      expect(payload.issuer).to.equal(issuerId);
-    }).timeout(6000);
-  });
 
-  describe("/credentials/issue", () => {
-    const url = "/credentials/issue";
-    it("POST returns 201 and cred", async () => {
-      const response = await apiServer.inject({
-        method: "POST",
-        url: url,
-        payload: { credential: sampleUnsignedCredential }
-      });
-      expect(response.statusCode).to.equal(201);
       const payload = JSON.parse(response.payload);
-      console.log(payload)
+      expect(response.statusCode).to.equal(201);
       expect(payload.proof.type).to.equal('Ed25519Signature2020');
       expect(payload.issuer).to.equal(issuerId);
     }).timeout(6000);
@@ -245,7 +362,7 @@ describe("api", () => {
     it("POST returns 201 and presentation", async () => {
       const response = await apiServer.inject({
         method: "POST",
-        url: url,
+        url,
         payload: { presentation: sampleUnsignedPresentation, options: presentationOptions }
       });
       expect(response.statusCode).to.equal(201);
@@ -261,7 +378,7 @@ describe("api", () => {
     it("POST returns 200", async () => {
       const response = await apiServer.inject({
         method: "POST",
-        url: url,
+        url,
         payload: { verifiableCredential: sampleSignedCredential, options: credentialOptions }
       });
       expect(response.statusCode).to.equal(200);
@@ -276,7 +393,7 @@ describe("api", () => {
     it("POST returns 200", async () => {
       const response = await apiServer.inject({
         method: "POST",
-        url: url,
+        url,
         payload: { verifiablePresentation: sampleSignedPresentation, options: presentationOptions }
       });
       expect(response.statusCode).to.equal(200);
@@ -285,60 +402,40 @@ describe("api", () => {
     }).timeout(9000);
   });
 
-   describe("/request/credential and alias /exchange/:exchangeId", () => {
-
-    before(async () => {
-      sandbox.stub(IssuerHelper, 'credentialRecordFromOidc').returns(Promise.resolve({}));
-      sandbox.stub(Certificate, 'composeCredential').returns(demoCredential);
-    });
-
+  describe("/request/credential", () => {
+    sandbox.stub(IssuerHelper, 'credentialRecordFromOidc').returns(Promise.resolve({}));
+    sandbox.stub(Certificate, 'composeCredential').returns(demoCredential);
     const url = "/request/credential";
-    it(`${url} POST returns 201`, async () => {
+    it("POST returns 200", async () => {
       const response = await apiServer.inject({
         method: "POST",
-        url: url,
+        url,
         headers: {
           authorization: "Bearer @cc3$$t0k3n123"
         },
         payload: sampleSignedPresentation
       });
-      expect(response.statusCode).to.equal(200);
+
       const payload = JSON.parse(response.payload);
+      expect(response.statusCode).to.equal(200);
       expect(payload.proof.type).to.equal('Ed25519Signature2020');
       expect(payload.issuer.id).to.equal(issuerId);
     }).timeout(9000);
-
-    const aliasURL = "/exchange/:exchangeId";
-    it(`${aliasURL} POST returns 201`, async () => {
-      const response = await apiServer.inject({
-        method: "POST",
-        url: aliasURL,
-        headers: {
-          authorization: "Bearer @cc3$$t0k3n123"
-        },
-        payload: sampleSignedPresentation
-      });
-      expect(response.statusCode).to.equal(200);
-      const payload = JSON.parse(response.payload);
-      expect(payload.proof.type).to.equal('Ed25519Signature2020');
-      expect(payload.issuer.id).to.equal(issuerId);
-    }).timeout(9000);
-
   });
- 
+
   describe("/request/democredential/nodidproof", () => {
     const url = "/request/democredential/nodidproof";
     it("POST returns 500 if demo issuance not supported", async () => {
       const response = await apiServer.inject({
         method: "POST",
-        url: url,
+        url,
         payload: { "holder": "did:example:me" }
       });
       expect(response.statusCode).to.equal(500);
      }).timeout(6000);
 
     it("GET returns 404", async () => {
-      const response = await apiServer.inject({ method: "GET", url: url });
+      const response = await apiServer.inject({ method: "GET", url });
       expect(response.statusCode).to.equal(404);
       expect(response.payload).to.deep.equal('{"message":"Route GET:/request/democredential/nodidproof not found","error":"Not Found","statusCode":404}');
     });
@@ -349,7 +446,7 @@ describe("api", () => {
     it("POST returns 500 if demo issuance not supported", async () => {
       const response = await apiServer.inject({
         method: "POST",
-        url: url,
+        url,
         payload: sampleSignedPresentation
       });
       expect(response.statusCode).to.equal(500);
@@ -361,7 +458,7 @@ describe("api", () => {
     it("POST returns 201 and cred", async () => {
       const response = await apiServer.inject({
         method: "POST",
-        url: url,
+        url,
         payload: {
           "presentationId": "456",
           "holder": issuerId,
@@ -372,6 +469,183 @@ describe("api", () => {
       expect(response.statusCode).to.equal(201);
       const payload = JSON.parse(response.payload);
       expect(payload.holder).to.equal(issuerId);
+    }).timeout(6000);
+  });
+});
+
+const beforeEachCredStatusMgmt = async () => {
+  resetConfig();
+  const credStatusClient = new MockGithubCredentialStatusClient({
+    credStatusRepoName,
+    credStatusMetaRepoName,
+    credStatusRepoOrgName,
+    credStatusRepoVisibility,
+    credStatusClientAccessToken
+  });
+  sandbox.stub(process, "env").value(validEnv);
+  sandbox.stub(OctokitClient.Octokit.prototype, 'constructor').returns(null);
+  sandbox.stub(GithubCredentialStatus, 'GithubCredentialStatusClient').returns(credStatusClient);
+  sandbox.stub(IssuerHelper, 'credentialRecordFromOidc').returns(Promise.resolve({}));
+  sandbox.stub(Certificate, 'composeCredential').returns(demoCredential);
+  const apiServer = await build();
+  await apiServer.ready();
+  return { apiServer, credStatusClient };
+};
+
+const afterEachCredStatusMgmt = () => {
+  sandbox.restore();
+};
+
+describe("api with credential status management", () => {
+  describe("/issue/credentials", () => {
+    const url = "/issue/credentials";
+    it("POST returns 201 and cred", async () => {
+      const { apiServer, credStatusClient } = await beforeEachCredStatusMgmt();
+
+      const statusConfigBefore = await credStatusClient.readConfigData();
+      const statusLogBefore = await credStatusClient.readLogData();
+
+      expect(statusConfigBefore.credentialsIssued).to.equal(0);
+      validateArrayEmpty(statusLogBefore);
+
+      const response = await apiServer.inject({
+        method: "POST",
+        url,
+        headers: {
+          authorization: "Bearer @cc3$$t0k3n123"
+        },
+        payload: { credential: sampleUnsignedCredential, options: credentialOptions }
+      });
+
+      const statusConfigAfter = await credStatusClient.readConfigData();
+      const statusLogAfter = await credStatusClient.readLogData();
+
+      const payload = JSON.parse(response.payload);
+      expect(response.statusCode).to.equal(201);
+      expect(payload.proof.type).to.equal('Ed25519Signature2020');
+      expect(payload.issuer).to.equal(issuerId);
+
+      expect(statusConfigAfter.credentialsIssued).to.equal(1);
+      validateArrayNotEmpty(statusLogAfter);
+      expect(statusLogAfter.length).to.equal(1);
+      const statusLogAfterEntry = statusLogAfter[0];
+      expect(statusLogAfterEntry.credentialState).to.equal(CredentialStatus.CredentialState.Issued);
+      expect(statusLogAfterEntry.statusListId).to.equal(statusListId);
+
+      afterEachCredStatusMgmt();
+    }).timeout(6000);
+  });
+
+  describe("/credentials/status", () => {
+    const url = "/credentials/status";
+    it("POST returns 200 and status cred", async () => {
+      const { apiServer, credStatusClient } = await beforeEachCredStatusMgmt();
+
+      const statusConfigBefore = await credStatusClient.readConfigData();
+      const statusLogBefore = await credStatusClient.readLogData();
+      const statusListBefore = await credStatusClient.readStatusData();
+
+      const statusListBeforeDecoded = await decodeList({ encodedList: statusListBefore.credentialSubject.encodedList });
+      expect(statusListBeforeDecoded.getStatus(statusListIndex)).to.be.false;
+      validateArrayEmpty(statusLogBefore);
+
+      const credentialId = `${credStatusClient.getCredentialStatusUrl()}/${statusListId}`;
+      await credStatusClient.updateLogData([{
+        timestamp: (new Date()).toISOString(),
+        credentialId,
+        credentialIssuer: issuerId,
+        credentialSubject,
+        credentialState: CredentialStatus.CredentialState.Issued,
+        verificationMethod: issuerVerificationMethod,
+        statusListId,
+        statusListIndex
+      }]);
+
+      const response = await apiServer.inject({
+        method: "POST",
+        url,
+        headers: {
+          authorization: "Bearer @cc3$$t0k3n123"
+        },
+        payload: {
+          credentialId,
+          credentialStatus: [
+            {
+              type: CredentialStatus.CREDENTIAL_STATUS_TYPE,
+              status: CredentialStatus.CredentialState.Revoked
+            }
+          ]
+        }
+      });
+
+      const statusConfigAfter = await credStatusClient.readConfigData();
+      const statusLogAfter = await credStatusClient.readLogData();
+      const statusListAfter = await credStatusClient.readStatusData();
+
+      const payload = JSON.parse(response.payload);
+      expect(response.statusCode).to.equal(200);
+
+      validateObjectEquality(payload, statusListAfter);
+      validateObjectEquality(statusConfigAfter, statusConfigBefore);
+      validateArrayNotEmpty(statusLogAfter);
+      expect(statusLogAfter.length).to.equal(2);
+      const statusLogAfterEntry = statusLogAfter[1];
+      expect(statusLogAfterEntry.credentialState).to.equal(CredentialStatus.CredentialState.Revoked);
+      expect(statusLogAfterEntry.statusListId).to.equal(statusListId);
+      expect(statusLogAfterEntry.statusListIndex).to.equal(statusListIndex);
+      expect(statusListAfter.credentialSubject.type).to.equal(statusListBefore.credentialSubject.type);
+      expect(statusListAfter.credentialSubject.type).to.equal('StatusList2021');
+      expect(statusListAfter.credentialSubject.statusPurpose).to.equal(statusListBefore.credentialSubject.statusPurpose);
+      expect(statusListAfter.credentialSubject.statusPurpose).to.equal('revocation');
+      expect(statusListAfter.credentialSubject.encodedList).not.to.equal(statusListBefore.credentialSubject.encodedList);
+      const statusListAfterDecoded = await decodeList({ encodedList: statusListAfter.credentialSubject.encodedList });
+      expect(statusListAfterDecoded.getStatus(statusListIndex)).to.be.true;
+      expect(new Date(statusListAfter.issuanceDate)).to.greaterThanOrEqual(new Date(statusListBefore.issuanceDate));
+      expect(new Date(statusListAfter.proof.created)).to.greaterThanOrEqual(new Date(statusListBefore.proof.created));
+      expect(statusListAfter.proof.type).to.equal(statusListBefore.proof.type);
+      expect(statusListAfter.proof.type).to.equal('Ed25519Signature2020');
+      expect(statusListAfter.proof.proofValue).not.to.equal(statusListBefore.proof.proofValue);
+
+      afterEachCredStatusMgmt();
+    }).timeout(6000);
+  });
+
+  describe("/request/credential", () => {
+    const url = "/request/credential";
+    it("POST returns 200 and cred", async () => {
+      const { apiServer, credStatusClient } = await beforeEachCredStatusMgmt();
+
+      const statusConfigBefore = await credStatusClient.readConfigData();
+      const statusLogBefore = await credStatusClient.readLogData();
+
+      expect(statusConfigBefore.credentialsIssued).to.equal(0);
+      validateArrayEmpty(statusLogBefore);
+
+      const response = await apiServer.inject({
+        method: "POST",
+        url,
+        headers: {
+          authorization: "Bearer @cc3$$t0k3n123"
+        },
+        payload: sampleSignedPresentation
+      });
+
+      const statusConfigAfter = await credStatusClient.readConfigData();
+      const statusLogAfter = await credStatusClient.readLogData();
+
+      const payload = JSON.parse(response.payload);
+      expect(response.statusCode).to.equal(200);
+      expect(payload.proof.type).to.equal('Ed25519Signature2020');
+      expect(payload.issuer.id).to.equal(issuerId);
+
+      expect(statusConfigAfter.credentialsIssued).to.equal(1);
+      validateArrayNotEmpty(statusLogAfter);
+      expect(statusLogAfter.length).to.equal(1);
+      const statusLogAfterEntry = statusLogAfter[0];
+      expect(statusLogAfterEntry.credentialState).to.equal(CredentialStatus.CredentialState.Issued);
+      expect(statusLogAfterEntry.statusListId).to.equal(statusListId);
+
+      afterEachCredStatusMgmt();
     }).timeout(6000);
   });
 });
@@ -387,11 +661,13 @@ describe("api with demo issuance", () => {
         DEMO_ISSUER_METHOD: issuerVerificationMethod
       }
     );
+    sandbox.stub(OctokitClient.Octokit.prototype, 'constructor').returns(null);
+    sandbox.stub(GithubCredentialStatus, 'GithubCredentialStatusClient').value(MockGithubCredentialStatusClient);
     apiServer = await build();
     await apiServer.ready();
   });
 
-  after(async () => {
+  after(() => {
     sandbox.restore();
   });
 
@@ -400,7 +676,7 @@ describe("api with demo issuance", () => {
     it("POST returns 201 and credential", async () => {
       const response = await apiServer.inject({
         method: "POST",
-        url: url,
+        url,
         payload: { "holder": "did:example:me" }
       });
       expect(response.statusCode).to.equal(201);
@@ -411,7 +687,7 @@ describe("api with demo issuance", () => {
     }).timeout(6000);
 
     it("GET returns 404", async () => {
-      const response = await apiServer.inject({ method: "GET", url: url });
+      const response = await apiServer.inject({ method: "GET", url });
       expect(response.statusCode).to.equal(404);
       expect(response.payload).to.deep.equal('{"message":"Route GET:/request/democredential/nodidproof not found","error":"Not Found","statusCode":404}');
     });
@@ -422,7 +698,7 @@ describe("api with demo issuance", () => {
     it("POST returns 201 and credential", async () => {
       const response = await apiServer.inject({
         method: "POST",
-        url: url,
+        url,
         payload: sampleSignedPresentation
       });
       expect(response.statusCode).to.equal(201);
@@ -445,6 +721,8 @@ describe("api with db inspection", () => {
     sandbox.stub(Database, "dbCredClient").value(
       new Database.DatabaseClient(dbUri, dbName, dbCollection)
     );
+    sandbox.stub(OctokitClient.Octokit.prototype, 'constructor').returns(null);
+    sandbox.stub(GithubCredentialStatus, 'GithubCredentialStatusClient').value(MockGithubCredentialStatusClient);
     await dbConnect(dbUri);
   });
 
@@ -460,25 +738,25 @@ describe("api with db inspection", () => {
       resetConfig();
       const vpChallengeEnv = {
         ...validEnv,
-        AUTH_TYPE: AuthType.VpChallenge
+        AUTH_TYPE: IssuerHelper.AuthType.VpChallenge
       };
       sandbox.stub(process, "env").value(vpChallengeEnv);
       apiServer = await build();
       await apiServer.ready();
     });
 
-    afterEach(async () => {
+    afterEach(() => {
       findOneSpy.restore();
     });
 
     const url = "/request/credential";
     it("returns proper credential db record", async () => {
-      const validCredentialRecord = new Credential(sampleDbCredential1);
+      const validCredentialRecord = new DbCredential(sampleDbCredential1);
       const savedCredentialRecord = await validCredentialRecord.save();
       validateNotEmpty(savedCredentialRecord);
       await apiServer.inject({
         method: "POST",
-        url: url,
+        url,
         payload: sampleSignedPresentation
       });
       expect(findOneSpy.calledOnceWith({ challenge })).to.be.true;
@@ -494,14 +772,14 @@ describe("api with db inspection", () => {
       resetConfig();
       const oidcTokenEnv = {
         ...validEnv,
-        AUTH_TYPE: AuthType.OidcToken
+        AUTH_TYPE: IssuerHelper.AuthType.OidcToken
       };
       sandbox.stub(process, "env").value(oidcTokenEnv);
       apiServer = await build();
       await apiServer.ready();
     });
 
-    afterEach(async () => {
+    afterEach(() => {
       findOneSpy.restore();
     });
 
@@ -511,12 +789,12 @@ describe("api with db inspection", () => {
       const bearerToken = "Bearer @cc3$$t0k3n123";
       sandbox.stub(Issuer, "discover").resolves(new Issuer({ issuer: issuerUrl2, userinfo_endpoint: userinfoEndpoint }));
       sandbox.stub(axios, "get").withArgs(userinfoEndpoint).resolves({ data: { email: email2 } });
-      const validCredentialRecord = new Credential(sampleDbCredential2);
+      const validCredentialRecord = new DbCredential(sampleDbCredential2);
       const savedCredentialRecord = await validCredentialRecord.save();
       validateNotEmpty(savedCredentialRecord);
       await apiServer.inject({
         method: "POST",
-        url: url,
+        url,
         headers: {
           authorization: bearerToken
         },

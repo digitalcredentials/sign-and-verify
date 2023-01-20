@@ -1,7 +1,7 @@
 
-import fastify = require("fastify");
+import fastify = require('fastify');
 
-declare module "fastify" {
+declare module 'fastify' {
   interface FastifyRequest {
     rawBody: string;
   }

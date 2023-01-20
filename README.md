@@ -13,8 +13,17 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 1. Configure the service with the following environment variables:
 - \*`AUTH_TYPE`: the mechanism by which to authorize access to credential (required)
 - \*`DID_SEED`: a secret seed used to generate DID document for issuer (required)
+- `VC_API_ISSUER_URL_HOST`: host of the url where an instance of the api service will be hosted (required)
 - `OIDC_ISSUER_URL`: OIDC issuer discovery URL (required)
 - `ISSUER_MEMBERSHIP_REGISTRY_URL`: location of registry used to confirm issuer's membership status in DCC (required)
+- \*`CRED_STATUS_CLIENT_ACCESS_TOKEN`: access token for source control API (required - necessary for credential status/revocation management hosted in source control services like GitHub and GitLab)
+- `CRED_STATUS_REPO_ORG_NAME`: name of org in source control service that owns credential status/revocation management repo (required - necessary for delegated hosting of credential status/revocation management)
+- `CRED_STATUS_REPO_ORG_ID`: ID of org in source control service that owns credential status/revocation management repo (required - GitLab only)
+- `VC_API_ISSUER_URL_PROTOCOL`: protocol of the url where an instance of the api service will be hosted (optional, default: `https`)
+- \*`CRED_STATUS_REPO_NAME`: name of credential status repo (optional, default: `credential-status` - necessary for delegated hosting of credential status/revocation management)
+- \*`CRED_STATUS_META_REPO_NAME`: name of credential status metadata repo (optional, default: `credential-status-metadata` - necessary for delegated hosting of credential status/revocation management)
+- \*`CRED_STATUS_REPO_VISIBILITY`: level of visibility of credential status/revocation management repo (optional, default: `public`)
+- \*`CRED_STATUS_CLIENT_TYPE`: credential status management client type (optional, default: `github`)
 - `DID_WEB_URL`: the url used to generate `did:web` document and keys for issuer (optional, default: `undefined`)
 - `PORT`: the port the web service will bind to (optional, default: `5000`)
 - `DB_USER`: database client username (optional)
@@ -26,17 +35,63 @@ Follow these steps to properly configure a `sign-and-verify` service deployment 
 
 2. Copy `.env.example` to `.env`, which `npm run start` will pick up, to test these values.
 
-3. Modify the `DatabaseClient` class in `./src/database.ts` to suit your organization's DBMS deployment infrastructure
+3. Modify the `DatabaseClient` class in `./src/database.ts` to suit your organization's DBMS deployment infrastructure (currently assumes MongoDB)
 
-4. Modify the content of `./src/issuer.ts` to suit your organization's DBMS/OIDC deployment infrastructure
+4. Modify the content of `./src/issuer.ts` to suit your organization's DBMS/OIDC deployment infrastructure (currently assumes MongoDB)
 
 5. Run `npm run setup` or `yarn setup` and follow output deployment instructions (please use Node version 14 or higher)
 
-NOTE: `AUTH_TYPE` accepts the following values:
+\*NOTE: `AUTH_TYPE` accepts the following values:
 - `oidc_token`: retrieves email from `userinfo` endpoint using OIDC token and fetches matching credential
 - `vp_challenge`: fetches credential with matching VP challenge
 
-NOTE: the `DID_SEED` included as an example is just for your reference. Do not check in production did seeds, private keys, or the equivalent.
+\*NOTE: the `DID_SEED` included as an example is just for your reference. Do not check in production did seeds, private keys, or the equivalent.
+
+\*NOTE: Here are the steps for retrieving a valid value for `CRED_STATUS_CLIENT_ACCESS_TOKEN` (Please reserve this step for after you have run `npm run setup` or `yarn setup` per the instructions below):
+
+**GitHub**
+1. Login to GitHub as an authorized member of the organization
+2. Click on your profile dropdown icon in the top-right corner of the screen
+3. Select the *Settings* tab
+4. Select the *Developer settings* tab toward the bottom of the left navigation bar
+5. Select the *Personal access tokens* tab
+6. Click the *Generate a new token* button
+7. Enter the name for access token
+8. Select the expiration date for access token
+9. Select the full *repo* scope
+10. Click the *Generate token* button
+11. Copy the generated token
+12. \*Save the token from the previous step as the `CRED_STATUS_CLIENT_ACCESS_TOKEN` environment variable at the service that is hosting your organization’s instance of `sign-and-verify` and use it as an authorization bearer token in issuance and revocation requests
+
+**GitLab**
+1. Login to GitLab as an authorized member of the group
+2. Click on your profile dropdown icon in the top-right corner of the screen
+3. Select the *Preferences* tab
+4. Select the *Access Tokens* tab in the left navigation bar
+5. Enter the name for access token
+6. Select the expiration date for access token
+7. Select the *api* scope
+8. Click the *Create personal access token* button
+9. Copy the generated token
+10. \*Save the token from the previous step as the `CRED_STATUS_CLIENT_ACCESS_TOKEN` environment variable at the service that is hosting your organization’s instance of `sign-and-verify` and use it as an authorization bearer token in issuance and revocation requests
+
+\*NOTE: `CRED_STATUS_REPO_NAME`, the designated credential status repo, and `CRED_STATUS_META_REPO_NAME`, the designated credential status metadata repo, will automatically be generated after running `npm run start` or `yarn start`, per the instructions below.
+
+\*NOTE: `CRED_STATUS_REPO_VISIBILITY` accepts the following values (per GitHub's guidance [here](https://docs.github.com/en/enterprise-cloud@latest/repositories/creating-and-managing-repositories/about-repositories)):
+- `public`: Public repositories are accessible to everyone on the internet.
+- `private`: Private repositories are only accessible to you, people you explicitly share access with, and, for organization repositories, certain organization members.
+- `internal`: Internal repositories are accessible to all enterprise members.
+
+\*NOTE: `CRED_STATUS_CLIENT_TYPE` accepts the following values:
+- `github`: manages credential status at GitHub
+- `gitlab`: manages credential status at GitLab
+- `internal`: manages credential status at the same service that is hosting your organization’s instance of `sign-and-verify`
+
+\*NOTE: Here are some important points on credential status management to consider in a live deployment:
+- According to [this GitHub Pages resource](https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages): *GitHub Pages is available in public repositories with GitHub Free and GitHub Free for organizations, and in public and private repositories with GitHub Pro, GitHub Team, GitHub Enterprise Cloud, and GitHub Enterprise Server. For more information, see "[GitHub's products](https://docs.github.com/en/get-started/learning-about-github/githubs-products)."*
+- Take note of the expiration date of `CRED_STATUS_CLIENT_ACCESS_TOKEN` value generated above, so that you can renew this binding in advance. Failure to do this will result in a faulty credential status management process.
+- Issuers should wait a couple of minutes after running `sign-and-verify` with a new credential status configuration before issuing credentials leveraging the hosted status info. This is because there is a delay between configuration and publication of the info to the service's site (e.g., `https://CRED_STATUS_REPO_ORG_NAME.github.io/CRED_STATUS_REPO_NAME/1234567890`).
+- Verifiers should accept that a credential that was revoked within the last couple of minutes may register as verified due to caching.
 
 ## Install
 

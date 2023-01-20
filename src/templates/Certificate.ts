@@ -1,5 +1,9 @@
-export function composeCredential (issuerDid: string, holderDid: string, credentialRecord: any): any {
-  const credential: any = {
+import { v4 as uuidv4 } from 'uuid';
+import { Credential } from '../types';
+
+export function composeCredential (issuerDid: string, holderDid: string, credentialRecord: any): Credential {
+  const credential: Credential = {
+    id: uuidv4(),
     '@context': [
       "https://www.w3.org/2018/credentials/v1",
       "https://purl.imsglobal.org/spec/ob/v3p0/context.json"
@@ -20,6 +24,7 @@ export function composeCredential (issuerDid: string, holderDid: string, credent
       image: "https://w3c-ccg.github.io/vc-ed/plugfest-1-2022/images/JFF_LogoLockup.png"
     },
     issuanceDate: credentialRecord.issuanceDate,
+    ...(credentialRecord.expirationDate && {expirationDate: credentialRecord.expirationDate}),
     credentialSubject: {
       type: ["AchievementSubject"],
       id: holderDid,
@@ -40,7 +45,6 @@ export function composeCredential (issuerDid: string, holderDid: string, credent
       }
     }
   }
-
   if (credentialRecord.expirationDate) {
     credential.expirationDate = credentialRecord.expirationDate;
   }

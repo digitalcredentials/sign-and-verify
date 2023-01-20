@@ -126,3 +126,6 @@ build
 
 # docker-compose
 docker-compose.yml
+
+# Credential status
+credentials/status/

@@ -1,7 +1,9 @@
+import { v4 as uuidv4 } from 'uuid';
+import LRU from 'lru-cache';
+import axios from 'axios';
 import fastify from 'fastify';
 import * as fs from 'fs';
 import fastifyRawBody from 'fastify-raw-body';
-import axios from 'axios';
 import fastifySensible from 'fastify-sensible';
 import { createIssuer, createVerifier, DIDDocument } from '@digitalcredentials/sign-and-verify-core';
 import { Ed25519VerificationKey2020 } from '@digitalcredentials/ed25519-verification-key-2020';
@@ -9,13 +11,28 @@ import { X25519KeyAgreementKey2020 } from '@digitalcredentials/x25519-key-agreem
 import { CryptoLD } from 'crypto-ld';
 import * as didWeb from '@interop/did-web-resolver';
 import * as didKey from '@digitalcredentials/did-method-key';
-import { AuthType, credentialRecordFromOidc, credentialRecordFromChallenge } from './issuer';
+import { decodeList } from '@digitalbazaar/vc-status-list';
 import { getConfig, decodeSeed } from './config';
 import { default as demoCredential } from './demoCredential.json';
-import { v4 as uuidv4 } from 'uuid';
-import LRU from 'lru-cache';
+import { extractAccessToken, verifyStatusRepoAccess } from './hooks';
+import { AuthType, credentialRecordFromOidc, credentialRecordFromChallenge } from './issuer';
 import { composeCredential } from './templates/Certificate';
 import { credentialIssuePostSchema } from './credentialIssuePostSchema'
+import { Credential, Presentation, VerifiableCredential, VerifiablePresentation } from './types';
+import {
+  BaseCredentialStatusClient,
+  composeStatusCredential,
+  CredentialState,
+  CredentialStatusClientType,
+  CredentialStatusConfigData,
+  CredentialStatusLogData,
+  CredentialStatusLogEntry,
+  CredentialStatusRequest,
+} from './credential-status';
+import { GithubCredentialStatusClient } from './credential-status-github';
+import { GitlabCredentialStatusClient } from './credential-status-gitlab';
+import { CREDENTIAL_STATUS_FOLDER, InternalCredentialStatusClient } from './credential-status-internal';
+
 const cryptoLd = new CryptoLD();
 cryptoLd.use(Ed25519VerificationKey2020);
 cryptoLd.use(X25519KeyAgreementKey2020);
@@ -56,6 +73,13 @@ const getVerificationMethodForSigning = (publicDids) => {
   return field;
 };
 
+const ensureId = (field) => {
+  if (typeof field === 'object') {
+    return field.id;
+  }
+  return field;
+};
+
 function copyFromMethod (didDocument, methodToCopy) {
   const didDocumentClone = JSON.parse(JSON.stringify(didDocument));
   const methodForPurpose = didDocument[methodToCopy][0];
@@ -76,7 +100,7 @@ function privatizeDid (didDocument, getMethodForPurpose, methodToCopy?) {
   return didDocumentClone;
 }
 
-function constructDemoCredential(holder: string, id = uuidv4(), issuanceDate = new Date().toISOString()): any {
+function constructDemoCredential(holder: string, id = uuidv4(), issuanceDate = new Date().toISOString()): Credential {
   const credential = JSON.parse(JSON.stringify(demoCredential));
   credential.id = id;
   credential.credentialSubject.id = holder;
@@ -89,9 +113,18 @@ export async function build(opts = {}) {
     authType,
     didSeed,
     didWebUrl,
+    vcApiIssuerUrlHost,
+    vcApiIssuerUrlProtocol,
     demoIssuerMethod,
     issuerMembershipRegistryUrl,
-    enableHttpsForDev
+    enableHttpsForDev,
+    credStatusClientType,
+    credStatusRepoName,
+    credStatusMetaRepoName,
+    credStatusRepoOrgName,
+    credStatusRepoOrgId,
+    credStatusRepoVisibility,
+    credStatusClientAccessToken,
   } = getConfig();
   const didSeedBytes = decodeSeed(didSeed);
   const privateDids: DIDDocument[] = [];
@@ -147,6 +180,69 @@ export async function build(opts = {}) {
 
   const server = fastify(fastifyOptions);
 
+  // Setup the credential status client
+  let credStatusClient: BaseCredentialStatusClient;
+  switch (credStatusClientType) {
+    case CredentialStatusClientType.Github:
+      credStatusClient = new GithubCredentialStatusClient({
+        credStatusRepoName,
+        credStatusMetaRepoName,
+        credStatusRepoOrgName,
+        credStatusRepoVisibility,
+        credStatusClientAccessToken
+      });
+      break;
+    case CredentialStatusClientType.Gitlab:
+      credStatusClient = new GitlabCredentialStatusClient({
+        credStatusRepoName,
+        credStatusMetaRepoName,
+        credStatusRepoOrgName,
+        credStatusRepoOrgId,
+        credStatusRepoVisibility,
+        credStatusClientAccessToken
+      });
+      break;
+    case CredentialStatusClientType.Internal:
+      credStatusClient = new InternalCredentialStatusClient({ vcApiIssuerUrlHost, vcApiIssuerUrlProtocol });
+      break;
+  }
+
+  // Setup status credential
+  const credentialStatusUrl = credStatusClient.getCredentialStatusUrl();
+  const repoExists = await credStatusClient.statusRepoExists();
+  if (!repoExists) {
+    // Create status repo
+    await credStatusClient.createStatusRepo();
+
+    // Create and persist status config
+    const listId = credStatusClient.generateStatusListId();
+    const configData: CredentialStatusConfigData = {
+      credentialsIssued: 0,
+      latestList: listId
+    };
+    await credStatusClient.createConfigData(configData);
+
+    // Create and persist status log
+    const logData = [];
+    await credStatusClient.createLogData(logData);
+
+    // Create and sign status credential
+    const issuerDid = publicDids[0].id;
+    const credentialId = `${credentialStatusUrl}/${listId}`;
+    const statusCredentialDataUnsigned = await composeStatusCredential({ issuerDid, credentialId });
+    const verificationMethod = ensureId(publicDids[0].assertionMethod[0]);
+    const statusCredentialData = await sign(statusCredentialDataUnsigned, { verificationMethod });
+
+    // Create and persist status data
+    await credStatusClient.createStatusData(statusCredentialData);
+
+    // Setup credential status website
+    await credStatusClient.setupCredentialStatusWebsite();
+  } else {
+    // Sync status repo state
+    await credStatusClient.syncStatusRepoState();
+  }
+
   server.register(require('fastify-cors'), {});
   server.register(require('fastify-swagger'), {
     routePrefix: '/docs',
@@ -179,12 +275,21 @@ export async function build(opts = {}) {
       .send({ status: 'OK' });
   });
 
+  server.get(`/${CREDENTIAL_STATUS_FOLDER}/:listId`, async (request, reply) => {
+    const statusCredentialData = await credStatusClient.readStatusData();
+    const statusCredentialDataString = JSON.stringify(statusCredentialData, null, 2);
+    reply
+      .code(200)
+      .header('Content-Type', 'application/json; charset=utf-8')
+      .send(statusCredentialDataString);
+  });
+
   server.post(
     '/request/credential', async (request, reply) => {
       const { headers, body } = request;
 
-      const accessToken = extractAccessToken(headers);
       // Verify that access token was included in request
+      const accessToken = extractAccessToken(headers);
       if (authType === AuthType.OidcToken && !accessToken) {
         return reply
           .code(401)
@@ -192,11 +297,11 @@ export async function build(opts = {}) {
       }
 
       // VP is placed directly in body
-      const verifiablePresentation: any = body;
+      const verifiablePresentation = body as VerifiablePresentation;
       // provided by issuer via diploma, email, LMS (e.g., Canvas), etc.
-      const challenge = verifiablePresentation?.proof?.challenge;
+      const challenge = verifiablePresentation?.proof?.challenge as string;
       // holder DID generated by credential wallet
-      const holderDid = verifiablePresentation.holder;
+      const holderDid = verifiablePresentation.holder as string;
       // issuer DID generated by build function above
       const issuerDid = publicDids[0].id;
       // formal verification of presentation
@@ -219,7 +324,7 @@ export async function build(opts = {}) {
             credentialRecord = await credentialRecordFromChallenge(challenge);
             break;
         }
-      } catch (error) {
+      } catch (error: any) {
         return reply
           .code(400)
           .send({ message: error.message });
@@ -228,36 +333,76 @@ export async function build(opts = {}) {
       if (!credentialRecord) {
         return reply
           .code(404)
-          .send({ message: `Learner record not found for holder.` });
+          .send({ message: 'Learner record not found for holder' });
       }
 
       // Currently using only templates/Certificate.ts
-      const credential = composeCredential(issuerDid, holderDid, credentialRecord);
+      const credentialBase = composeCredential(issuerDid, holderDid, credentialRecord);
 
-      // retrieved from issuer DID document
-      // NOTE: for now, we default to the verification method of the first did in publicDids
-      // TODO: if we want to support multiple verification methods,
-      // issuer should provide proper one to use via deep link query
-      // parameter passed through options, or some other mechanism
-      const verificationMethod = getVerificationMethodForSigning(publicDids);
-      const options = {
-        "verificationMethod": verificationMethod,
+      try {
+        // Attach status to credential
+        const { credential, newList } = await credStatusClient.embedCredentialStatus({ credential: credentialBase });
+
+        // Setup data necessary for composing signed status credential
+        // NOTE: these values are retrieved from the issuer DID document;
+        // for now, we default to the did and verification method of the first did in publicDids
+        // TODO: if we want to support multiple verification methods,
+        // issuer should provide proper one to use via deep link query
+        // parameter passed through options, or some other mechanism
+        const issuerDid = publicDids[0].id;
+        const verificationMethod = ensureId(publicDids[0].assertionMethod[0]);
+
+        // Create new status credential only if a new list was created
+        if (newList) {
+          // Create and sign status credential
+          const statusCredentialId = `${credentialStatusUrl}/${newList}`;
+          const statusCredentialDataUnsigned = await composeStatusCredential({ issuerDid, credentialId: statusCredentialId });
+          const statusCredentialData = await sign(statusCredentialDataUnsigned, { verificationMethod });
+
+          // Create and persist status data
+          await credStatusClient.createStatusData(statusCredentialData);
+        }
+
+        // Sign credential
+        const options = { verificationMethod };
+        const result = await sign(credential, options);
+
+        // Add new entry to status log
+        const { id: credentialStatusId, statusListCredential, statusListIndex } = credential.credentialStatus;
+        const statusListId = statusListCredential.split('/').slice(-1).pop(); // retrieve status list id from status credential url
+        const statusLogEntry: CredentialStatusLogEntry = {
+          timestamp: (new Date()).toISOString(),
+          credentialId: credential.id || credentialStatusId,
+          credentialIssuer: issuerDid,
+          credentialSubject: credential.credentialSubject?.id,
+          credentialState: CredentialState.Issued,
+          verificationMethod,
+          statusListId,
+          statusListIndex
+        };
+        const statusLogData = await credStatusClient.readLogData();
+        statusLogData.push(statusLogEntry);
+        await credStatusClient.updateLogData(statusLogData);
+
+        reply
+          .code(200)
+          .header('Content-Type', 'application/json; charset=utf-8')
+          .send(result);
+      } catch (error: any) {
+        reply
+          .code(400)
+          .send({ message: error.message });
       }
-      const result = await sign(credential, options);
-      reply
-        .code(200)
-        .header('Content-Type', 'application/json; charset=utf-8')
-        .send(result);
     }
   )
 
   server.post(
     '/exchange/:exchangeId', async (request, reply) => {
 
-      // NOTE:  for the moment, the exchangeId is just the 
+      // NOTE:  for the moment, the exchangeId is just the
       // same as the challenge, so not used for anyting here.
 
-     // const { exchangeId } = request.params;
+      // const { exchangeId } = request.params;
 
       const { headers, body } = request;
 
@@ -332,20 +477,63 @@ export async function build(opts = {}) {
   server.post(
     '/issue/credentials',
     {
+      preHandler: [verifyStatusRepoAccess(credStatusClient)],
       config: {
         rawBody: true,
       }
     },
     async (request, reply) => {
-      const req: any = request.body;
-      const credential = req.credential;
-      const options = req.options;
+      const req = request.body as { credential: Credential; options: Object; };
 
-      const result = await sign(credential, options);
-      reply
-        .code(201)
-        .header('Content-Type', 'application/json; charset=utf-8')
-        .send(result);
+      try {
+        // Attach status to credential
+        const { credential, newList } = await credStatusClient.embedCredentialStatus({ credential: req.credential });
+
+        // Setup data necessary for composing signed status credential
+        const issuerDid = publicDids[0].id;
+        const verificationMethod = ensureId(publicDids[0].assertionMethod[0]);
+
+        // Create new status credential only if a new list was created
+        if (newList) {
+          // Create and sign status credential
+          const statusCredentialId = `${credentialStatusUrl}/${newList}`;
+          const statusCredentialDataUnsigned = await composeStatusCredential({ issuerDid, credentialId: statusCredentialId });
+          const statusCredentialData = await sign(statusCredentialDataUnsigned, { verificationMethod });
+
+          // Create and persist status data
+          await credStatusClient.createStatusData(statusCredentialData);
+        }
+
+        // Sign credential
+        const options = req.options;
+        const result = await sign(credential, options);
+
+        // Add new entry to status log
+        const { id: credentialStatusId, statusListCredential, statusListIndex } = credential.credentialStatus;
+        const statusListId = statusListCredential.split('/').slice(-1).pop(); // retrieve status list id from status credential url
+        const statusLogEntry: CredentialStatusLogEntry = {
+          timestamp: (new Date()).toISOString(),
+          credentialId: credential.id || credentialStatusId,
+          credentialIssuer: issuerDid,
+          credentialSubject: credential.credentialSubject?.id,
+          credentialState: CredentialState.Issued,
+          verificationMethod,
+          statusListId,
+          statusListIndex
+        };
+        const statusLogData = await credStatusClient.readLogData();
+        statusLogData.push(statusLogEntry);
+        await credStatusClient.updateLogData(statusLogData);
+
+        reply
+          .code(201)
+          .header('Content-Type', 'application/json; charset=utf-8')
+          .send(result);
+      } catch (error: any) {
+        reply
+          .code(400)
+          .send({ message: error.message });
+      }
     }
   )
 
@@ -368,7 +556,7 @@ export async function build(opts = {}) {
       // verifivation method.
       const verificationMethod = getVerificationMethodForSigning(publicDids)
       const options = { verificationMethod }
-      
+
       try {
         const result = await sign(credential, options);
         reply
@@ -382,13 +570,83 @@ export async function build(opts = {}) {
           .code(400)
           .send('invalid input')
       }
-      
+
     }
   )
 
   server.post(
+    '/credentials/status',
+    {
+      preHandler: [verifyStatusRepoAccess(credStatusClient)]
+    },
+    async (request, reply) => {
+      const { credentialId, credentialStatus } = request.body as CredentialStatusRequest;
+
+      const logData: CredentialStatusLogData = await credStatusClient.readLogData();
+      const logEntry = logData.find((entry) => {
+        return entry.credentialId === credentialId;
+      });
+
+      // Unable to find credential with given id
+      if (!logEntry) {
+        return reply
+          .code(404)
+          .send({ message: 'Credential not found' });
+      }
+
+      const { statusListId, statusListIndex } = logEntry as CredentialStatusLogEntry;
+
+      try {
+        // Setup data necessary for composing signed status credential
+        const issuerDid = publicDids[0].id;
+        const verificationMethod = ensureId(publicDids[0].assertionMethod[0]);
+
+        // Retrieve status credential
+        const statusCredentialDataBefore = await credStatusClient.readStatusData();
+        const statusCredentialListEncodedBefore = statusCredentialDataBefore.credentialSubject.encodedList;
+
+        // Update status credential
+        const statusCredentialListDecoded = await decodeList({ encodedList: statusCredentialListEncodedBefore });
+        statusCredentialListDecoded.setStatus(statusListIndex, true);
+        const statusCredentialId = `${credentialStatusUrl}/${statusListId}`;
+        const statusCredentialDataUnsigned = await composeStatusCredential({ issuerDid, credentialId: statusCredentialId, statusList: statusCredentialListDecoded });
+
+        // Resign and persist status credential
+        const statusCredentialDataAfter = await sign(statusCredentialDataUnsigned, { verificationMethod });
+        await credStatusClient.updateStatusData(statusCredentialDataAfter);
+
+        // Add new entries to status log
+        const statusLogData = await credStatusClient.readLogData();
+        for (let item of credentialStatus) {
+          const { status } = item;
+          const statusLogEntry: CredentialStatusLogEntry = {
+            timestamp: (new Date()).toISOString(),
+            credentialId,
+            credentialIssuer: issuerDid,
+            credentialState: status as CredentialState,
+            verificationMethod,
+            statusListId,
+            statusListIndex
+          };
+          statusLogData.push(statusLogEntry);
+        }
+        await credStatusClient.updateLogData(statusLogData);
+
+        reply
+          .code(200)
+          .header('Content-Type', 'application/json; charset=utf-8')
+          .send(statusCredentialDataAfter);
+      } catch (error: any) {
+        reply
+          .code(400)
+          .send({ message: error.message });
+      }
+    }
+  );
+
+  server.post(
     '/prove/presentations', async (request, reply) => {
-      const req: any = request.body;
+      const req = request.body as { presentation: Presentation; options: Object; };
       const credential = req.presentation;
       const options = req.options;
 
@@ -402,7 +660,7 @@ export async function build(opts = {}) {
 
   server.post(
     '/verify/credentials', async (request, reply) => {
-      const req: any = request.body;
+      const req = request.body as { verifiableCredential: VerifiableCredential; options: Object; };
       const verifiableCredential = req.verifiableCredential;
       const options = req.options;
 
