@@ -1,42 +1,40 @@
+import { randomUUID } from "crypto";
+
 export function composeCredential (issuerDid: string, holderDid: string, credentialRecord: any): any {
+  
   const credential: any = {
     '@context': [
       "https://www.w3.org/2018/credentials/v1",
       "https://purl.imsglobal.org/spec/ob/v3p0/context.json"
     ],
-    id: "urn:uuid:a63a60be-f4af-491c-87fc-2c8fd3007a58",
+    id: `urn:uuid:${randomUUID()}`,
     type: [
       "VerifiableCredential",
       "OpenBadgeCredential"
     ],
-    name: "JFF x vc-edu PlugFest 2 Interoperability",
+    name: credentialRecord.name,
     issuer: {
-      type: [
-        "Profile",
-      ],
+      type: "Profile",
       id: issuerDid,
       name: credentialRecord.issuer.name,
-      url: "https://www.jff.org/",
-      image: "https://w3c-ccg.github.io/vc-ed/plugfest-1-2022/images/JFF_LogoLockup.png"
+      url: credentialRecord.issuer.url,
+      image: {
+          id: credentialRecord.issuer.image,
+          type: "Image"
+        }
     },
     issuanceDate: credentialRecord.issuanceDate,
     credentialSubject: {
       type: ["AchievementSubject"],
       id: holderDid,
+      name: credentialRecord.credentialSubject.name,
       achievement: {
-        id: "urn:uuid:bd6d9316-f7ae-4073-a1e5-2f7f5bd22922",
+        id: `urn:uuid:${randomUUID()}`,
         type: [
           "Achievement"
         ],
-        name: "JFF x vc-edu PlugFest 2 Interoperability",
-        description: "This credential solution supports the use of OBv3 and w3c Verifiable Credentials and is interoperable with at least two other solutions.  This was demonstrated successfully during JFF x vc-edu PlugFest 2.",
-        criteria: {
-          narrative: "Solutions providers earned this badge by demonstrating interoperability between multiple providers based on the OBv3 candidate final standard, with some additional required fields. Credential issuers earning this badge successfully issued a credential into at least two wallets.  Wallet implementers earning this badge successfully displayed credentials issued by at least two different credential issuers."
-        },
-        image: {
-          id: "https://w3c-ccg.github.io/vc-ed/plugfest-2-2022/images/JFF-VC-EDU-PLUGFEST2-badge-image.png",
-          type: "Image"
-        }
+        name: credentialRecord.name,
+        description: credentialRecord.description
       }
     }
   }
@@ -44,5 +42,19 @@ export function composeCredential (issuerDid: string, holderDid: string, credent
   if (credentialRecord.expirationDate) {
     credential.expirationDate = credentialRecord.expirationDate;
   }
+
+  if (credentialRecord.credentialSubject?.achievement?.image) {
+    credential.credentialSubject.achievement.image = {
+      id: credentialRecord.credentialSubject.achievement.image,
+      type: "Image"
+    }
+  }
+
+  if (credentialRecord.credentialSubject?.achievement?.criteria?.narrative) {
+    credential.credentialSubject.achievement.criteria = {
+     narrative: credentialRecord.credentialSubject.achievement.criteria.narrative
+    }
+  }
   return credential;
 }
+
