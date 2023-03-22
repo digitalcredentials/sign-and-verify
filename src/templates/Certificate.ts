@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 
 export function composeCredential (issuerDid: string, holderDid: string, credentialRecord: any): any {
-  
+  try {
   const credential: any = {
     '@context': [
       "https://www.w3.org/2018/credentials/v1",
@@ -12,14 +12,14 @@ export function composeCredential (issuerDid: string, holderDid: string, credent
       "VerifiableCredential",
       "OpenBadgeCredential"
     ],
-    name: credentialRecord.name,
+    name: credentialRecord.credentialName,
     issuer: {
       type: "Profile",
       id: issuerDid,
-      name: credentialRecord.issuer.name,
-      url: credentialRecord.issuer.url,
+      name: credentialRecord.issuerName,
+      url: credentialRecord.issuerURI,
       image: {
-          id: credentialRecord.issuer.image,
+          id: credentialRecord.issuerImage,
           type: "Image"
         }
     },
@@ -27,14 +27,14 @@ export function composeCredential (issuerDid: string, holderDid: string, credent
     credentialSubject: {
       type: ["AchievementSubject"],
       id: holderDid,
-      name: credentialRecord.credentialSubject.name,
+      name: credentialRecord.studentName,
       achievement: {
         id: `urn:uuid:${randomUUID()}`,
         type: [
           "Achievement"
         ],
-        name: credentialRecord.name,
-        description: credentialRecord.description
+        name: credentialRecord.credentialName,
+        description: credentialRecord.credentialDescription
       }
     }
   }
@@ -43,18 +43,21 @@ export function composeCredential (issuerDid: string, holderDid: string, credent
     credential.expirationDate = credentialRecord.expirationDate;
   }
 
-  if (credentialRecord.credentialSubject?.achievement?.image) {
+  if (credentialRecord.credentialImage) {
     credential.credentialSubject.achievement.image = {
-      id: credentialRecord.credentialSubject.achievement.image,
+      id: credentialRecord.credentialImage,
       type: "Image"
     }
   }
 
-  if (credentialRecord.credentialSubject?.achievement?.criteria?.narrative) {
+  if (credentialRecord.credentialCriteria) {
     credential.credentialSubject.achievement.criteria = {
-     narrative: credentialRecord.credentialSubject.achievement.criteria.narrative
+     narrative: credentialRecord.credentialCriteria
     }
   }
   return credential;
+} catch (e) {
+  console.log(e)
+}
 }
 
