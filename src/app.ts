@@ -1,5 +1,6 @@
 import fastify from 'fastify';
 import * as fs from 'fs';
+import path from 'path';
 import fastifyRawBody from 'fastify-raw-body';
 import axios from 'axios';
 import fastifySensible from 'fastify-sensible';
@@ -140,8 +141,8 @@ export async function build(opts = {}) {
 
   if (enableHttpsForDev) {
     fastifyOptions.https = {
-      key: fs.readFileSync("/Users/jameschartrand/Documents/github/sign-and-verify/src/server-dev-only.key"),
-      cert: fs.readFileSync("/Users/jameschartrand/Documents/github/sign-and-verify/src/server-dev-only.cert")
+      key: fs.readFileSync(path.resolve(__dirname, "./https-certs-dev/server-dev-only.key")),
+      cert: fs.readFileSync(path.resolve(__dirname, "./https-certs-dev/server-dev-only.cert"))
     }
   }
 

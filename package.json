@@ -11,7 +11,7 @@
     "start": "node --require dotenv/config dist/index.js",
     "postinstall": "rm -f node_modules/mongodb/*.d.ts",
     "postbuild": "npm run copy-files",
-    "copy-files": "copyfiles -u 1 src/**/*.yaml src/templates/* dist/"
+    "copy-files": "copyfiles -u 1 src/https-certs-dev/* src/**/*.yaml src/templates/* dist/"
   },
   "keywords": [],
   "author": "Digital Credentials Consortium (DCC)",
