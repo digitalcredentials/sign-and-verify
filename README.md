@@ -2,7 +2,7 @@
 
 A minimal REST service that demonstrates signing and verification functionality. It relies on [sign-and-verify-core](https://github.com/digitalcredentials/sign-and-verify-core)
 
-The REST service implements a subset of the W3C CCG [vc-http-api draft standard](https://w3c-ccg.github.io/vc-http-api/).
+The REST service implements a subset of the W3C CCG [vc-api draft standard](https://w3c-ccg.github.io/vc-api/).
 
 # Getting started
 
@@ -69,9 +69,9 @@ This assumes familiarity with the basics of the [W3C Verifiable Credentials Data
 - [Verifiable Credential](https://www.w3.org/TR/vc-data-model/#credentials)
 - [Verifiable Presentation](https://www.w3.org/TR/vc-data-model/#presentations)
 
-The REST API exposed by this service implements a subset of the [vc-http-api](https://w3c-ccg.github.io/vc-http-api/vc-http-api) draft standard and also includes some non-standard convenience endpoints.
+The REST API exposed by this service implements a subset of the [vc-api](https://w3c-ccg.github.io/vc-api/) draft standard and also includes some non-standard convenience endpoints.
 
-The vc-http-api can be confusing when getting started, partly because it contains APIs for issuer, holders, and verifiers. Actual deployments would involve different endpoints for differely roles; or, put differently, a single instance of this service is not intended to be used by issuers, holders, and verifiers. The vc-http-api currently lacks high-level documentation, so this README provides verbose descriptions about what these APIs are used for. But these APIs ultimately (should eventually) comply with [vc-http-api](https://w3c-ccg.github.io/vc-http-api/).
+The vc-api can be confusing when getting started, partly because it contains APIs for issuer, holders, and verifiers. Actual deployments would involve different endpoints for differely roles; or, put differently, a single instance of this service is not intended to be used by issuers, holders, and verifiers. The vc-api currently lacks high-level documentation, so this README provides verbose descriptions about what these APIs are used for. But these APIs ultimately (should eventually) comply with [vc-api](https://w3c-ccg.github.io/vc-api/).
 
 # API Docs
 
@@ -105,7 +105,7 @@ Response Codes:
 - 400: invalid input
 - 500: error
 
-[Reference: vc-http-api /issue/credentials](https://w3c-ccg.github.io/vc-http-api/#/Issuer/issueCredential)
+[Reference: vc-api /issue/credential](https://w3c-ccg.github.io/vc-api/#issue-credential)
 
 ## Verify Presentation
 
@@ -144,7 +144,7 @@ Response Codes:
 - 400: invalid input
 - 500: error
 
-Note: VerificationResult from vc-http-api isn't especially helpful at the moment, so we pass along non-standard verification metadata. Response code 200 means it's successfully verified. Additionally, in case of success, we return the non-standard `holder` field for convenience. In this example, the VerificationResult is:
+Note: VerificationResult from vc-api isn't especially helpful at the moment, so we pass along non-standard verification metadata. Response code 200 means it's successfully verified. Additionally, in case of success, we return the non-standard `holder` field for convenience. In this example, the VerificationResult is:
 
 ```
 {
@@ -152,7 +152,7 @@ Note: VerificationResult from vc-http-api isn't especially helpful at the moment
 }
 ```
 
-[Reference: vc-http-api /verify/presentations](https://w3c-ccg.github.io/vc-http-api/#/Verifier/verifyPresentation)
+[Reference: vc-api /verify/presentations](https://w3c-ccg.github.io/vc-api/#verify-presentation)
 
 
 ## Verify Credential
@@ -186,7 +186,7 @@ Response Codes:
 - 400: invalid input
 - 500: error
 
-Note: VerificationResult from vc-http-api isn't especially helpful at the moment, so we pass along verification metadata. But response code 200 means it's successfully verified.
+Note: VerificationResult from vc-api isn't especially helpful at the moment, so we pass along verification metadata. But response code 200 means it's successfully verified.
 
 
 ## Request a Demo Credential
@@ -211,7 +211,7 @@ curl --header "Content-Type: application/json" \
 
 # Overview of Credential Request Flow
 
-The vc-http-api standard doesn't include specific methods related to credential request. Similarly, the credential request protocol is not overly-specified by DCC, to allow issuers flexibility to adapt it to their processes. But there are certain request/response elements expected by the DCC wallet, which this service can help with. This section describes how the DCC credential request flow relates to sign-and-verify
+The vc-api standard doesn't include specific methods related to credential request. Similarly, the credential request protocol is not overly-specified by DCC, to allow issuers flexibility to adapt it to their processes. But there are certain request/response elements expected by the DCC wallet, which this service can help with. This section describes how the DCC credential request flow relates to sign-and-verify
 
 ## Request Structure
 
